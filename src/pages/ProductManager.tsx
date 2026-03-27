@@ -39,12 +39,13 @@ export const ProductManager = () => {
     if (!product) return;
 
     try {
-      await api.put(`/products/${id}`, { is_available: !product.is_available });
+      await api.patch(`/products/${id}`, { is_available: !product.is_available });
       setProducts(products.map(p => 
         p.id === id ? { ...p, is_available: !p.is_available } : p
       ));
-    } catch {
-      alert('Erro ao atualizar disponibilidade.');
+    } catch (error) {
+      console.error(error);
+      alert('Erro ao atualizar disponibilidade. Verifique o console.');
     }
   };
 

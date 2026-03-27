@@ -28,13 +28,13 @@ export const BioLinkManager = () => {
   useEffect(() => {
     const fetchLinks = async () => {
       try {
-        const response = await api.get('/settings');
-        const settings = response.data;
+        const response = await api.get('/restaurant');
+        const r = response.data;
         setLinks({
-          instagram: settings.instagram || '',
-          maps: settings.maps || '',
-          whatsapp: settings.whatsapp || '',
-          bio: settings.bio || 'O melhor smash da região! 🍔'
+          instagram: r.social_links?.instagram || '',
+          maps: r.social_links?.maps || '',
+          whatsapp: r.whatsapp_number || '',
+          bio: r.bio || ''
         });
       } catch (error) {
         console.error('Erro ao buscar links:', error);
@@ -46,7 +46,15 @@ export const BioLinkManager = () => {
   const handleSave = async () => {
     setLoading(true);
     try {
-      await api.post('/settings', links);
+      const payload = {
+        whatsapp_number: links.whatsapp,
+        bio: links.bio,
+        social_links: {
+          instagram: links.instagram,
+          maps: links.maps
+        }
+      };
+      await api.post('/restaurant', payload);
       alert('Canais de contato atualizados!');
     } catch {
       alert('Erro ao salvar links.');

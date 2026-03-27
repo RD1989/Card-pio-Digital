@@ -68,7 +68,6 @@ export const AdminLayout = ({ children }: { children: React.ReactNode }) => {
     { to: '/admin/products', icon: Store, label: 'Cardápio' },
     { to: '/admin/biolink', icon: LinkIcon, label: 'Link na Bio' },
     { to: '/admin/labels', icon: Printer, label: 'Etiquetas' },
-    { to: '/admin/metrics', icon: BarChart3, label: 'Métricas' },
     { to: '/admin/settings/ia', icon: Cpu, label: 'Config. IA' },
     { to: '/admin/settings/payments', icon: CreditCard, label: 'Pagamentos' },
   ];

@@ -24,12 +24,12 @@ class RestaurantController extends Controller
         }
 
         $validated = $request->validate([
-            'name' => 'sometimes|string|max:255',
-            'accent_color' => 'sometimes|string|max:10',
-            'whatsapp_number' => 'sometimes|string|max:20',
-            'social_links' => 'sometimes|array',
-            'bio' => 'sometimes|string|max:500',
-            'address' => 'sometimes|string|max:255',
+            'name' => 'sometimes|nullable|string|max:255',
+            'accent_color' => 'sometimes|nullable|string|max:10',
+            'whatsapp_number' => 'sometimes|nullable|string|max:20',
+            'social_links' => 'sometimes|nullable|array',
+            'bio' => 'sometimes|nullable|string|max:500',
+            'address' => 'sometimes|nullable|string|max:255',
         ]);
 
         // Handle Logo Upload
