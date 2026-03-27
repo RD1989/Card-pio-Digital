@@ -171,45 +171,47 @@ export const ProductManager = () => {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95 }}
                     key={product.id}
-                    className={`group bg-zinc-900 border border-zinc-800 rounded-3xl p-4 flex items-center gap-6 transition-all ${!product.is_available ? 'opacity-60 grayscale' : ''}`}
+                    className={`group bg-zinc-900 border border-zinc-800 rounded-3xl p-4 flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6 transition-all ${!product.is_available ? 'opacity-60 grayscale' : ''}`}
                   >
-                    {/* Imagem */}
-                    <div className="w-20 h-20 rounded-2xl overflow-hidden shrink-0 border border-zinc-800 bg-zinc-950">
-                      {(product.image_url || product.image) ? (
-                        <img 
-                          src={product.image_url || product.image} 
-                          className="w-full h-full object-cover" 
-                          onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-zinc-700 text-2xl">🍽️</div>
-                      )}
-                    </div>
-
-                    {/* Info */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-bold text-white truncate">{product.name}</h3>
-                        {product.is_upsell && (
-                          <span className="bg-amber-500/10 text-amber-500 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1 shrink-0">
-                            <TrendingUp className="w-3 h-3" /> Upsell
-                          </span>
+                    <div className="flex items-center gap-4 sm:gap-6 w-full sm:w-auto">
+                      {/* Imagem */}
+                      <div className="w-20 h-20 rounded-2xl overflow-hidden shrink-0 border border-zinc-800 bg-zinc-950">
+                        {(product.image_url || product.image) ? (
+                          <img 
+                            src={product.image_url || product.image} 
+                            className="w-full h-full object-cover" 
+                            onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-zinc-700 text-2xl">🍽️</div>
                         )}
                       </div>
-                      <p className="text-zinc-500 text-sm truncate">{product.description}</p>
-                      <div className="flex items-center gap-3 mt-2">
-                        <span className="text-amber-500 font-bold">R$ {Number(product.price).toFixed(2)}</span>
-                        {product.original_price && (
-                          <span className="text-zinc-600 text-xs line-through">R$ {Number(product.original_price).toFixed(2)}</span>
-                        )}
-                        <span className="text-zinc-600 text-xs px-2 py-1 bg-zinc-950 rounded-lg">
-                          {typeof product.category === 'object' ? product.category.name : product.category}
-                        </span>
+
+                      {/* Info */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-wrap items-center gap-2 mb-1">
+                          <h3 className="font-bold text-white truncate max-w-full">{product.name}</h3>
+                          {product.is_upsell && (
+                            <span className="bg-amber-500/10 text-amber-500 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1 shrink-0">
+                              <TrendingUp className="w-3 h-3" /> Upsell
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-zinc-500 text-sm truncate">{product.description}</p>
+                        <div className="flex flex-wrap items-center gap-2 sm:gap-3 mt-2">
+                          <span className="text-amber-500 font-bold">R$ {Number(product.price).toFixed(2)}</span>
+                          {product.original_price && (
+                            <span className="text-zinc-600 text-xs line-through">R$ {Number(product.original_price).toFixed(2)}</span>
+                          )}
+                          <span className="text-zinc-600 text-xs px-2 py-1 bg-zinc-950 rounded-lg whitespace-nowrap">
+                            {typeof product.category === 'object' ? product.category.name : product.category}
+                          </span>
+                        </div>
                       </div>
                     </div>
 
                     {/* Ações */}
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center justify-end gap-2 w-full sm:w-auto mt-2 sm:mt-0 pt-3 sm:pt-0 border-t border-zinc-800/50 sm:border-0">
                       <button 
                         onClick={() => toggleAvailability(product.id)}
                         className={`p-3 rounded-2xl transition-all ${product.is_available ? 'bg-zinc-950 text-emerald-500 hover:bg-zinc-800' : 'bg-zinc-950 text-zinc-600 hover:bg-zinc-800'}`}

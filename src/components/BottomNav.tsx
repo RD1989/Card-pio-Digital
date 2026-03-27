@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 
 export const BottomNav = () => {
   return (
-    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-md z-50">
+    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-md z-50 md:hidden">
       <div className="bg-zinc-900/80 backdrop-blur-xl border border-zinc-800/50 rounded-full px-6 py-3 flex items-center justify-between shadow-2xl">
         <button className="text-amber-500 flex flex-col items-center gap-1 transition-all">
           <Home className="w-6 h-6" />

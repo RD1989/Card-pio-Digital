@@ -68,8 +68,8 @@ export const PublicMenu = () => {
   return (
     <div className="min-h-screen bg-black text-white font-sans selection:bg-amber-500/30">
       {/* Header Premium */}
-      <header className="fixed top-0 left-0 right-0 z-40 px-6 pt-12 pb-6 bg-gradient-to-b from-black via-black/80 to-transparent backdrop-blur-sm">
-        <div className="max-w-md mx-auto flex items-center gap-4">
+      <header className="fixed top-0 left-0 right-0 z-40 px-6 pt-6 md:pt-12 pb-6 bg-gradient-to-b from-black via-black/80 to-transparent backdrop-blur-sm">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
           <div className="relative flex-1">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500" />
             <input 
@@ -86,9 +86,9 @@ export const PublicMenu = () => {
         </div>
       </header>
 
-      <main className="max-w-md mx-auto px-6 pt-32 pb-40">
+      <main className="max-w-7xl mx-auto px-6 pt-28 md:pt-40 pb-40">
         {/* Hero Section */}
-        <section className="mb-10">
+        <section className="mb-10 text-center md:text-left">
           <span className="text-amber-500 font-bold tracking-[0.2em] uppercase text-[10px] mb-2 block">
             Experiência Gastronômica
           </span>
@@ -96,7 +96,7 @@ export const PublicMenu = () => {
             Menu <br />
             <span className="text-zinc-400 not-italic font-sans font-bold tracking-tighter">Premium</span>
           </h1>
-          <p className="text-zinc-500 text-sm leading-relaxed max-w-[80%]">
+          <p className="text-zinc-500 text-sm md:text-base leading-relaxed max-w-xl mx-auto md:mx-0">
             Pratos autorais preparados com ingredientes selecionados para paladares exigentes.
           </p>
         </section>
@@ -111,7 +111,7 @@ export const PublicMenu = () => {
         </div>
 
         {/* Products Grid */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
           <AnimatePresence mode="popLayout">
             {filteredProducts.map((product) => (
               <ProductCard 
