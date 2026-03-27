@@ -7,6 +7,7 @@ import { useThemeStore } from './store/useThemeStore';
 
 import { PublicMenu } from './pages/PublicMenu';
 import { PublicBioLink } from './pages/PublicBioLink';
+import { LandingPage } from './pages/LandingPage';
 import { AdminLayout } from './components/AdminLayout';
 // ... rest
 import { DashboardHome } from './pages/DashboardHome';
@@ -86,7 +87,7 @@ function App() {
     <Router>
       <AccentColorInjector />
       <Routes>
-        <Route path="/" element={<PublicMenu />} />
+        <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/b/:slug" element={<PublicBioLink />} />
