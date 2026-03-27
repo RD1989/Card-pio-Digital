@@ -16,11 +16,20 @@ export const Login = () => {
     e.preventDefault();
     setLoading(true);
     try {
+      console.log('Tentando login em:', api.defaults.baseURL);
       const response = await api.post('/login', { email, password });
+      
+      console.log('Resposta do Login:', response.data);
+      if (!response.data.token) {
+        throw new Error('Servidor não retornou um token. O sistema pode estar offline ou mal configurado na nuvem.');
+      }
+      
       setAuth(response.data.user, response.data.token);
       navigate('/admin');
-    } catch {
-      alert('Erro ao fazer login. Verifique suas credenciais.');
+    } catch (error: any) {
+      console.error('Erro no login:', error);
+      const message = error.response?.data?.message || error.message || 'Erro ao fazer login. Verifique suas credenciais.';
+      alert(message);
     } finally {
       setLoading(false);
     }
