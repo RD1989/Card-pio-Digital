@@ -13,6 +13,8 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { LandingNavBar } from '../components/landing/LandingNavBar';
+import { SmartphoneMockup } from '../components/landing/SmartphoneMockup';
+import { DashboardMockup } from '../components/landing/DashboardMockup';
 
 // Componentes Reutilizáveis
 const Section = ({ id, className, children }: { id?: string, className?: string, children: React.ReactNode }) => (
@@ -71,67 +73,85 @@ export function LandingPage() {
         <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-amber-500/20 rounded-full blur-[120px] -translate-x-1/2 pointer-events-none" />
         <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-amber-600/10 rounded-full blur-[100px] translate-x-1/2 pointer-events-none" />
         
-        <div className="container mx-auto px-4 md:px-6 relative z-10 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-zinc-800 bg-zinc-900/50 backdrop-blur-md text-sm font-medium text-zinc-300 mb-8"
-          >
-            <Zap className="w-4 h-4 text-amber-500" />
-            <span className="text-white">A nova era do delivery digital</span>
-          </motion.div>
+        <div className="container mx-auto px-4 md:px-6 relative z-10">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            
+            {/* Esquerda: Texto */}
+            <div className="text-center lg:text-left">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6 }}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-zinc-800 bg-zinc-900/50 backdrop-blur-md text-sm font-medium text-zinc-300 mb-8"
+              >
+                <Zap className="w-4 h-4 text-amber-500" />
+                <span className="text-white">A nova era do delivery digital</span>
+              </motion.div>
 
-          <motion.h1 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-            className="text-5xl md:text-7xl font-extrabold text-white tracking-tight mb-6 max-w-4xl mx-auto leading-tight"
-          >
-            Seu Cardápio Digital <br className="hidden md:block"/>
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-amber-600">
-              Moderno e Automatizado
-            </span>
-          </motion.h1>
+              <motion.h1 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.1 }}
+                className="text-5xl md:text-6xl lg:text-7xl font-extrabold text-white tracking-tight mb-6 leading-tight"
+              >
+                Seu Cardápio Digital <br className="hidden md:block"/>
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-amber-600">
+                  Moderno e Automatizado
+                </span>
+              </motion.h1>
 
-          <motion.p 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="text-lg md:text-xl text-zinc-400 max-w-2xl mx-auto mb-10 leading-relaxed"
-          >
-            Receba pedidos direto no WhatsApp, gere etiquetas automáticas, crie seu Link na Bio personalizado e aumente suas vendas sem taxas abusivas.
-          </motion.p>
+              <motion.p 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+                className="text-lg md:text-xl text-zinc-400 mb-10 leading-relaxed max-w-xl mx-auto lg:mx-0"
+              >
+                Receba pedidos direto no WhatsApp, gere etiquetas automáticas, crie seu Link na Bio personalizado e aumente suas vendas sem taxas abusivas.
+              </motion.p>
 
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-4"
-          >
-            <Link 
-              to="/register"
-              className="w-full sm:w-auto flex items-center justify-center gap-2 h-14 px-8 rounded-full text-lg font-bold bg-amber-500 text-zinc-950 hover:bg-amber-400 hover:scale-105 transition-all shadow-[0_0_30px_rgba(245,158,11,0.4)]"
-            >
-              Criar Conta Grátis
-              <ArrowRight className="w-5 h-5" />
-            </Link>
-            <a 
-              href="#funcionalidades"
-              className="w-full sm:w-auto flex items-center justify-center h-14 px-8 rounded-full text-lg font-medium text-white border border-zinc-700 bg-zinc-800/50 hover:bg-zinc-800 transition-all"
-            >
-              Ver Funcionalidades
-            </a>
-          </motion.div>
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.3 }}
+                className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4"
+              >
+                <Link 
+                  to="/register"
+                  className="w-full sm:w-auto flex items-center justify-center gap-2 h-14 px-8 rounded-full text-lg font-bold bg-amber-500 text-zinc-950 hover:bg-amber-400 hover:scale-105 transition-all shadow-[0_0_30px_rgba(245,158,11,0.4)]"
+                >
+                  Criar Conta Grátis
+                  <ArrowRight className="w-5 h-5" />
+                </Link>
+                <a 
+                  href="#funcionalidades"
+                  className="w-full sm:w-auto flex items-center justify-center h-14 px-8 rounded-full text-lg font-medium text-white border border-zinc-700 bg-zinc-800/50 hover:bg-zinc-800 transition-all"
+                >
+                  Ver Funcionalidades
+                </a>
+              </motion.div>
 
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.8 }}
-            className="mt-6 text-sm text-zinc-500 font-medium"
-          >
-            ✅ Não requer cartão de crédito • 🚀 Configuração em 2 minutos
-          </motion.p>
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.8 }}
+                className="mt-6 text-sm text-zinc-500 font-medium"
+              >
+                ✅ Não requer cartão de crédito • 🚀 Configuração em 2 minutos
+              </motion.p>
+            </div>
+
+            {/* Direita: Mockup do Celular */}
+            <div className="hidden lg:block relative perspective-[1200px]">
+              <motion.div
+                initial={{ rotateY: 15, rotateX: 5, opacity: 0, x: 50 }}
+                animate={{ rotateY: -15, rotateX: 5, opacity: 1, x: 0 }}
+                transition={{ duration: 1, type: "spring", bounce: 0.4, delay: 0.2 }}
+              >
+                <SmartphoneMockup />
+              </motion.div>
+            </div>
+            
+          </div>
         </div>
       </section>
 
@@ -190,57 +210,8 @@ export function LandingPage() {
       <Section id="como-funciona" className="relative">
         <div className="grid lg:grid-cols-2 gap-16 items-center">
           <div className="order-2 lg:order-1 relative perspective-[1000px]">
-             {/* Abstract Dashboard Representation using Framer Motion */}
-             <motion.div 
-               initial={{ rotateY: -15, rotateX: 5, opacity: 0, x: -50 }}
-               whileInView={{ rotateY: 0, rotateX: 0, opacity: 1, x: 0 }}
-               transition={{ duration: 0.8, type: "spring" }}
-               viewport={{ once: true, margin: "-100px" }}
-               className="bg-zinc-950 border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden shadow-amber-500/10"
-             >
-                {/* Mac Header */}
-                <div className="bg-zinc-900 border-b border-zinc-800 p-4 flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                  <div className="w-3 h-3 rounded-full bg-amber-500"></div>
-                  <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                </div>
-                {/* Content Area */}
-                <div className="p-6 flex gap-6">
-                  {/* Sidebar */}
-                  <div className="w-48 hidden sm:flex flex-col gap-3">
-                    <div className="h-8 bg-zinc-800 rounded-md w-3/4 mb-4"></div>
-                    {[1, 2, 3, 4].map(i => (
-                      <div key={i} className={`h-10 rounded-lg ${i === 1 ? 'bg-amber-500/20 text-amber-500 border border-amber-500/30' : 'bg-zinc-800/50'}`}></div>
-                    ))}
-                  </div>
-                  {/* Main Content */}
-                  <div className="flex-1 space-y-6">
-                    <div className="flex justify-between items-center">
-                      <div className="h-8 bg-zinc-800 rounded-lg w-40"></div>
-                      <div className="h-8 bg-amber-500 rounded-lg w-24"></div>
-                    </div>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                      {[1, 2, 3].map(i => (
-                        <div key={i} className="bg-zinc-900 border border-zinc-800 h-24 rounded-xl p-4">
-                          <div className="h-4 bg-zinc-800 rounded w-1/2 mb-2"></div>
-                          <div className="h-6 bg-zinc-700 rounded w-3/4 mt-auto"></div>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="bg-zinc-900 border border-zinc-800 h-48 rounded-xl p-4">
-                       <div className="h-4 bg-zinc-800 rounded w-1/4 mb-4"></div>
-                       <div className="space-y-3">
-                         {[1, 2].map(i => (
-                           <div key={i} className="h-12 bg-zinc-800/50 rounded-lg flex items-center p-3 gap-4">
-                             <div className="h-8 w-8 rounded-full bg-zinc-700"></div>
-                             <div className="h-4 bg-zinc-700 rounded w-full"></div>
-                           </div>
-                         ))}
-                       </div>
-                    </div>
-                  </div>
-                </div>
-             </motion.div>
+             {/* Dashboard Realista Substituindo o antigo abstrato */}
+             <DashboardMockup />
           </div>
           
           <div className="order-1 lg:order-2">
