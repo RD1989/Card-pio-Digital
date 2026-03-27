@@ -1,18 +1,32 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Cpu, Save, ShieldCheck } from 'lucide-react';
+import api from '../services/api';
 
 export const AISettings = () => {
-  const [apiKey, setApiKey] = useState('sk-or-v1-....................');
+  const [apiKey, setApiKey] = useState('');
   const [model, setModel] = useState('google/gemini-flash-1.5');
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    api.get('/settings').then(response => {
+      if (response.data.ai_api_key) setApiKey(response.data.ai_api_key);
+      if (response.data.ai_model) setModel(response.data.ai_model);
+    });
+  }, []);
+
   const handleSave = async () => {
     setLoading(true);
-    // Simulação de save
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      await api.post('/settings', {
+        ai_api_key: apiKey,
+        ai_model: model
+      });
       alert('Configurações de IA enviadas com sucesso!');
-    }, 1000);
+    } catch (error) {
+      alert('Erro ao salvar as configurações.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -34,6 +48,7 @@ export const AISettings = () => {
           <label className="text-sm font-medium text-zinc-400">OpenRouter API Key</label>
           <input 
             type="password" 
+            placeholder="sk-or-v1-...................."
             value={apiKey}
             onChange={(e) => setApiKey(e.target.value)}
             className="w-full bg-zinc-950 border border-zinc-800 rounded-2xl py-4 px-6 text-white outline-none focus:border-amber-500 transition-all font-mono text-sm"

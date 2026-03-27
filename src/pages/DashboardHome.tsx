@@ -1,28 +1,12 @@
+import { useState, useEffect } from 'react';
 import { 
-  AreaChart, 
-  Area, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  ResponsiveContainer 
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer 
 } from 'recharts';
 import { 
-  Users, 
-  Smartphone, 
-  TrendingUp, 
-  CreditCard 
+  Users, Smartphone, TrendingUp, CreditCard, Layers, Package, Eye, Activity
 } from 'lucide-react';
 import { motion } from 'framer-motion';
-
-const data = [
-  { name: 'Jan', value: 400 },
-  { name: 'Fev', value: 700 },
-  { name: 'Mar', value: 600 },
-  { name: 'Abr', value: 800 },
-  { name: 'Mai', value: 1100 },
-  { name: 'Jun', value: 1560 },
-];
+import api from '../services/api';
 
 interface StatCardProps {
   icon: React.ElementType;
@@ -51,21 +35,65 @@ const StatCard = ({ icon: Icon, label, value, trend }: StatCardProps) => (
   </motion.div>
 );
 
+const getIconForLabel = (label: string) => {
+  const lower = label.toLowerCase();
+  if (lower.includes('lojista')) return Users;
+  if (lower.includes('qr')) return Smartphone;
+  if (lower.includes('receita')) return CreditCard;
+  if (lower.includes('assinantes')) return TrendingUp;
+  if (lower.includes('categorias')) return Layers;
+  if (lower.includes('produtos')) return Package;
+  if (lower.includes('visualizações')) return Eye;
+  return Activity;
+};
+
 export const DashboardHome = () => {
+  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState<{
+    role: string;
+    stats: { label: string; value: string; trend: string | null }[];
+    chartTitle: string;
+    chartData: { name: string; value: number }[];
+  } | null>(null);
+
+  useEffect(() => {
+    api.get('/dashboard')
+      .then(response => {
+        setData(response.data);
+      })
+      .catch(error => console.error("Erro ao carregar dashboard", error))
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
+  if (!data) return null;
+
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard icon={Users} label="Total Lojistas" value="124" trend="+12%" />
-        <StatCard icon={Smartphone} label="Scan de QR Codes" value="4.8k" trend="+25%" />
-        <StatCard icon={CreditCard} label="Receita Mensal" value="R$ 15.420" trend="+8%" />
-        <StatCard icon={TrendingUp} label="Novos Assinantes" value="18" trend="+5%" />
+        {data.stats.map((stat, idx) => (
+          <StatCard 
+            key={idx}
+            icon={getIconForLabel(stat.label)} 
+            label={stat.label} 
+            value={stat.value} 
+            trend={stat.trend || undefined} 
+          />
+        ))}
       </div>
 
       <div className="bg-zinc-900 border border-zinc-800 p-8 rounded-3xl">
-        <h3 className="text-xl font-serif text-white mb-8">Crescimento de Assinaturas</h3>
+        <h3 className="text-xl font-serif text-white mb-8">{data.chartTitle}</h3>
         <div className="h-[300px] w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={data}>
+            <AreaChart data={data.chartData}>
               <defs>
                 <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.3}/>
@@ -74,7 +102,7 @@ export const DashboardHome = () => {
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
               <XAxis dataKey="name" stroke="#52525b" fontSize={12} tickLine={false} axisLine={false} />
-              <YAxis stroke="#52525b" fontSize={12} tickLine={false} axisLine={false} />
+              <YAxis stroke="#52525b" fontSize={12} tickLine={false} axisLine={false} allowDecimals={false} />
               <Tooltip 
                 contentStyle={{ backgroundColor: '#18181b', border: '1px solid #27272a', borderRadius: '16px' }}
                 itemStyle={{ color: '#white' }}

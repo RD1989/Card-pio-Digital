@@ -49,7 +49,7 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/b/:slug" element={<PublicBioLink />} />
         <Route 
-          path="/admin" 
+          path="/admin/*" 
           element={
             <ProtectedRoute>
               <AdminDashboard />

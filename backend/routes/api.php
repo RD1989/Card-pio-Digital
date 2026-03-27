@@ -16,6 +16,8 @@ Route::middleware('auth:sanctum')->group(function () {
         return $request->user()->load('restaurant');
     });
 
+    Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index']);
+
     Route::get('/settings', [\App\Http\Controllers\SystemSettingController::class, 'index']);
     Route::post('/settings', [\App\Http\Controllers\SystemSettingController::class, 'update']);
 

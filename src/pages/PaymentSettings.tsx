@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { CreditCard, Save, Lock, Landmark } from 'lucide-react';
+import api from '../services/api';
 
 export const PaymentSettings = () => {
   const [config, setConfig] = useState({
@@ -9,12 +10,30 @@ export const PaymentSettings = () => {
   });
   const [loading, setLoading] = useState(false);
 
-  const handleSave = () => {
+  useEffect(() => {
+    api.get('/settings').then(response => {
+      setConfig({
+        clientId: response.data.efi_client_id || '',
+        clientSecret: response.data.efi_client_secret || '',
+        sandbox: response.data.efi_sandbox !== 'false', // default to true if null
+      });
+    });
+  }, []);
+
+  const handleSave = async () => {
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      await api.post('/settings', {
+        efi_client_id: config.clientId,
+        efi_client_secret: config.clientSecret,
+        efi_sandbox: config.sandbox ? 'true' : 'false'
+      });
       alert('Credenciais Efí atualizadas!');
-    }, 1000);
+    } catch (error) {
+      alert('Erro ao salvar as credenciais.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
