@@ -1,0 +1,294 @@
+import { useState, useEffect } from 'react';
+import { X, Save, Loader2, DollarSign, Tag, AlignLeft, Image as ImageIcon, Star } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import api from '../services/api';
+import type { Product, Category } from '../types';
+
+interface ProductFormModalProps {
+  product?: Product | null;
+  onClose: () => void;
+  onSaved: (product: Product) => void;
+}
+
+const emptyForm = {
+  name: '',
+  description: '',
+  price: '',
+  original_price: '',
+  image_url: '',
+  category_id: '',
+  is_available: true,
+  is_upsell: false,
+};
+
+export const ProductFormModal = ({ product, onClose, onSaved }: ProductFormModalProps) => {
+  const [form, setForm] = useState({ ...emptyForm });
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [loadingCats, setLoadingCats] = useState(true);
+
+  // Preencher formulário quando editando
+  useEffect(() => {
+    if (product) {
+      setForm({
+        name: product.name,
+        description: product.description || '',
+        price: String(product.price),
+        original_price: product.original_price ? String(product.original_price) : '',
+        image_url: product.image_url || product.image || '',
+        category_id: typeof product.category === 'object' ? String(product.category.id) : '',
+        is_available: product.is_available,
+        is_upsell: product.is_upsell ?? false,
+      });
+    }
+  }, [product]);
+
+  // Buscar categorias do lojista
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await api.get('/categories');
+        setCategories(response.data);
+        if (!product && response.data.length > 0) {
+          setForm(f => ({ ...f, category_id: String(response.data[0].id) }));
+        }
+      } catch (err) {
+        console.error('Erro ao buscar categorias:', err);
+      } finally {
+        setLoadingCats(false);
+      }
+    };
+    fetchCategories();
+  }, [product]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value, type } = e.target;
+    const val = type === 'checkbox' ? (e.target as HTMLInputElement).checked : value;
+    setForm(f => ({ ...f, [name]: val }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.category_id) { alert('Selecione uma categoria.'); return; }
+    setLoading(true);
+
+    const payload = {
+      name: form.name,
+      description: form.description || null,
+      price: parseFloat(form.price),
+      original_price: form.original_price ? parseFloat(form.original_price) : null,
+      image_url: form.image_url || null,
+      category_id: parseInt(form.category_id),
+      is_available: form.is_available,
+      is_upsell: form.is_upsell,
+    };
+
+    try {
+      let response;
+      if (product?.id) {
+        response = await api.patch(`/products/${product.id}`, payload);
+      } else {
+        response = await api.post('/products', payload);
+      }
+      onSaved(response.data);
+      onClose();
+    } catch (err: unknown) {
+      console.error('Erro ao salvar produto:', err);
+      const message = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Erro ao salvar produto.';
+      alert(message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-start md:items-center justify-center p-4 overflow-y-auto"
+        onClick={(e) => e.target === e.currentTarget && onClose()}
+      >
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.95 }}
+          transition={{ type: 'spring', damping: 20, stiffness: 300 }}
+          className="bg-zinc-900 border border-zinc-800 rounded-3xl w-full max-w-lg shadow-2xl my-4"
+        >
+          {/* Header */}
+          <div className="flex items-center justify-between p-6 border-b border-zinc-800">
+            <h3 className="text-xl font-bold text-white">
+              {product ? 'Editar Produto' : 'Novo Produto'}
+            </h3>
+            <button
+              onClick={onClose}
+              className="p-2 rounded-xl text-zinc-500 hover:text-white hover:bg-zinc-800 transition-all"
+            >
+              <X className="w-6 h-6" />
+            </button>
+          </div>
+
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="p-6 space-y-5">
+            {/* Nome */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-zinc-400 uppercase tracking-wide">Nome do Produto *</label>
+              <div className="relative">
+                <Tag className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600" />
+                <input
+                  type="text"
+                  name="name"
+                  required
+                  value={form.name}
+                  onChange={handleChange}
+                  placeholder="Ex: Hambúrguer Artesanal"
+                  className="w-full bg-zinc-950 border border-zinc-800 rounded-2xl py-3 pl-11 pr-4 text-white outline-none focus:border-amber-500/50 transition-colors"
+                />
+              </div>
+            </div>
+
+            {/* Descrição */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-zinc-400 uppercase tracking-wide">Descrição</label>
+              <div className="relative">
+                <AlignLeft className="absolute left-4 top-4 w-4 h-4 text-zinc-600" />
+                <textarea
+                  name="description"
+                  value={form.description}
+                  onChange={handleChange}
+                  placeholder="Ingredientes e diferenciais..."
+                  rows={3}
+                  className="w-full bg-zinc-950 border border-zinc-800 rounded-2xl py-3 pl-11 pr-4 text-white outline-none focus:border-amber-500/50 transition-colors resize-none"
+                />
+              </div>
+            </div>
+
+            {/* Preços */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-zinc-400 uppercase tracking-wide">Preço *</label>
+                <div className="relative">
+                  <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600" />
+                  <input
+                    type="number"
+                    name="price"
+                    required
+                    min="0"
+                    step="0.01"
+                    value={form.price}
+                    onChange={handleChange}
+                    placeholder="0,00"
+                    className="w-full bg-zinc-950 border border-zinc-800 rounded-2xl py-3 pl-11 pr-4 text-white outline-none focus:border-amber-500/50 transition-colors"
+                  />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-zinc-400 uppercase tracking-wide">Preço Original</label>
+                <div className="relative">
+                  <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600" />
+                  <input
+                    type="number"
+                    name="original_price"
+                    min="0"
+                    step="0.01"
+                    value={form.original_price}
+                    onChange={handleChange}
+                    placeholder="Riscado"
+                    className="w-full bg-zinc-950 border border-zinc-800 rounded-2xl py-3 pl-11 pr-4 text-white outline-none focus:border-amber-500/50 transition-colors"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* URL da Imagem */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-zinc-400 uppercase tracking-wide">URL da Imagem</label>
+              <div className="relative">
+                <ImageIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600" />
+                <input
+                  type="url"
+                  name="image_url"
+                  value={form.image_url}
+                  onChange={handleChange}
+                  placeholder="https://..."
+                  className="w-full bg-zinc-950 border border-zinc-800 rounded-2xl py-3 pl-11 pr-4 text-white outline-none focus:border-amber-500/50 transition-colors"
+                />
+              </div>
+              {form.image_url && (
+                <img src={form.image_url} alt="Preview" className="w-full h-28 object-cover rounded-2xl mt-2 border border-zinc-800" onError={(e) => (e.currentTarget.style.display = 'none')} />
+              )}
+            </div>
+
+            {/* Categoria */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-zinc-400 uppercase tracking-wide">Categoria *</label>
+              {loadingCats ? (
+                <div className="flex items-center gap-2 text-zinc-500 text-sm py-3">
+                  <Loader2 className="w-4 h-4 animate-spin" /> Carregando categorias...
+                </div>
+              ) : categories.length === 0 ? (
+                <p className="text-amber-500 text-sm py-2">⚠️ Crie uma categoria antes de adicionar produtos.</p>
+              ) : (
+                <select
+                  name="category_id"
+                  required
+                  value={form.category_id}
+                  onChange={handleChange}
+                  className="w-full bg-zinc-950 border border-zinc-800 rounded-2xl py-3 px-4 text-white outline-none focus:border-amber-500/50 transition-colors appearance-none cursor-pointer"
+                >
+                  <option value="">Selecione...</option>
+                  {categories.map(cat => (
+                    <option key={cat.id} value={cat.id}>{cat.name}</option>
+                  ))}
+                </select>
+              )}
+            </div>
+
+            {/* Flags */}
+            <div className="flex items-center gap-6">
+              <label className="flex items-center gap-3 cursor-pointer">
+                <div
+                  onClick={() => setForm(f => ({ ...f, is_available: !f.is_available }))}
+                  className={`w-12 h-6 rounded-full transition-colors relative ${form.is_available ? 'bg-emerald-500' : 'bg-zinc-700'}`}
+                >
+                  <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${form.is_available ? 'left-7' : 'left-1'}`} />
+                </div>
+                <span className="text-sm text-zinc-300">Disponível</span>
+              </label>
+              <label className="flex items-center gap-3 cursor-pointer">
+                <div
+                  onClick={() => setForm(f => ({ ...f, is_upsell: !f.is_upsell }))}
+                  className={`w-12 h-6 rounded-full transition-colors relative ${form.is_upsell ? 'bg-amber-500' : 'bg-zinc-700'}`}
+                >
+                  <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${form.is_upsell ? 'left-7' : 'left-1'}`} />
+                </div>
+                <span className="text-sm text-zinc-300 flex items-center gap-1.5"><Star className="w-3.5 h-3.5 text-amber-500" />Upsell</span>
+              </label>
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-3 pt-2">
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex-1 py-3 rounded-2xl border border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-700 transition-all"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                disabled={loading || loadingCats || categories.length === 0}
+                className="flex-1 py-3 rounded-2xl bg-amber-500 text-zinc-950 font-bold hover:bg-amber-400 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
+                {loading ? 'Salvando...' : 'Salvar Produto'}
+              </button>
+            </div>
+          </form>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
+  );
+};

@@ -14,6 +14,7 @@ import { RestaurantBranding } from './pages/RestaurantBranding';
 import { ProductManager } from './pages/ProductManager';
 import { BioLinkManager } from './pages/BioLinkManager';
 import { DeliveryLabels } from './pages/DeliveryLabels';
+import { MetricsPage } from './pages/MetricsPage';
 
 // Componente Admin Real (Dashboard)
 const AdminDashboard = () => {
@@ -27,7 +28,7 @@ const AdminDashboard = () => {
         <Route path="labels" element={<DeliveryLabels />} />
         <Route path="settings/ia" element={<AISettings />} />
         <Route path="settings/payments" element={<PaymentSettings />} />
-        <Route path="metrics" element={<DashboardHome />} />
+        <Route path="metrics" element={<MetricsPage />} />
         <Route path="restaurants" element={<DashboardHome />} />
       </Routes>
     </AdminLayout>
