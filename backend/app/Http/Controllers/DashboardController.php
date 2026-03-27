@@ -101,17 +101,36 @@ class DashboardController extends Controller
         $totalProdutos = Product::where('restaurant_id', $restaurantId)->count();
         $produtosAtivos = Product::where('restaurant_id', $restaurantId)->where('is_active', true)->count();
         $totalCategorias = Category::where('restaurant_id', $restaurantId)->count();
-        $visitasCardapio = 345; // Mock: Visitas do mês
+        $visitasCardapio = \App\Models\RestaurantView::where('restaurant_id', $restaurantId)->count();
         
-        // Mocking chart data specifically for the merchant
-        $month = now()->format('m');
-        $months = ['01'=>'Jan','02'=>'Fev','03'=>'Mar','04'=>'Abr','05'=>'Mai','06'=>'Jun','07'=>'Jul','08'=>'Ago','09'=>'Set','10'=>'Out','11'=>'Nov','12'=>'Dez'];
-        
-        $chartData = [
-            ['name' => $months[now()->subMonths(2)->format('m') ?? '01'], 'value' => 120],
-            ['name' => $months[now()->subMonths(1)->format('m') ?? '01'], 'value' => 250],
-            ['name' => $months[$month], 'value' => 345],
-        ];
+        $chartData = \App\Models\RestaurantView::select(
+            DB::raw('strftime("%m", created_at) as month'),
+            DB::raw('count(*) as value')
+        )
+        ->where('restaurant_id', $restaurantId)
+        ->where('created_at', '>=', now()->subMonths(6))
+        ->groupBy('month')
+        ->orderBy('month')
+        ->get()
+        ->map(function ($item) {
+            $months = [
+                '01' => 'Jan', '02' => 'Fev', '03' => 'Mar', '04' => 'Abr',
+                '05' => 'Mai', '06' => 'Jun', '07' => 'Jul', '08' => 'Ago',
+                '09' => 'Set', '10' => 'Out', '11' => 'Nov', '12' => 'Dez'
+            ];
+            return [
+                'name' => $months[$item->month] ?? $item->month,
+                'value' => (int) $item->value
+            ];
+        });
+
+        if ($chartData->isEmpty()) {
+            $month = now()->format('m');
+            $months = ['01'=>'Jan','02'=>'Fev','03'=>'Mar','04'=>'Abr','05'=>'Mai','06'=>'Jun','07'=>'Jul','08'=>'Ago','09'=>'Set','10'=>'Out','11'=>'Nov','12'=>'Dez'];
+            $chartData = collect([
+                ['name' => $months[$month], 'value' => $visitasCardapio]
+            ]);
+        }
 
         return response()->json([
             'role' => 'merchant',

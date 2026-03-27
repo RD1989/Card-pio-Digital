@@ -10,6 +10,7 @@ Route::post('/login', [AuthController::class, 'login']);
 // Rotas públicas para o cardápio
 Route::get('/categories', [\App\Http\Controllers\CategoryController::class, 'index']);
 Route::get('/products', [\App\Http\Controllers\ProductController::class, 'index']);
+Route::post('/analytics/view', [\App\Http\Controllers\AnalyticsController::class, 'view']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', function (Request $request) {

@@ -37,6 +37,10 @@ export const PublicMenu = () => {
         setCategories(catsRes.data);
         setProducts(prodsRes.data);
         setRestaurantSettings(restRes.data);
+        
+        // Registrar visualização real no backend (Não bloqueia o carregamento visual)
+        api.post('/analytics/view').catch(() => {});
+        
       } catch (error) {
         console.error('Erro ao buscar dados:', error);
       } finally {
