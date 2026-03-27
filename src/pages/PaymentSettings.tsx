@@ -29,7 +29,7 @@ export const PaymentSettings = () => {
         efi_sandbox: config.sandbox ? 'true' : 'false'
       });
       alert('Credenciais Efí atualizadas!');
-    } catch (error) {
+    } catch {
       alert('Erro ao salvar as credenciais.');
     } finally {
       setLoading(false);

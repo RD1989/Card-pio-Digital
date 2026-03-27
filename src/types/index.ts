@@ -2,6 +2,7 @@ export interface User {
   id: number;
   name: string;
   email: string;
+  is_super_admin?: boolean;
   restaurant?: {
     id: number;
     name: string;
@@ -11,6 +12,7 @@ export interface User {
     accent_color?: string;
     bio?: string;
     address?: string;
+    whatsapp_number?: string;
     social_links?: Record<string, string>;
   };
 }

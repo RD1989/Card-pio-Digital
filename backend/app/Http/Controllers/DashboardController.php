@@ -98,8 +98,8 @@ class DashboardController extends Controller
     {
         $restaurantId = $user->restaurant->id ?? 0;
 
-        $totalProdutos = Product::where('restaurant_id', $restaurantId)->count();
-        $produtosAtivos = Product::where('restaurant_id', $restaurantId)->where('is_active', true)->count();
+        $totalProdutos = Product::whereHas('category', fn($q) => $q->where('restaurant_id', $restaurantId))->count();
+        $produtosAtivos = Product::whereHas('category', fn($q) => $q->where('restaurant_id', $restaurantId))->where('is_available', true)->count();
         $totalCategorias = Category::where('restaurant_id', $restaurantId)->count();
         $visitasCardapio = \App\Models\RestaurantView::where('restaurant_id', $restaurantId)->count();
         
@@ -134,10 +134,14 @@ class DashboardController extends Controller
 
         return response()->json([
             'role' => 'merchant',
+            'total_produtos' => $totalProdutos,
+            'produtos_ativos' => $produtosAtivos,
+            'total_categorias' => $totalCategorias,
+            'visitas_cardapio' => $visitasCardapio,
             'stats' => [
                 [
-                    'label' => 'Total de Categorias',
-                    'value' => (string) $totalCategorias,
+                    'label' => 'Visualizações do Cardápio',
+                    'value' => (string) $visitasCardapio,
                     'trend' => null
                 ],
                 [
@@ -151,12 +155,13 @@ class DashboardController extends Controller
                     'trend' => null
                 ],
                 [
-                    'label' => 'Visualizações do Cardápio',
-                    'value' => (string) $visitasCardapio,
-                    'trend' => '+15%'
+                    'label' => 'Categorias',
+                    'value' => (string) $totalCategorias,
+                    'trend' => null
                 ]
             ],
             'chartTitle' => 'Visualizações do Cardápio (Últimos Meses)',
+            'chart_data' => $chartData,
             'chartData' => $chartData
         ]);
     }

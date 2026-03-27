@@ -9,10 +9,13 @@ import {
   Smartphone
 } from 'lucide-react';
 import { useAuthStore } from '../store/useAuthStore';
+import { useThemeStore } from '../store/useThemeStore';
 import { motion } from 'framer-motion';
 
 export const DeliveryLabels = () => {
   const { user } = useAuthStore();
+  const { theme, accentColor } = useThemeStore();
+  const isLight = theme === 'light';
   
   const mockOrder = {
     id: '#1024',
@@ -31,10 +34,18 @@ export const DeliveryLabels = () => {
     <div className="max-w-4xl space-y-10">
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h2 className="text-3xl font-serif text-white mb-2">Etiquetas de Entrega</h2>
-          <p className="text-zinc-500">Gere impressos profissionais para seus pedidos do WhatsApp.</p>
+          <h2 className={`text-3xl font-serif mb-2 ${isLight ? 'text-slate-900' : 'text-white'}`}>
+            Etiquetas de Entrega
+          </h2>
+          <p className={isLight ? 'text-slate-500' : 'text-zinc-500'}>
+            Gere impressos profissionais para seus pedidos do WhatsApp.
+          </p>
         </div>
-        <button className="bg-white text-zinc-950 font-bold py-3 px-6 rounded-2xl flex items-center gap-2 hover:bg-zinc-200 transition-all shadow-xl">
+        <button className={`font-bold py-3 px-6 rounded-2xl flex items-center gap-2 transition-all shadow-xl ${
+          isLight 
+            ? 'bg-slate-900 text-white hover:bg-slate-800' 
+            : 'bg-white text-zinc-950 hover:bg-zinc-200'
+        }`}>
            <Printer className="w-5 h-5" />
            Imprimir Lote
         </button>
@@ -43,7 +54,9 @@ export const DeliveryLabels = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
         {/* Preview da Etiqueta */}
         <div className="space-y-6">
-          <p className="text-xs text-zinc-500 font-bold uppercase tracking-widest">Amostra da Etiqueta (Térmica/Papel)</p>
+          <p className={`text-xs font-bold uppercase tracking-widest ${isLight ? 'text-slate-500' : 'text-zinc-500'}`}>
+            Amostra da Etiqueta (Térmica/Papel)
+          </p>
           
           <motion.div 
             initial={{ opacity: 0, scale: 0.9 }}
@@ -95,48 +108,74 @@ export const DeliveryLabels = () => {
         </div>
 
         {/* Configurações */}
-        <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-8 space-y-8">
-           <h3 className="text-xl font-bold text-white flex items-center gap-3">
-              <Tag className="w-6 h-6 text-amber-500" /> Formatos de Impressão
+        <div className={`rounded-3xl p-8 space-y-8 border ${
+          isLight ? 'bg-white border-slate-200' : 'bg-zinc-900 border-zinc-800'
+        }`}>
+           <h3 className={`text-xl font-bold flex items-center gap-3 ${isLight ? 'text-slate-900' : 'text-white'}`}>
+              <Tag className="w-6 h-6" style={{ color: accentColor }} /> Formatos de Impressão
            </h3>
 
            <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 bg-zinc-950 rounded-2xl border-2 border-amber-500/50">
+              <div className={`flex items-center justify-between p-4 rounded-2xl border-2 ${
+                isLight ? 'bg-slate-50' : 'bg-zinc-950'
+              }`}
+              style={{ borderColor: `${accentColor}80` }}
+              >
                  <div className="flex items-center gap-3">
-                    <Truck className="w-5 h-5 text-amber-500" />
+                    <Truck className="w-5 h-5" style={{ color: accentColor }} />
                     <div>
-                       <p className="text-sm font-bold text-white">Impressão Térmica (80mm)</p>
-                       <p className="text-[10px] text-zinc-500">Ideal para iFood e pedidos físicos.</p>
+                       <p className={`text-sm font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                         Impressão Térmica (80mm)
+                       </p>
+                       <p className={`text-[10px] ${isLight ? 'text-slate-500' : 'text-zinc-500'}`}>
+                         Ideal para iFood e pedidos físicos.
+                       </p>
                     </div>
                  </div>
-                 <CheckCircle className="w-5 h-5 text-amber-500" />
+                 <CheckCircle className="w-5 h-5" style={{ color: accentColor }} />
               </div>
 
-              <div className="flex items-center justify-between p-4 bg-zinc-950 rounded-2xl border border-zinc-800 opacity-50 grayscale">
+              <div className={`flex items-center justify-between p-4 rounded-2xl border opacity-50 grayscale ${
+                isLight ? 'bg-slate-50 border-slate-200' : 'bg-zinc-950 border-zinc-800'
+              }`}>
                  <div className="flex items-center gap-3">
-                    <Smartphone className="w-5 h-5 text-zinc-500" />
+                    <Smartphone className={`w-5 h-5 ${isLight ? 'text-slate-400' : 'text-zinc-500'}`} />
                     <div>
-                       <p className="text-sm font-bold text-white">Papel A4 (4 por página)</p>
-                       <p className="text-[10px] text-zinc-500">Ideal para impressoras domésticas.</p>
+                       <p className={`text-sm font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                         Papel A4 (4 por página)
+                       </p>
+                       <p className={`text-[10px] ${isLight ? 'text-slate-500' : 'text-zinc-500'}`}>
+                         Ideal para impressoras domésticas.
+                       </p>
                     </div>
                  </div>
-                 <div className="w-5 h-5 border border-zinc-800 rounded-full" />
+                 <div className={`w-5 h-5 border rounded-full ${isLight ? 'border-slate-300' : 'border-zinc-800'}`} />
               </div>
 
-              <div className="pt-6 border-t border-zinc-800 space-y-4">
-                 <h4 className="text-xs text-zinc-500 font-bold uppercase">Informações Extras</h4>
+              <div className={`pt-6 border-t space-y-4 ${isLight ? 'border-slate-200' : 'border-zinc-800'}`}>
+                 <h4 className={`text-xs font-bold uppercase ${isLight ? 'text-slate-500' : 'text-zinc-500'}`}>
+                   Informações Extras
+                 </h4>
                  <div className="flex gap-2">
-                    <input type="checkbox" className="w-4 h-4 accent-amber-500 rounded" checked />
-                    <span className="text-xs text-zinc-300">Incluir Pix para Pagamento</span>
+                    <input type="checkbox" className="w-4 h-4 rounded" style={{ accentColor }} defaultChecked />
+                    <span className={`text-xs ${isLight ? 'text-slate-600' : 'text-zinc-300'}`}>
+                      Incluir Pix para Pagamento
+                    </span>
                  </div>
                  <div className="flex gap-2">
-                    <input type="checkbox" className="w-4 h-4 accent-amber-500 rounded" checked />
-                    <span className="text-xs text-zinc-300">Incluir cupom de próxima compra</span>
+                    <input type="checkbox" className="w-4 h-4 rounded" style={{ accentColor }} defaultChecked />
+                    <span className={`text-xs ${isLight ? 'text-slate-600' : 'text-zinc-300'}`}>
+                      Incluir cupom de próxima compra
+                    </span>
                  </div>
               </div>
            </div>
 
-           <button className="w-full bg-zinc-800 border border-zinc-700 text-white py-4 rounded-2xl text-xs font-bold uppercase tracking-widest hover:bg-zinc-700 transition-all flex items-center justify-center gap-2">
+           <button className={`w-full py-4 rounded-2xl text-xs font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2 border ${
+             isLight 
+               ? 'bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200' 
+               : 'bg-zinc-800 border-zinc-700 text-white hover:bg-zinc-700'
+           }`}>
               Ver Guia de Configuração <ExternalLink className="w-4 h-4" />
            </button>
         </div>

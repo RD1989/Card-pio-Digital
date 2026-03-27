@@ -1,5 +1,3 @@
-
-
 interface Props {
   categories: string[];
   activeCategory: string;
@@ -14,11 +12,16 @@ export const CategoryNav = ({ categories, activeCategory, onSelect }: Props) => 
           <button
             key={cat}
             onClick={() => onSelect(cat)}
-            className={`whitespace-nowrap px-5 py-2 rounded-2xl text-[12px] font-bold uppercase tracking-wider transition-all duration-300 ${
+            className="whitespace-nowrap px-5 py-2 rounded-2xl text-[12px] font-bold uppercase tracking-wider transition-all duration-300"
+            style={
               activeCategory === cat
-                ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20'
-                : 'bg-zinc-900/50 text-zinc-500 border border-zinc-800'
-            }`}
+                ? {
+                    backgroundColor: 'var(--accent)',
+                    color: '#000',
+                    boxShadow: '0 4px 16px color-mix(in srgb, var(--accent) 30%, transparent)',
+                  }
+                : {}
+            }
           >
             {cat}
           </button>

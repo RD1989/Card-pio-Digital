@@ -1,12 +1,30 @@
 {
-  "rewrites": [
+  "version": 2,
+  "framework": "vite",
+  "functions": {
+    "api/index.php": {
+      "runtime": "vercel-php@0.7.0",
+      "memory": 1024,
+      "maxDuration": 10
+    }
+  },
+  "routes": [
     {
-      "source": "/api/(.*)",
-      "destination": "https://api.seudominio.com.br/api/$1"
+      "src": "/api/(.*)",
+      "dest": "/api/index.php"
     },
     {
-      "source": "/(.*)",
-      "destination": "/index.html"
+      "src": "/assets/(.*)",
+      "dest": "/assets/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
     }
-  ]
+  ],
+  "env": {
+    "APP_ENV": "production",
+    "APP_DEBUG": "false",
+    "LOG_CHANNEL": "stderr"
+  }
 }

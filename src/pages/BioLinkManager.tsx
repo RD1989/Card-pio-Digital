@@ -7,14 +7,19 @@ import {
   Share2,
   Copy,
   Layout,
-  Save
+  Save,
+  Check
 } from 'lucide-react';
 import { useAuthStore } from '../store/useAuthStore';
+import { useThemeStore } from '../store/useThemeStore';
 import api from '../services/api';
 
 export const BioLinkManager = () => {
   const { user } = useAuthStore();
+  const { theme, accentColor } = useThemeStore();
+  const isLight = theme === 'light';
   const [loading, setLoading] = useState(false);
+  const [copied, setCopied] = useState(false);
   const [links, setLinks] = useState({
     instagram: '',
     maps: '',
@@ -65,43 +70,61 @@ export const BioLinkManager = () => {
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(bioUrl);
-    alert('Link copiado!');
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   return (
     <div className="max-w-4xl space-y-10">
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h2 className="text-3xl font-serif text-white mb-2">Link na Bio</h2>
-          <p className="text-zinc-500">Sua página central para o Instagram e Redes Sociais.</p>
+          <h2 className={`text-3xl font-serif mb-2 ${isLight ? 'text-slate-900' : 'text-white'}`}>
+            Link na Bio
+          </h2>
+          <p className={isLight ? 'text-slate-500' : 'text-zinc-500'}>
+            Sua página central para o Instagram e Redes Sociais.
+          </p>
         </div>
-        <div className="flex items-center gap-3 bg-zinc-900 border border-zinc-800 p-2 pl-4 rounded-2xl overflow-hidden max-w-full">
-           <span className="text-xs text-zinc-500 font-mono truncate hidden sm:block">{bioUrl}</span>
+        <div className={`flex items-center gap-3 p-2 pl-4 rounded-2xl overflow-hidden max-w-full border ${
+          isLight ? 'bg-white border-slate-200' : 'bg-zinc-900 border-zinc-800'
+        }`}>
+           <span className={`text-xs font-mono truncate hidden sm:block ${isLight ? 'text-slate-500' : 'text-zinc-500'}`}>
+             {bioUrl}
+           </span>
            <button 
              onClick={copyToClipboard}
-             className="bg-amber-500 text-zinc-950 p-2 rounded-xl hover:bg-amber-400 transition-all flex-shrink-0"
+             className="p-2 rounded-xl transition-all flex-shrink-0 text-zinc-950"
+             style={{ backgroundColor: accentColor }}
            >
-             <Copy className="w-4 h-4" />
+             {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
            </button>
         </div>
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
         <div className="space-y-6">
-          <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6 space-y-6">
-            <h3 className="text-lg font-bold text-white flex items-center gap-2">
-              <Layout className="w-5 h-5 text-amber-500" /> Canais de Contato
+          <div className={`rounded-3xl p-6 space-y-6 border ${
+            isLight ? 'bg-white border-slate-200' : 'bg-zinc-900 border-zinc-800'
+          }`}>
+            <h3 className={`text-lg font-bold flex items-center gap-2 ${isLight ? 'text-slate-900' : 'text-white'}`}>
+              <Layout className="w-5 h-5" style={{ color: accentColor }} /> Canais de Contato
             </h3>
 
             <div className="space-y-4">
               <div className="space-y-2">
-                <label className="text-xs text-zinc-500 font-bold uppercase">Instagram</label>
+                <label className={`text-xs font-bold uppercase ${isLight ? 'text-slate-500' : 'text-zinc-500'}`}>
+                  Instagram
+                </label>
                 <div className="relative">
-                  <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-600" />
+                  <Globe className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 ${isLight ? 'text-slate-400' : 'text-zinc-600'}`} />
                   <input 
                     type="text" 
                     placeholder="@seu_restaurante"
-                    className="w-full bg-zinc-950 border border-zinc-800 rounded-2xl py-3 pl-12 pr-4 text-white outline-none focus:border-zinc-700"
+                    className={`w-full rounded-2xl py-3 pl-12 pr-4 outline-none border ${
+                      isLight 
+                        ? 'bg-slate-50 border-slate-200 text-slate-900 focus:border-slate-300' 
+                        : 'bg-zinc-950 border-zinc-800 text-white focus:border-zinc-700'
+                    }`}
                     value={links.instagram}
                     onChange={(e) => setLinks({ ...links, instagram: e.target.value })}
                   />
@@ -109,12 +132,18 @@ export const BioLinkManager = () => {
               </div>
 
               <div className="space-y-2">
-                <label className="text-xs text-zinc-500 font-bold uppercase">Bio Curta</label>
+                <label className={`text-xs font-bold uppercase ${isLight ? 'text-slate-500' : 'text-zinc-500'}`}>
+                  Bio Curta
+                </label>
                 <div className="relative">
-                  <Layout className="absolute left-4 top-4 w-5 h-5 text-zinc-600" />
+                  <Layout className={`absolute left-4 top-4 w-5 h-5 ${isLight ? 'text-slate-400' : 'text-zinc-600'}`} />
                   <textarea 
                     placeholder="Descrição para a Bio"
-                    className="w-full bg-zinc-950 border border-zinc-800 rounded-2xl py-3 pl-12 pr-4 text-white outline-none focus:border-zinc-700 min-h-[100px]"
+                    className={`w-full rounded-2xl py-3 pl-12 pr-4 outline-none min-h-[100px] border ${
+                      isLight 
+                        ? 'bg-slate-50 border-slate-200 text-slate-900 focus:border-slate-300' 
+                        : 'bg-zinc-950 border-zinc-800 text-white focus:border-zinc-700'
+                    }`}
                     value={links.bio}
                     onChange={(e) => setLinks({ ...links, bio: e.target.value })}
                   />
@@ -122,13 +151,19 @@ export const BioLinkManager = () => {
               </div>
 
               <div className="space-y-2">
-                <label className="text-xs text-zinc-500 font-bold uppercase">Localização (Google Maps)</label>
+                <label className={`text-xs font-bold uppercase ${isLight ? 'text-slate-500' : 'text-zinc-500'}`}>
+                  Localização (Google Maps)
+                </label>
                 <div className="relative">
-                  <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-600" />
+                  <MapPin className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 ${isLight ? 'text-slate-400' : 'text-zinc-600'}`} />
                   <input 
                     type="text" 
                     placeholder="URL do Google Maps"
-                    className="w-full bg-zinc-950 border border-zinc-800 rounded-2xl py-3 pl-12 pr-4 text-white outline-none focus:border-zinc-700"
+                    className={`w-full rounded-2xl py-3 pl-12 pr-4 outline-none border ${
+                      isLight 
+                        ? 'bg-slate-50 border-slate-200 text-slate-900 focus:border-slate-300' 
+                        : 'bg-zinc-950 border-zinc-800 text-white focus:border-zinc-700'
+                    }`}
                     value={links.maps}
                     onChange={(e) => setLinks({ ...links, maps: e.target.value })}
                   />
@@ -136,13 +171,19 @@ export const BioLinkManager = () => {
               </div>
 
               <div className="space-y-2">
-                <label className="text-xs text-zinc-500 font-bold uppercase">WhatsApp de Reservas</label>
+                <label className={`text-xs font-bold uppercase ${isLight ? 'text-slate-500' : 'text-zinc-500'}`}>
+                  WhatsApp de Reservas
+                </label>
                 <div className="relative">
-                  <MessageCircle className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-600" />
+                  <MessageCircle className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 ${isLight ? 'text-slate-400' : 'text-zinc-600'}`} />
                   <input 
                     type="text" 
                     placeholder="(00) 00000-0000"
-                    className="w-full bg-zinc-950 border border-zinc-800 rounded-2xl py-3 pl-12 pr-4 text-white outline-none focus:border-zinc-700"
+                    className={`w-full rounded-2xl py-3 pl-12 pr-4 outline-none border ${
+                      isLight 
+                        ? 'bg-slate-50 border-slate-200 text-slate-900 focus:border-slate-300' 
+                        : 'bg-zinc-950 border-zinc-800 text-white focus:border-zinc-700'
+                    }`}
                     value={links.whatsapp}
                     onChange={(e) => setLinks({ ...links, whatsapp: e.target.value })}
                   />
@@ -153,7 +194,11 @@ export const BioLinkManager = () => {
             <button
                onClick={handleSave}
                disabled={loading}
-               className="w-full bg-white text-zinc-950 font-bold py-4 rounded-2xl flex items-center justify-center gap-2 hover:bg-zinc-200 transition-all active:scale-95"
+               className={`w-full font-bold py-4 rounded-2xl flex items-center justify-center gap-2 transition-all active:scale-95 ${
+                 isLight 
+                   ? 'bg-slate-900 text-white hover:bg-slate-800' 
+                   : 'bg-white text-zinc-950 hover:bg-zinc-200'
+               }`}
             >
                <Save className="w-5 h-5" />
                {loading ? 'Salvando...' : 'Salvar Alterações'}
@@ -162,7 +207,9 @@ export const BioLinkManager = () => {
         </div>
 
         <div className="flex flex-col items-center">
-          <p className="text-xs text-zinc-500 font-bold uppercase mb-4 tracking-widest">Preview em Tempo Real</p>
+          <p className={`text-xs font-bold uppercase mb-4 tracking-widest ${isLight ? 'text-slate-500' : 'text-zinc-500'}`}>
+            Preview em Tempo Real
+          </p>
           <div className="w-[280px] h-[580px] bg-zinc-950 border-[8px] border-zinc-900 rounded-[3rem] shadow-2xl relative overflow-hidden flex flex-col">
              <div className="h-32 bg-zinc-900 relative">
                  <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 w-20 h-20 rounded-full border-4 border-zinc-950 bg-zinc-800 overflow-hidden shadow-xl">
@@ -176,7 +223,10 @@ export const BioLinkManager = () => {
              </div>
 
              <div className="mt-8 px-4 space-y-3">
-                <div className="w-full bg-white text-zinc-950 py-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-lg">
+                <div 
+                  className="w-full py-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-lg text-zinc-950"
+                  style={{ backgroundColor: accentColor }}
+                >
                    Ver Cardápio Digital <ExternalLink className="w-3 h-3" />
                 </div>
                 {links.whatsapp && (

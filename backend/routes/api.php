@@ -11,6 +11,7 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::get('/categories', [\App\Http\Controllers\CategoryController::class, 'index']);
 Route::get('/products', [\App\Http\Controllers\ProductController::class, 'index']);
 Route::post('/analytics/view', [\App\Http\Controllers\AnalyticsController::class, 'view']);
+Route::get('/restaurants/{slug}', [\App\Http\Controllers\RestaurantController::class, 'showPublic']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', function (Request $request) {
@@ -24,6 +25,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/restaurant', [\App\Http\Controllers\RestaurantController::class, 'show']);
     Route::post('/restaurant', [\App\Http\Controllers\RestaurantController::class, 'update']);
+
+    Route::get('/admin/clients', [\App\Http\Controllers\RestaurantController::class, 'index']);
+    Route::post('/admin/clients/{restaurant}/toggle', [\App\Http\Controllers\RestaurantController::class, 'toggleStatus']);
 
     Route::apiResource('categories', \App\Http\Controllers\CategoryController::class)->except(['index']);
     Route::apiResource('products', \App\Http\Controllers\ProductController::class)->except(['index']);

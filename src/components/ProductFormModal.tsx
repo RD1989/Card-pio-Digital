@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { X, Save, Loader2, DollarSign, Tag, AlignLeft, Image as ImageIcon, Star } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useThemeStore } from '../store/useThemeStore';
 import api from '../services/api';
 import type { Product, Category } from '../types';
 
@@ -22,6 +23,8 @@ const emptyForm = {
 };
 
 export const ProductFormModal = ({ product, onClose, onSaved }: ProductFormModalProps) => {
+  const { theme, accentColor } = useThemeStore();
+  const isLight = theme === 'light';
   const [form, setForm] = useState({ ...emptyForm });
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
@@ -101,6 +104,12 @@ export const ProductFormModal = ({ product, onClose, onSaved }: ProductFormModal
     }
   };
 
+  const inputClasses = `w-full rounded-2xl py-3 pr-4 outline-none transition-colors border ${
+    isLight 
+      ? 'bg-slate-50 border-slate-200 text-slate-900 focus:border-slate-300' 
+      : 'bg-zinc-950 border-zinc-800 text-white focus:border-zinc-600'
+  }`;
+
   return (
     <AnimatePresence>
       <motion.div
@@ -115,16 +124,24 @@ export const ProductFormModal = ({ product, onClose, onSaved }: ProductFormModal
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95 }}
           transition={{ type: 'spring', damping: 20, stiffness: 300 }}
-          className="bg-zinc-900 border border-zinc-800 rounded-3xl w-full max-w-lg shadow-2xl my-4"
+          className={`rounded-3xl w-full max-w-lg shadow-2xl my-4 border ${
+            isLight ? 'bg-white border-slate-200' : 'bg-zinc-900 border-zinc-800'
+          }`}
         >
           {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-zinc-800">
-            <h3 className="text-xl font-bold text-white">
+          <div className={`flex items-center justify-between p-6 border-b ${
+            isLight ? 'border-slate-200' : 'border-zinc-800'
+          }`}>
+            <h3 className={`text-xl font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>
               {product ? 'Editar Produto' : 'Novo Produto'}
             </h3>
             <button
               onClick={onClose}
-              className="p-2 rounded-xl text-zinc-500 hover:text-white hover:bg-zinc-800 transition-all"
+              className={`p-2 rounded-xl transition-all ${
+                isLight 
+                  ? 'text-slate-400 hover:text-slate-900 hover:bg-slate-100' 
+                  : 'text-zinc-500 hover:text-white hover:bg-zinc-800'
+              }`}
             >
               <X className="w-6 h-6" />
             </button>
@@ -134,9 +151,11 @@ export const ProductFormModal = ({ product, onClose, onSaved }: ProductFormModal
           <form onSubmit={handleSubmit} className="p-6 space-y-5">
             {/* Nome */}
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-zinc-400 uppercase tracking-wide">Nome do Produto *</label>
+              <label className={`text-xs font-bold uppercase tracking-wide ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>
+                Nome do Produto *
+              </label>
               <div className="relative">
-                <Tag className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600" />
+                <Tag className={`absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 ${isLight ? 'text-slate-400' : 'text-zinc-600'}`} />
                 <input
                   type="text"
                   name="name"
@@ -144,23 +163,25 @@ export const ProductFormModal = ({ product, onClose, onSaved }: ProductFormModal
                   value={form.name}
                   onChange={handleChange}
                   placeholder="Ex: Hambúrguer Artesanal"
-                  className="w-full bg-zinc-950 border border-zinc-800 rounded-2xl py-3 pl-11 pr-4 text-white outline-none focus:border-amber-500/50 transition-colors"
+                  className={`${inputClasses} pl-11`}
                 />
               </div>
             </div>
 
             {/* Descrição */}
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-zinc-400 uppercase tracking-wide">Descrição</label>
+              <label className={`text-xs font-bold uppercase tracking-wide ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>
+                Descrição
+              </label>
               <div className="relative">
-                <AlignLeft className="absolute left-4 top-4 w-4 h-4 text-zinc-600" />
+                <AlignLeft className={`absolute left-4 top-4 w-4 h-4 ${isLight ? 'text-slate-400' : 'text-zinc-600'}`} />
                 <textarea
                   name="description"
                   value={form.description}
                   onChange={handleChange}
                   placeholder="Ingredientes e diferenciais..."
                   rows={3}
-                  className="w-full bg-zinc-950 border border-zinc-800 rounded-2xl py-3 pl-11 pr-4 text-white outline-none focus:border-amber-500/50 transition-colors resize-none"
+                  className={`${inputClasses} pl-11 resize-none`}
                 />
               </div>
             </div>
@@ -168,9 +189,11 @@ export const ProductFormModal = ({ product, onClose, onSaved }: ProductFormModal
             {/* Preços */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-zinc-400 uppercase tracking-wide">Preço *</label>
+                <label className={`text-xs font-bold uppercase tracking-wide ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>
+                  Preço *
+                </label>
                 <div className="relative">
-                  <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600" />
+                  <DollarSign className={`absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 ${isLight ? 'text-slate-400' : 'text-zinc-600'}`} />
                   <input
                     type="number"
                     name="price"
@@ -180,14 +203,16 @@ export const ProductFormModal = ({ product, onClose, onSaved }: ProductFormModal
                     value={form.price}
                     onChange={handleChange}
                     placeholder="0,00"
-                    className="w-full bg-zinc-950 border border-zinc-800 rounded-2xl py-3 pl-11 pr-4 text-white outline-none focus:border-amber-500/50 transition-colors"
+                    className={`${inputClasses} pl-11`}
                   />
                 </div>
               </div>
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-zinc-400 uppercase tracking-wide">Preço Original</label>
+                <label className={`text-xs font-bold uppercase tracking-wide ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>
+                  Preço Original
+                </label>
                 <div className="relative">
-                  <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600" />
+                  <DollarSign className={`absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 ${isLight ? 'text-slate-400' : 'text-zinc-600'}`} />
                   <input
                     type="number"
                     name="original_price"
@@ -196,7 +221,7 @@ export const ProductFormModal = ({ product, onClose, onSaved }: ProductFormModal
                     value={form.original_price}
                     onChange={handleChange}
                     placeholder="Riscado"
-                    className="w-full bg-zinc-950 border border-zinc-800 rounded-2xl py-3 pl-11 pr-4 text-white outline-none focus:border-amber-500/50 transition-colors"
+                    className={`${inputClasses} pl-11`}
                   />
                 </div>
               </div>
@@ -204,39 +229,52 @@ export const ProductFormModal = ({ product, onClose, onSaved }: ProductFormModal
 
             {/* URL da Imagem */}
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-zinc-400 uppercase tracking-wide">URL da Imagem</label>
+              <label className={`text-xs font-bold uppercase tracking-wide ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>
+                URL da Imagem
+              </label>
               <div className="relative">
-                <ImageIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600" />
+                <ImageIcon className={`absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 ${isLight ? 'text-slate-400' : 'text-zinc-600'}`} />
                 <input
                   type="url"
                   name="image_url"
                   value={form.image_url}
                   onChange={handleChange}
                   placeholder="https://..."
-                  className="w-full bg-zinc-950 border border-zinc-800 rounded-2xl py-3 pl-11 pr-4 text-white outline-none focus:border-amber-500/50 transition-colors"
+                  className={`${inputClasses} pl-11`}
                 />
               </div>
               {form.image_url && (
-                <img src={form.image_url} alt="Preview" className="w-full h-28 object-cover rounded-2xl mt-2 border border-zinc-800" onError={(e) => (e.currentTarget.style.display = 'none')} />
+                <img 
+                  src={form.image_url} 
+                  alt="Preview" 
+                  className={`w-full h-28 object-cover rounded-2xl mt-2 border ${
+                    isLight ? 'border-slate-200' : 'border-zinc-800'
+                  }`} 
+                  onError={(e) => (e.currentTarget.style.display = 'none')} 
+                />
               )}
             </div>
 
             {/* Categoria */}
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-zinc-400 uppercase tracking-wide">Categoria *</label>
+              <label className={`text-xs font-bold uppercase tracking-wide ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>
+                Categoria *
+              </label>
               {loadingCats ? (
-                <div className="flex items-center gap-2 text-zinc-500 text-sm py-3">
+                <div className={`flex items-center gap-2 text-sm py-3 ${isLight ? 'text-slate-500' : 'text-zinc-500'}`}>
                   <Loader2 className="w-4 h-4 animate-spin" /> Carregando categorias...
                 </div>
               ) : categories.length === 0 ? (
-                <p className="text-amber-500 text-sm py-2">⚠️ Crie uma categoria antes de adicionar produtos.</p>
+                <p className="text-sm py-2" style={{ color: accentColor }}>
+                  ⚠️ Crie uma categoria antes de adicionar produtos.
+                </p>
               ) : (
                 <select
                   name="category_id"
                   required
                   value={form.category_id}
                   onChange={handleChange}
-                  className="w-full bg-zinc-950 border border-zinc-800 rounded-2xl py-3 px-4 text-white outline-none focus:border-amber-500/50 transition-colors appearance-none cursor-pointer"
+                  className={`${inputClasses} px-4 appearance-none cursor-pointer`}
                 >
                   <option value="">Selecione...</option>
                   {categories.map(cat => (
@@ -251,20 +289,24 @@ export const ProductFormModal = ({ product, onClose, onSaved }: ProductFormModal
               <label className="flex items-center gap-3 cursor-pointer">
                 <div
                   onClick={() => setForm(f => ({ ...f, is_available: !f.is_available }))}
-                  className={`w-12 h-6 rounded-full transition-colors relative ${form.is_available ? 'bg-emerald-500' : 'bg-zinc-700'}`}
+                  className={`w-12 h-6 rounded-full transition-colors relative ${form.is_available ? 'bg-emerald-500' : isLight ? 'bg-slate-300' : 'bg-zinc-700'}`}
                 >
                   <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${form.is_available ? 'left-7' : 'left-1'}`} />
                 </div>
-                <span className="text-sm text-zinc-300">Disponível</span>
+                <span className={`text-sm ${isLight ? 'text-slate-600' : 'text-zinc-300'}`}>Disponível</span>
               </label>
               <label className="flex items-center gap-3 cursor-pointer">
                 <div
                   onClick={() => setForm(f => ({ ...f, is_upsell: !f.is_upsell }))}
-                  className={`w-12 h-6 rounded-full transition-colors relative ${form.is_upsell ? 'bg-amber-500' : 'bg-zinc-700'}`}
+                  className="w-12 h-6 rounded-full transition-colors relative"
+                  style={{ backgroundColor: form.is_upsell ? accentColor : isLight ? '#cbd5e1' : '#3f3f46' }}
                 >
                   <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${form.is_upsell ? 'left-7' : 'left-1'}`} />
                 </div>
-                <span className="text-sm text-zinc-300 flex items-center gap-1.5"><Star className="w-3.5 h-3.5 text-amber-500" />Upsell</span>
+                <span className={`text-sm flex items-center gap-1.5 ${isLight ? 'text-slate-600' : 'text-zinc-300'}`}>
+                  <Star className="w-3.5 h-3.5" style={{ color: accentColor }} />
+                  Upsell
+                </span>
               </label>
             </div>
 
@@ -273,14 +315,19 @@ export const ProductFormModal = ({ product, onClose, onSaved }: ProductFormModal
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 py-3 rounded-2xl border border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-700 transition-all"
+                className={`flex-1 py-3 rounded-2xl border transition-all ${
+                  isLight 
+                    ? 'border-slate-200 text-slate-500 hover:text-slate-900 hover:border-slate-300' 
+                    : 'border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-700'
+                }`}
               >
                 Cancelar
               </button>
               <button
                 type="submit"
                 disabled={loading || loadingCats || categories.length === 0}
-                className="flex-1 py-3 rounded-2xl bg-amber-500 text-zinc-950 font-bold hover:bg-amber-400 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
+                className="flex-1 py-3 rounded-2xl font-bold transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2 text-zinc-950"
+                style={{ backgroundColor: accentColor }}
               >
                 {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
                 {loading ? 'Salvando...' : 'Salvar Produto'}

@@ -28,9 +28,17 @@ export const PublicBioLink = () => {
   useEffect(() => {
     const fetchBio = async () => {
       try {
-        // Busca configurações via slug
-        const response = await api.get(`/settings?slug=${slug}`);
-        setData(response.data);
+        const response = await api.get(`/restaurants/${slug}`);
+        const r = response.data;
+        setData({
+          name: r.name,
+          bio: r.bio,
+          address: r.address,
+          logo_url: r.logo_url,
+          whatsapp: r.whatsapp_number,
+          maps: r.social_links?.maps,
+          instagram: r.social_links?.instagram,
+        });
       } catch (error) {
         console.error('Erro ao buscar bio:', error);
       } finally {

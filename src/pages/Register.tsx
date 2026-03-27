@@ -24,8 +24,9 @@ export const Register = () => {
       const response = await api.post('/register', formData);
       setAuth(response.data.user, response.data.token);
       navigate('/admin');
-    } catch (error: any) {
-      const message = error.response?.data?.message || 'Erro ao criar conta. Verifique os dados.';
+    } catch (error: unknown) {
+      const axiosError = error as { response?: { data?: { message?: string } } };
+      const message = axiosError.response?.data?.message || 'Erro ao criar conta. Verifique os dados.';
       alert(message);
     } finally {
       setLoading(false);

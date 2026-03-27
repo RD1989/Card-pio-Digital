@@ -22,7 +22,7 @@ export const AISettings = () => {
         ai_model: model
       });
       alert('Configurações de IA enviadas com sucesso!');
-    } catch (error) {
+    } catch {
       alert('Erro ao salvar as configurações.');
     } finally {
       setLoading(false);

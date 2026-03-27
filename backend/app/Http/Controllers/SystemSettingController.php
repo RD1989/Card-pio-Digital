@@ -25,6 +25,10 @@ class SystemSettingController extends Controller
      */
     public function update(Request $request): JsonResponse
     {
+        if (!$request->user()->is_super_admin) {
+            return response()->json(['message' => 'Acesso negado. Apenas administradores podem alterar configurações globais.'], 403);
+        }
+
         $settings = $request->all();
         
         foreach ($settings as $key => $value) {
