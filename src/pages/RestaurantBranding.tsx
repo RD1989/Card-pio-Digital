@@ -28,7 +28,8 @@ export const RestaurantBranding = () => {
   const getImageUrl = (url?: string) => {
     if (!url) return '';
     if (url.startsWith('http') || url.startsWith('data:')) return url;
-    return `http://localhost:8000${url}`;
+    const baseUrl = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api').replace('/api', '');
+    return `${baseUrl}${url}`;
   };
  
   const [logoPreview, setLogoPreview] = useState(getImageUrl(user?.restaurant?.logo_url));

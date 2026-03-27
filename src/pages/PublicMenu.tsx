@@ -74,7 +74,8 @@ export const PublicMenu = () => {
   const getImageUrl = (url?: string) => {
     if (!url) return '';
     if (url.startsWith('http')) return url;
-    return `http://localhost:8000${url}`;
+    const baseUrl = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api').replace('/api', '');
+    return `${baseUrl}${url}`;
   };
 
   if (loading) {
