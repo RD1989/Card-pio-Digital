@@ -95,13 +95,18 @@ export const ColorWheelPicker = ({ value, onChange, size = 200 }: ColorWheelPick
         const angle = h * 360 * Math.PI / 180;
         const dist = Math.min(s * 0.7 + (1 - l) * 0.3, 1) * radius;
         
-        setMarkerPos({
+        const newPos = {
           x: centerX + Math.cos(angle) * dist,
           y: centerY + Math.sin(angle) * dist
-        });
+        };
+        
+        // Só atualiza se a posição mudou significativamente para evitar loops
+        if (Math.abs(markerPos.x - newPos.x) > 1 || Math.abs(markerPos.y - newPos.y) > 1) {
+          setMarkerPos(newPos);
+        }
       }
     }
-  }, [value, size, isDragging]);
+  }, [value, size, isDragging, markerPos.x, markerPos.y]);
 
   const getColorAtPosition = (x: number, y: number) => {
     const canvas = canvasRef.current;

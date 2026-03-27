@@ -57,12 +57,7 @@ export const RestaurantBranding = () => {
     document.documentElement.style.setProperty('--accent', color);
   };
 
-  const handleCustomColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const color = e.target.value;
-    setCustomColor(color);
-    setAccentColor(color);
-    document.documentElement.style.setProperty('--accent', color);
-  };
+  // ... handleColorChange j faz o trabalho
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'logo' | 'banner') => {
     const file = e.target.files?.[0];

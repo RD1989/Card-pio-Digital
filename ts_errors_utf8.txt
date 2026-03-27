@@ -1,0 +1,1 @@
+﻿src/pages/RestaurantBranding.tsx(60,9): error TS6133: 'handleCustomColorChange' is declared but its value is never read.

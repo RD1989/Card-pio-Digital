@@ -74,7 +74,7 @@ export const MenuImportModal = ({ onClose, onImported }: MenuImportModalProps) =
     } else {
       setFilePreview(null);
     }
-  }, []);
+  }, [validateFile]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();

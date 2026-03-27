@@ -121,7 +121,7 @@ export const AdminDashboard = () => {
                 <YAxis stroke="#52525b" fontSize={12} tickLine={false} axisLine={false} allowDecimals={false} />
                 <Tooltip 
                   contentStyle={{ backgroundColor: '#18181b', border: '1px solid #27272a', borderRadius: '16px' }}
-                  itemStyle={{ color: '#white' }}
+                  itemStyle={{ color: 'white' }}
                 />
                 <Area 
                   type="monotone" 
