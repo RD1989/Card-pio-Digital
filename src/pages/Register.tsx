@@ -27,6 +27,7 @@ export const Register = () => {
     } catch (error: unknown) {
       const axiosError = error as { response?: { data?: { message?: string } } };
       const message = axiosError.response?.data?.message || 'Erro ao criar conta. Verifique os dados.';
+      console.error('Erro na requisição /register:', error);
       alert(message);
     } finally {
       setLoading(false);
