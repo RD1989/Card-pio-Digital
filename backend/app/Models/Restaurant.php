@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Restaurant extends Model
@@ -21,6 +22,7 @@ class Restaurant extends Model
         'address',
         'theme_color',
         'is_active',
+        'plan',
     ];
 
     protected $casts = [
@@ -39,5 +41,21 @@ class Restaurant extends Model
     public function categories(): HasMany
     {
         return $this->hasMany(Category::class)->orderBy('sort_order');
+    }
+
+    public function products(): HasManyThrough
+    {
+        return $this->hasManyThrough(Product::class, Category::class);
+    }
+
+    public function orders(): HasMany
+    {
+        return $this->hasMany(RestaurantOrder::class);
+    }
+
+    public function getPlanConfigAttribute()
+    {
+        $plan = $this->plan ?? 'free';
+        return config("plans.{$plan}");
     }
 }

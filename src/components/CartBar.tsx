@@ -1,18 +1,45 @@
-import { ShoppingCart, ChevronRight } from 'lucide-react';
+import { ShoppingCart, ChevronRight, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCartStore } from '../store/useCartStore';
-import { useAuthStore } from '../store/useAuthStore';
+import { useState } from 'react';
+import api from '../services/api';
 
-export const CartBar = () => {
+interface CartBarProps {
+  whatsappNumber?: string;
+  restaurantSlug?: string;
+}
+
+export const CartBar = ({ whatsappNumber, restaurantSlug }: CartBarProps) => {
   const { items, totalItems, totalPrice } = useCartStore();
-  const { user } = useAuthStore();
+  const [loading, setLoading] = useState(false);
   const count = totalItems();
   const total = totalPrice();
 
-  const generateWhatsAppLink = () => {
-    // Usa o WhatsApp do restaurante se disponível, senão fallback
-    const restaurantPhone = user?.restaurant?.whatsapp_number || '';
-    const phone = restaurantPhone.replace(/\D/g, '') || '5511999999999';
+  const generateWhatsAppLink = async () => {
+    setLoading(true);
+    
+    // Registrar o pedido no backend para validar limites
+    try {
+      await api.post('/analytics/order', {
+        slug: restaurantSlug,
+        total_amount: total,
+        items_count: count
+      });
+    } catch (error: any) {
+      setLoading(false);
+      const errData = error?.response?.data;
+      if (errData?.error === 'PLAN_LIMIT_EXCEEDED') {
+        alert('Este restaurante atingiu o limite de pedidos online para este mês. Volte em breve.');
+        return;
+      }
+      // Se for outro erro, ignorar e seguir em frente para não bloquear a venda (ex: erro de rede)
+      console.warn('Erro ao registrar pedido:', error);
+    }
+    
+    setLoading(false);
+
+    // Usa o WhatsApp do estabelecimento
+    const phone = (whatsappNumber || '').replace(/\D/g, '') || '5511999999999';
     
     let message = "Olá! Gostaria de fazer o pedido:\n\n";
     
@@ -55,11 +82,12 @@ export const CartBar = () => {
 
             <button
               onClick={generateWhatsAppLink}
-              className="px-6 py-3 rounded-2xl font-bold flex items-center gap-2 transition-all active:scale-95"
+              disabled={loading}
+              className="px-6 py-3 rounded-2xl font-bold flex items-center gap-2 transition-all active:scale-95 disabled:opacity-70"
               style={{ backgroundColor: 'var(--accent, #d4af37)', color: '#0a0a0a' }}
             >
-              Ver Pedido
-              <ChevronRight className="w-5 h-5" />
+              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Ver Pedido'}
+              {!loading && <ChevronRight className="w-5 h-5" />}
             </button>
           </div>
         </motion.div>

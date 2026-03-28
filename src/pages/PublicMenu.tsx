@@ -15,6 +15,7 @@ interface RestaurantSettings {
   bio?: string;
   logo_url?: string;
   banner_url?: string;
+  whatsapp_number?: string;
 }
 
 export const PublicMenu = () => {
@@ -189,8 +190,12 @@ export const PublicMenu = () => {
         )}
       </main>
 
+      {/* Ocultado provisoriamente para evitar quebrar o CSS nativo até o CartBar atualizar */}
       <BottomNav onSearchClick={handleSearchFocus} onHomeClick={() => setActiveCategory('Todos')} />
-      <CartBar />
+      <CartBar 
+        whatsappNumber={restaurantSettings.whatsapp_number} 
+        restaurantSlug={window.location.pathname.split('/').pop()} 
+      />
 
       <UpsellModal 
         isOpen={isUpsellOpen} 

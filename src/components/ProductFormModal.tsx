@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useThemeStore } from '../store/useThemeStore';
 import api from '../services/api';
 import type { Product, Category } from '../types';
+import { UpgradeModal } from './UpgradeModal';
 
 interface ProductFormModalProps {
   product?: Product | null;
@@ -29,6 +30,7 @@ export const ProductFormModal = ({ product, onClose, onSaved }: ProductFormModal
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingCats, setLoadingCats] = useState(true);
+  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
 
   // Preencher formulário quando editando
   useEffect(() => {
@@ -95,10 +97,15 @@ export const ProductFormModal = ({ product, onClose, onSaved }: ProductFormModal
       }
       onSaved(response.data);
       onClose();
-    } catch (err: unknown) {
+    } catch (err: any) {
       console.error('Erro ao salvar produto:', err);
-      const message = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Erro ao salvar produto.';
-      alert(message);
+      const errorData = err?.response?.data;
+      if (err?.response?.status === 403 && errorData?.error === 'PLAN_LIMIT_EXCEEDED') {
+         setIsUpgradeModalOpen(true);
+      } else {
+         const message = errorData?.message || 'Erro ao salvar produto.';
+         alert(message);
+      }
     } finally {
       setLoading(false);
     }
@@ -111,8 +118,9 @@ export const ProductFormModal = ({ product, onClose, onSaved }: ProductFormModal
   }`;
 
   return (
-    <AnimatePresence>
-      <motion.div
+    <>
+      <AnimatePresence>
+        <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
@@ -337,5 +345,10 @@ export const ProductFormModal = ({ product, onClose, onSaved }: ProductFormModal
         </motion.div>
       </motion.div>
     </AnimatePresence>
+    <UpgradeModal 
+      isOpen={isUpgradeModalOpen} 
+      onClose={() => setIsUpgradeModalOpen(false)} 
+    />
+    </>
   );
 };

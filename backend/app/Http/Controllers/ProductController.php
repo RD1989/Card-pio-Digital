@@ -57,6 +57,17 @@ class ProductController extends Controller
             'sort_order' => 'nullable|integer',
         ]);
 
+        $restaurant = Auth::user()->restaurant;
+        $planConfig = $restaurant->planConfig;
+        $limit = $planConfig['features']['products_limit'];
+
+        if ($limit !== -1 && $restaurant->products()->count() >= $limit) {
+            return response()->json([
+                'error' => 'PLAN_LIMIT_EXCEEDED',
+                'message' => "Você atingiu o limite de {$limit} produtos do seu plano.",
+            ], 403);
+        }
+
         // Verify category belongs to user's restaurant
         $category = Category::findOrFail($validated['category_id']);
         if ($category->restaurant_id !== Auth::user()->restaurant->id) {

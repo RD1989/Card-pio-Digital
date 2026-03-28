@@ -132,6 +132,23 @@ class DashboardController extends Controller
             ]);
         }
 
+        $restaurant = $user->restaurant;
+        $planConfig = $restaurant ? $restaurant->planConfig : config('plans.free');
+        $ordersThisMonth = $restaurant ? $restaurant->orders()->whereMonth('created_at', now()->month)->whereYear('created_at', now()->year)->count() : 0;
+        
+        $limits = [
+            'plan_name' => $planConfig['name'] ?? 'Iniciante',
+            'plan_price' => $planConfig['price'] ?? 0,
+            'products' => [
+                'current' => $totalProdutos,
+                'max' => $planConfig['features']['products_limit'] ?? 5,
+            ],
+            'orders' => [
+                'current' => $ordersThisMonth,
+                'max' => $planConfig['features']['monthly_orders_limit'] ?? 15,
+            ]
+        ];
+
         return response()->json([
             'role' => 'merchant',
             'total_produtos' => $totalProdutos,
@@ -162,7 +179,8 @@ class DashboardController extends Controller
             ],
             'chartTitle' => 'Visualizações do Cardápio (Últimos Meses)',
             'chart_data' => $chartData,
-            'chartData' => $chartData
+            'chartData' => $chartData,
+            'limits' => $limits
         ]);
     }
 }

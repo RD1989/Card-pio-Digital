@@ -11,6 +11,7 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::get('/categories', [\App\Http\Controllers\CategoryController::class, 'index']);
 Route::get('/products', [\App\Http\Controllers\ProductController::class, 'index']);
 Route::post('/analytics/view', [\App\Http\Controllers\AnalyticsController::class, 'view']);
+Route::post('/analytics/order', [\App\Http\Controllers\AnalyticsController::class, 'order']);
 Route::get('/restaurants/{slug}', [\App\Http\Controllers\RestaurantController::class, 'showPublic']);
 
 Route::middleware('auth:sanctum')->group(function () {

@@ -3,10 +3,11 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer 
 } from 'recharts';
 import { 
-  TrendingUp, CreditCard, Activity, Building2, UserPlus, Zap
+  TrendingUp, CreditCard, Activity, Building2, UserPlus, Zap, Crown, ArrowRight
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import api from '../services/api';
+import { UpgradeModal } from '../components/UpgradeModal';
 
 interface StatCardProps {
   icon: React.ElementType;
@@ -38,10 +39,18 @@ const StatCard = ({ icon: Icon, label, value, trend, color = "amber" }: StatCard
 
 export const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
+  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
   const [data, setData] = useState<{
+    role: string;
     stats: { label: string; value: string; trend: string | null }[];
     chartTitle: string;
     chartData: { name: string; value: number }[];
+    limits?: {
+      plan_name: string;
+      plan_price: number;
+      products: { current: number; max: number };
+      orders: { current: number; max: number };
+    };
   } | null>(null);
 
   useEffect(() => {
@@ -75,13 +84,82 @@ export const AdminDashboard = () => {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
-         <h1 className="text-3xl font-serif italic text-white">Panorama Global SaaS</h1>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+         <h1 className="text-3xl font-serif italic text-white">
+           {data.role === 'admin' ? 'Panorama Global SaaS' : 'Painel do Restaurante'}
+         </h1>
          <div className="bg-zinc-900 border border-zinc-800 px-4 py-2 rounded-2xl flex items-center gap-2">
             <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
             <span className="text-zinc-400 text-xs font-medium uppercase tracking-widest">Sistema Ativo</span>
          </div>
       </div>
+
+      {data.role === 'merchant' && data.limits && (
+        <div className="bg-zinc-900 border border-amber-500/20 p-6 rounded-3xl relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/5 rounded-full blur-[80px] -mr-20 -mt-20 pointer-events-none" />
+          
+          <div className="flex flex-col md:flex-row justify-between md:items-center gap-6 relative z-10">
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <Crown className="w-5 h-5 text-amber-500" />
+                <h3 className="text-lg font-bold text-white">
+                  Plano Atual: <span className="text-amber-500">{data.limits.plan_name}</span>
+                </h3>
+              </div>
+              <p className="text-zinc-400 text-sm">
+                Acompanhe o limite mensal do seu plano para não pausar suas vendas.
+              </p>
+            </div>
+            
+            <div className="flex items-center gap-6">
+              <div className="flex flex-col gap-2 min-w-[150px]">
+                <div className="flex justify-between text-xs font-medium">
+                   <span className="text-zinc-400">Produtos</span>
+                   <span className="text-white">
+                     {data.limits.products.current} / {data.limits.products.max === -1 ? '∞' : data.limits.products.max}
+                   </span>
+                </div>
+                <div className="w-full bg-zinc-800 h-1.5 rounded-full overflow-hidden">
+                   <div 
+                     className={`h-full ${data.limits.products.max !== -1 && data.limits.products.current >= data.limits.products.max ? 'bg-red-500' : 'bg-amber-500'}`} 
+                     style={{ width: `${data.limits.products.max === -1 ? 100 : Math.min((data.limits.products.current / data.limits.products.max) * 100, 100)}%` }} 
+                   />
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-2 min-w-[150px]">
+                <div className="flex justify-between text-xs font-medium">
+                   <span className="text-zinc-400">Pedidos (Mês)</span>
+                   <span className="text-white">
+                     {data.limits.orders.current} / {data.limits.orders.max === -1 ? '∞' : data.limits.orders.max}
+                   </span>
+                </div>
+                <div className="w-full bg-zinc-800 h-1.5 rounded-full overflow-hidden">
+                   <div 
+                     className={`h-full ${data.limits.orders.max !== -1 && data.limits.orders.current >= data.limits.orders.max ? 'bg-red-500' : 'bg-amber-500'}`} 
+                     style={{ width: `${data.limits.orders.max === -1 ? 100 : Math.min((data.limits.orders.current / data.limits.orders.max) * 100, 100)}%` }} 
+                   />
+                </div>
+              </div>
+
+              <button 
+                onClick={() => setIsUpgradeModalOpen(true)}
+                className="bg-amber-500 text-zinc-950 px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-amber-400 transition-colors flex items-center gap-2 whitespace-nowrap whitespace-nowrap flex-shrink-0"
+              >
+                Fazer Upgrade
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <UpgradeModal 
+        isOpen={isUpgradeModalOpen} 
+        onClose={() => setIsUpgradeModalOpen(false)} 
+        title="Eleve seu Restaurante ao Próximo Nível"
+        description="Escolha o plano ideal para as suas vendas decolarem sem limites de produtos ou pedidos recebidos."
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {data.stats.map((stat, idx) => (
