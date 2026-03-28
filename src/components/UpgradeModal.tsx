@@ -1,5 +1,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, CheckCircle2, ArrowRight, X } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import api from '../services/api';
 
 interface Plan {
   id: string;
@@ -52,12 +54,35 @@ export function UpgradeModal({
   title = "Desbloqueie o Poder Total", 
   description = "Você atingiu o limite do seu plano atual. Faça o upgrade agora para continuar crescendo." 
 }: UpgradeModalProps) {
-  
+  const [checkoutLinks, setCheckoutLinks] = useState<Record<string, string>>({});
+  const [loadingLink, setLoadingLink] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      api.get('/settings').then(res => {
+        setCheckoutLinks({
+          starter: res.data.fibank_checkout_link_starter || '',
+          pro: res.data.fibank_checkout_link_pro || '',
+        });
+      }).catch(() => {});
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   const handleUpgrade = (planId: string) => {
-    // Integração futura com Stripe / Checkout
-    window.open(`https://wa.me/5511999999999?text=Ol%C3%A1!%20Gostaria%20de%20fazer%20o%20upgrade%20da%20minha%20conta%20para%20o%20plano%20${planId}`, '_blank');
+    setLoadingLink(true);
+    const link = checkoutLinks[planId];
+    if (link) {
+      window.open(link, '_blank');
+    } else {
+      // Fallback: contato via WhatsApp caso o admin ainda não configurou o link
+      window.open(
+        `https://wa.me/?text=Ol%C3%A1!%20Gostaria%20de%20fazer%20o%20upgrade%20para%20o%20plano%20${planId}`,
+        '_blank'
+      );
+    }
+    setLoadingLink(false);
   };
 
   return (
@@ -141,13 +166,14 @@ export function UpgradeModal({
 
                   <button 
                     onClick={() => handleUpgrade(plan.id)}
-                    className={`w-full py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 ${
+                    disabled={loadingLink}
+                    className={`w-full py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 disabled:opacity-70 ${
                       plan.recommended 
                         ? 'bg-amber-500 text-zinc-950 hover:bg-amber-400 hover:shadow-[0_0_15px_rgba(245,158,11,0.3)]' 
                         : 'bg-zinc-800 text-white hover:bg-zinc-700'
                     }`}
                   >
-                    Fazer Upgrade
+                    Fazer Upgrade via Fí Bank
                     <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>

@@ -135,8 +135,29 @@ class RestaurantController extends Controller
         $restaurant->save();
 
         return response()->json([
-            'message' => 'Status atualizado.',
+            'message'   => 'Status atualizado.',
             'is_active' => $restaurant->is_active
+        ]);
+    }
+
+    /**
+     * Altera o plano de um restaurante (ação do super admin).
+     */
+    public function updatePlan(Request $request, Restaurant $restaurant): JsonResponse
+    {
+        if (!$request->user()->is_super_admin) {
+            return response()->json(['message' => 'Não autorizado.'], 403);
+        }
+
+        $validated = $request->validate([
+            'plan' => 'required|in:free,starter,pro',
+        ]);
+
+        $restaurant->update(['plan' => $validated['plan']]);
+
+        return response()->json([
+            'message' => "Plano do restaurante '{$restaurant->name}' atualizado para '{$validated['plan']}'.",
+            'plan'    => $restaurant->plan,
         ]);
     }
 }
