@@ -32,18 +32,25 @@ export const PixPaymentFlow = ({ planId, period, amount, onSuccess, onCancel }: 
     async function generatePix() {
       try {
         setLoading(true);
-        // Simulando delay de rede
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        
-        // Mock de resposta da API (O usuário deve configurar a API real na Vercel)
-        setQrCodeData({
-          txid: "simulated-txid-" + Math.random().toString(36).substr(2, 9),
-          qr_code_base64: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==", // Empty pixel placeholder
-          copia_e_cola: "00020126580014BR.GOV.BCB.PIX01369796695b-0000-0000-0000-0000000000005204000053039865405" + amount.toFixed(2) + "5802BR5913MENU PRO SAAS6008SAO PAULO62070503***6304"
+        const response = await fetch('/api/checkout/pix', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ planId, period, amount })
         });
+        
+        const data = await response.json();
+        
+        if (!response.ok) throw new Error(data.error || 'Erro na cobrança PIX');
+
+        setQrCodeData({
+          txid: data.txid,
+          qr_code_base64: data.qr_code_base64,
+          copia_e_cola: data.copia_e_cola
+        });
+        
         setLoading(false);
       } catch (err: any) {
-        setError(err.message || 'Erro ao comunicar com o servidor de pagamentos.');
+        setError(err.message || 'Erro ao comunicar com a EFI Pay.');
         setLoading(false);
       }
     }
@@ -73,7 +80,7 @@ export const PixPaymentFlow = ({ planId, period, amount, onSuccess, onCancel }: 
         },
         (payload) => {
           // Se o plano foi atualizado para o que acabamos de pagar
-          if (payload.new.plan === planId && payload.new.should_block === false) {
+          if (payload.new.plan === planId && payload.new.is_active === true) {
             setPaymentConfirmed(true);
             setTimeout(() => onSuccess(), 4000);
           }
@@ -112,8 +119,7 @@ export const PixPaymentFlow = ({ planId, period, amount, onSuccess, onCancel }: 
             .from('restaurants')
             .update({ 
               plan: planId, 
-              should_block: false,
-              trial_ends_at: null // Assinatura ativa remove o trial
+              is_active: true
             })
             .eq('id', restaurant.id);
           
