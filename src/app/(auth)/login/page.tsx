@@ -14,6 +14,7 @@ import {
   AlertCircle 
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { useAuthStore } from '@/store/useAuthStore';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -21,6 +22,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const { setAuth } = useAuthStore() as any;
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -43,6 +45,22 @@ export default function LoginPage() {
 
       console.log('✅ LOGIN BEM-SUCEDIDO:', data.user?.email);
       
+      // Busca o restaurante vinculado ao usuário
+      const { data: restaurantData } = await supabase
+        .from('restaurants')
+        .select('*')
+        .eq('user_id', data.user!.id)
+        .single();
+
+      // Salva os dados no store para o painel usar
+      setAuth({
+        id: data.user!.id,
+        email: data.user!.email || '',
+        name: restaurantData?.name || data.user!.email || '',
+        restaurant: restaurantData || null,
+        is_super_admin: false,
+      }, data.session?.access_token || '');
+
       // Sincroniza cookies com o servidor antes de redirecionar
       router.refresh();
       
