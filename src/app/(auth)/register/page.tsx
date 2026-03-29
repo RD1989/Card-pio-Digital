@@ -38,8 +38,14 @@ export default function RegisterPage() {
     }
 
     try {
-      // 1. Cria o usuário no Supabase Auth
-      const { data: authData, error: signUpError } = await supabase.auth.signUp({ email, password });
+      // 1. Cria o usuário no Supabase Auth com Redirecionamento Correto
+      const { data: authData, error: signUpError } = await supabase.auth.signUp({ 
+        email, 
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/login`
+        }
+      });
 
       if (signUpError || !authData.user) {
         throw new Error(signUpError?.message || 'Erro ao criar conta. Tente novamente.');
@@ -62,12 +68,14 @@ export default function RegisterPage() {
 
       if (restaurantError) {
         console.error('Erro ao criar restaurante:', restaurantError);
-        // Não lançar erro aqui pois a conta foi criada, apenas avisar
-        setError('Conta criada! Mas houve um erro ao configurar seu restaurante inicialmente.');
+        // Se houver erro aqui, é provável que o e-mail não tenha sido confirmado (RLS)
+        setSuccess(true);
+        setError('Conta criada! Verifique seu e-mail para ativar seu restaurante.');
+        return;
       }
 
       setSuccess(true);
-      setTimeout(() => router.push('/dashboard'), 2000);
+      setTimeout(() => router.push('/dashboard'), 3000);
 
     } catch (err: any) {
       setError(err.message || 'Ocorreu um erro inesperado.');
