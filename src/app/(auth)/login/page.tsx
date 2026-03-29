@@ -42,7 +42,15 @@ export default function LoginPage() {
       }
 
       console.log('✅ LOGIN BEM-SUCEDIDO:', data.user?.email);
-      router.push('/dashboard');
+      
+      // Sincroniza cookies com o servidor antes de redirecionar
+      router.refresh();
+      
+      // Redirecionamento forçado para garantir limpeza de cache/estado
+      setTimeout(() => {
+        window.location.href = '/dashboard';
+      }, 500);
+
     } catch (err: any) {
       setError(err.message || 'Ocorreu um erro inesperado.');
     } finally {
