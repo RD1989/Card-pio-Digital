@@ -14,7 +14,8 @@ import {
   Calendar,
   CreditCard,
   Phone,
-  ArrowRight
+  ArrowRight,
+  Loader2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';

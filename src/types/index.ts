@@ -39,6 +39,7 @@ export interface Product {
   image?: string;
   image_url?: string;
   category: string | Category;
+  category_id?: number;
   is_available: boolean;
   is_upsell?: boolean;
   tags?: string[];

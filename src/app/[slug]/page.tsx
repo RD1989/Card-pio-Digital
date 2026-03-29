@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useParams } from 'next/navigation';
-import { Search, User as UserIcon, AlertCircle, Clock, Loader2 } from 'lucide-react';
+import { Search, User as UserIcon, AlertCircle, Clock, Loader2, Store } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { CategoryNav } from '@/components/CategoryNav';
 import { ProductCard } from '@/components/ProductCard';
@@ -279,6 +279,7 @@ export default function PublicMenuPage() {
         isOpen={isUpsellOpen} 
         onClose={() => setIsUpsellOpen(false)}
         accentColor={accentColor}
+        upsellProducts={products}
       />
 
       <ProductDetailModal
@@ -296,4 +297,3 @@ export default function PublicMenuPage() {
 }
 
 import Link from 'next/link';
-import { Store } from 'lucide-react';

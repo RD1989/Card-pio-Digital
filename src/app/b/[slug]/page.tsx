@@ -9,7 +9,7 @@ import {
   MessageCircle, 
   ExternalLink, 
   Share2,
-  Instagram,
+  Camera,
   ArrowRight
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
@@ -185,7 +185,7 @@ export default function PublicBioLinkPage() {
               rel="noopener noreferrer"
               className="w-full bg-zinc-900 text-white py-5 rounded-2xl font-black uppercase tracking-widest text-xs flex items-center justify-center gap-3 border border-zinc-800 hover:bg-zinc-800 transition-all active:scale-95"
             >
-              <Instagram className="w-5 h-5 text-pink-500" />
+              <Camera className="w-5 h-5 text-pink-500" />
               Nossas Redes Sociais
             </motion.a>
           )}
