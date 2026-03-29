@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   LayoutDashboard, 
   Store, 
@@ -25,6 +25,7 @@ import { useAuthStore } from '@/store/useAuthStore';
 import { useThemeStore } from '@/store/useThemeStore';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
+import { supabase } from '@/lib/supabase';
 
 const SidebarLink = ({ 
   to, 
@@ -72,11 +73,38 @@ const SidebarLink = ({
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { user, logout } = useAuthStore() as any;
+  const { user, logout, setUser, setAuth } = useAuthStore() as any;
   const { theme, toggleTheme } = useThemeStore() as any;
   const pathname = usePathname();
   const router = useRouter();
   const isLight = theme === 'light';
+
+  // Sempre sincroniza o restaurante do Supabase ao entrar no painel
+  useEffect(() => {
+    const syncRestaurant = async () => {
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (!authUser) return;
+
+      const { data: restaurantData } = await supabase
+        .from('restaurants')
+        .select('*')
+        .eq('user_id', authUser.id)
+        .single();
+
+      if (restaurantData && setUser && user) {
+        setUser({ ...user, restaurant: restaurantData });
+      } else if (restaurantData && setAuth) {
+        setAuth({
+          id: authUser.id,
+          email: authUser.email || '',
+          name: restaurantData.name || authUser.email || '',
+          restaurant: restaurantData,
+          is_super_admin: false,
+        }, (await supabase.auth.getSession()).data.session?.access_token || '');
+      }
+    };
+    syncRestaurant();
+  }, []);
 
   const handleLogout = () => {
     logout();
