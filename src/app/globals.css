@@ -1,193 +1,367 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+@import "tailwindcss";
 
+@theme {
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-serif: "Playfair Display", serif;
+  
+  --color-zinc-950: #000000;
+  --color-zinc-900: #0a0a0a;
+  --color-zinc-800: #1a1a1a;
+  --color-amber-400: #e5c07b;
+  --color-amber-500: #d4af37;
+  --color-gold: #c5a059;
+}
+
+@layer base {
+  body {
+    @apply bg-zinc-950 text-zinc-100 font-sans antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-serif;
+  }
+}
+
+/* Glassmorphism utility */
+.glass {
+  @apply backdrop-blur-md bg-zinc-950/70 border-b border-zinc-800/50;
+}
+
+.glass-card {
+  @apply backdrop-blur-sm bg-zinc-900/40 border border-zinc-800/50;
+}
+
+/* Hide scrollbar for category navigation */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* ── Accent Color Variable ────────────────────────────── */
 :root {
-  /* Paleta Principal (Clara) */
-  --color-bg: #f8f9fa;
-  --color-surface: #ffffff;
-  --color-surface-2: #f1f5f9;
-  --color-border: #e2e8f0;
-  --color-border-hover: #cbd5e1;
-
-  /* Gradiente de Marca (Amarelo) */
-  --gradient-brand: linear-gradient(135deg, #fcd34d 0%, #f59e0b 100%);
-  --gradient-subtle: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(245, 158, 11, 0.05) 100%);
-
-  /* Cores de Texto */
-  --color-text: #1e293b;
-  --color-text-muted: #475569;
-  --color-text-subtle: #64748b;
-
-  /* Cores de Estado */
-  --color-success: #10b981;
-  --color-warning: #f59e0b;
-  --color-danger: #ef4444;
-  --color-info: #3b82f6;
-
-  /* Tipografia */
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-xl: 24px;
-
-  /* Sombras */
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
-  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.08);
-  --shadow-glow: 0 0 40px rgba(245, 158, 11, 0.15);
+  --accent: #f59e0b;
+  --accent-rgb: 245, 158, 11;
+  --accent-text: #000000;
 }
 
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+.accent-btn {
+  background-color: var(--accent) !important;
+  color: var(--accent-text) !important;
 }
 
-html,
-body {
-  height: 100%;
-  font-family: var(--font-sans);
-  background-color: var(--color-bg);
-  color: var(--color-text);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+.bg-premium-dark {
+  background: radial-gradient(circle at top left, #1a1a1a 0%, #000000 100%);
 }
 
-/* Scrollbar customizada */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: var(--color-surface-2); }
-::-webkit-scrollbar-thumb { background: var(--color-border-hover); border-radius: 3px; }
-
-/* Utilitários de Gradiente */
-.gradient-brand { background: var(--gradient-brand); }
-.gradient-text {
-  background: var(--gradient-brand);
+.gold-gradient-text {
+  background: linear-gradient(135deg, #e5c07b 0%, #c5a059 50%, #d4af37 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  background-clip: text;
 }
 
-/* Card com glassmorphism claro */
-.glass-card {
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
+.accent-text {
+  color: var(--accent) !important;
 }
 
-/* Botão primário (Amarelo) */
-.btn-primary {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 12px 24px;
-  border: none;
-  border-radius: var(--radius-md);
-  background: var(--gradient-brand);
-  color: #111827; /* Texto escuro contrasta melhor com amarelo */
-  font-family: var(--font-sans);
-  font-size: 15px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: opacity 0.2s, transform 0.2s, box-shadow 0.2s;
-  width: 100%;
+.accent-border {
+  border-color: var(--accent) !important;
 }
 
-.btn-primary:hover:not(:disabled) {
-  opacity: 0.9;
-  transform: translateY(-1px);
-  box-shadow: 0 8px 24px rgba(245, 158, 11, 0.3);
+.accent-bg-subtle {
+  background-color: color-mix(in srgb, var(--accent) 10%, transparent) !important;
 }
 
-.btn-primary:active:not(:disabled) {
-  transform: translateY(0);
+/* ── Custom Scrollbar ────────────────────────── */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #27272a;
+  border-radius: 100px;
 }
 
-.btn-primary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+/* ═══════════════════════════════════════════════════════════
+   ██  LIGHT THEME — Admin Panel (High Contrast v2)
+   ═══════════════════════════════════════════════════════════ */
+
+.theme-light {
+  --tw-bg-opacity: 1;
 }
 
-/* Input para Light mode */
-.input-field {
-  width: 100%;
-  padding: 12px 16px;
-  background: #ffffff;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  color: var(--color-text);
-  font-family: var(--font-sans);
-  font-size: 15px;
-  transition: border-color 0.2s, box-shadow 0.2s;
-  outline: none;
+.theme-light,
+.theme-light body {
+  background-color: #edf0f4 !important;
+  color: #0a0f1a !important;
 }
 
-.input-field::placeholder { color: var(--color-text-subtle); }
-
-.input-field:focus {
-  border-color: #f59e0b;
-  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
-  background: #ffffff;
+/* ── Sidebar ── */
+.theme-light aside {
+  background-color: #ffffff !important;
+  border-color: #d1d5db !important;
+  box-shadow: 2px 0 8px rgba(0,0,0,0.06) !important;
 }
 
-/* Animações */
-@keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+.theme-light aside nav a {
+  color: #4b5563 !important;
 }
 
-@keyframes gradientShift {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
+.theme-light aside nav a:hover {
+  background-color: #f1f5f9 !important;
+  color: #0a0f1a !important;
 }
 
-@keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 20px rgba(245, 158, 11, 0.15); }
-  50% { box-shadow: 0 0 40px rgba(245, 158, 11, 0.3); }
+.theme-light aside nav a .accent-btn,
+.theme-light aside nav a[style*="--accent"] {
+  color: #0a0a0a !important;
 }
 
-.animate-fade-in-up {
-  animation: fadeInUp 0.5s ease forwards;
+/* ── Cards & panels ── */
+.theme-light .bg-zinc-900,
+.theme-light .bg-zinc-900\/40,
+.theme-light .bg-zinc-900\/50 {
+  background-color: #ffffff !important;
+  border-color: #d1d5db !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06) !important;
 }
 
-.animate-pulse-glow {
-  animation: pulse-glow 3s ease-in-out infinite;
+.theme-light .bg-zinc-950,
+.theme-light .bg-zinc-950\/70 {
+  background-color: #e8ecf1 !important;
 }
 
-/* Label de formulário */
-.form-label {
-  display: block;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--color-text-muted);
-  margin-bottom: 6px;
+.theme-light .bg-zinc-800 {
+  background-color: #d1d5db !important;
 }
 
-/* Alerta de erro */
-.alert-error {
-  padding: 12px 16px;
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  border-radius: var(--radius-sm);
-  color: #fca5a5;
-  font-size: 14px;
+/* ── Borders ── */
+.theme-light .border-zinc-800,
+.theme-light .border-zinc-800\/50 {
+  border-color: #d1d5db !important;
 }
 
-/* Linha divisória */
-.divider {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  color: var(--color-text-subtle);
-  font-size: 13px;
+.theme-light .border-zinc-700 {
+  border-color: #b8bfc7 !important;
 }
 
-.divider::before,
-.divider::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: var(--color-border);
+/* ══════════════════════════════════════
+   TEXT — HIGH CONTRAST 
+   Regras seletivas: NÃO afetam botões
+   com fundo escuro intencional
+   ══════════════════════════════════════ */
+
+/* Texto principal — claro -> escuro */
+.theme-light .text-zinc-100 {
+  color: #0a0f1a !important;
 }
+
+/* text-white só muda EM contextos de card/panel 
+   NÃO muda dentro de botões com fundo escuro (bg-slate-900, bg-emerald-500 etc.) */
+.theme-light .text-white {
+  color: #0a0f1a !important;
+}
+
+/* PRESERVAR texto branco em botões com fundo escuro */
+.theme-light button.bg-slate-900 .text-white,
+.theme-light button.bg-slate-900,
+.theme-light .bg-slate-900.text-white,
+.theme-light .bg-slate-900 {
+  color: #ffffff !important;
+}
+
+.theme-light .bg-emerald-500 {
+  color: #ffffff !important;
+}
+
+.theme-light .text-zinc-400 {
+  color: #4b5563 !important;
+}
+
+.theme-light .text-zinc-500 {
+  color: #64748b !important;
+}
+
+.theme-light .text-zinc-600 {
+  color: #374151 !important;
+}
+
+/* Textos muito claros que somem no light — forçar contraste */
+.theme-light .text-zinc-300 {
+  color: #374151 !important;
+}
+
+.theme-light .text-zinc-200 {
+  color: #1e293b !important;
+}
+
+/* ── Inputs — HIGH CONTRAST ── */
+.theme-light input,
+.theme-light textarea,
+.theme-light select {
+  background-color: #f8fafc !important;
+  border-color: #c8cdd5 !important;
+  color: #0a0f1a !important;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.04) !important;
+}
+
+.theme-light input::placeholder,
+.theme-light textarea::placeholder {
+  color: #9ca3af !important;
+}
+
+.theme-light input:focus,
+.theme-light textarea:focus,
+.theme-light select:focus {
+  border-color: #94a3b8 !important;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.04), 0 0 0 3px rgba(59, 130, 246, 0.08) !important;
+}
+
+/* ══════════════════════════════════════
+   BUTTONS — Contraste correto
+   ══════════════════════════════════════ */
+
+/* Botões que no dark tem bg-white text-zinc-950: inverter para dark bg */
+.theme-light button.bg-white,
+.theme-light a.bg-white {
+  background-color: #0a0f1a !important;
+  color: #ffffff !important;
+}
+
+.theme-light button.bg-white:hover,
+.theme-light a.bg-white:hover {
+  background-color: #1e293b !important;
+}
+
+/* Elementos NÃO-botão com bg-white mantêm branco (cards, divs, modais) */
+.theme-light div.bg-white,
+.theme-light section.bg-white,
+.theme-light main.bg-white {
+  background-color: #ffffff !important;
+  color: #0a0f1a !important;
+}
+
+/* Botão cancelar nos modais — melhorar contraste */
+.theme-light button.border-slate-200,
+.theme-light button.border-zinc-800 {
+  border-color: #c8cdd5 !important;
+  color: #374151 !important;
+}
+
+.theme-light button.border-slate-200:hover,
+.theme-light button.border-zinc-800:hover {
+  background-color: #e8ecf1 !important;
+  color: #0a0f1a !important;
+}
+
+/* Accent buttons */
+.theme-light .accent-btn {
+  background-color: var(--accent) !important;
+  color: #0a0a0a !important;
+}
+
+/* ── Modais — fundo correto ── */
+.theme-light .bg-black\/60 {
+  background-color: rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Modal card branco com sombra forte */
+.theme-light .bg-white.rounded-3xl,
+.theme-light [class*="bg-white"][class*="rounded-3xl"] {
+  background-color: #ffffff !important;
+  color: #0a0f1a !important;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* ── Mobile Header ── */
+.theme-light .bg-zinc-900\/80 {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08) !important;
+}
+
+/* ── Hover states ── */
+.theme-light .hover\:bg-zinc-900:hover,
+.theme-light .hover\:bg-zinc-800:hover {
+  background-color: #e8ecf1 !important;
+}
+
+/* ── Chart tooltip ── */
+.theme-light .recharts-default-tooltip {
+  background-color: #ffffff !important;
+  border-color: #d1d5db !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
+}
+
+/* ── Accent-tinted areas ── */
+.theme-light .bg-amber-500\/5 {
+  background-color: color-mix(in srgb, var(--accent) 8%, #ffffff) !important;
+}
+
+.theme-light .border-amber-500\/10 {
+  border-color: color-mix(in srgb, var(--accent) 20%, transparent) !important;
+}
+
+.theme-light .bg-amber-500\/10 {
+  background-color: color-mix(in srgb, var(--accent) 14%, transparent) !important;
+}
+
+/* ── Keep white text inside INTENTIONALLY dark elements ── */
+.theme-light .bg-zinc-950 .text-white,
+.theme-light .bg-zinc-900 .text-white,
+.theme-light .bg-slate-900 .text-white,
+.theme-light .bg-emerald-500 .text-white,
+.theme-light [class*="bg-slate-900"] {
+  color: #ffffff !important;
+}
+
+/* Etiqueta de delivery — manter fundo branco intencional */
+.theme-light .bg-white.text-zinc-950 {
+  background-color: #ffffff !important;
+  color: #0a0f1a !important;
+}
+
+/* ── Headings extra bold ── */
+.theme-light h2,
+.theme-light h3,
+.theme-light h4 {
+  color: #0a0f1a !important;
+  font-weight: 700;
+}
+
+/* ── Labels & small text ── */
+.theme-light label {
+  color: #374151 !important;
+}
+
+/* ── Span / p secondary text ── */
+.theme-light .text-slate-400 {
+  color: #64748b !important;
+}
+
+.theme-light .text-slate-500 {
+  color: #475569 !important;
+}
+
+/* ── Toggle switch labels ── */
+.theme-light span.text-zinc-300 {
+  color: #374151 !important;
+}
+
+/* ── Transitions ── */
+.theme-light * {
+  transition-property: background-color, border-color, color, box-shadow;
+  transition-duration: 200ms;
+  transition-timing-function: ease-out;
+}
+
+/* Keep animations snappy */
+.theme-light [class*="animate-"],
+.theme-light [class*="transition-transform"] {
+  transition-property: transform, opacity;
+}
+
