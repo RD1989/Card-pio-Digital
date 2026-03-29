@@ -28,12 +28,20 @@ export default function LoginPage() {
     setError('');
 
     try {
-      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
-
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+      
       if (signInError) {
-        throw new Error('E-mail ou senha incorretos. Verifique suas credenciais.');
+        console.error('❌ ERRO DURANTE O LOGIN:', signInError);
+        
+        if (signInError.message.includes('Email not confirmed')) {
+          setError('Sua conta precisa de confirmação de e-mail. Verifique sua caixa de entrada.');
+        } else {
+          setError('E-mail ou senha incorretos. Tente novamente.');
+        }
+        return;
       }
 
+      console.log('✅ LOGIN BEM-SUCEDIDO:', data.user?.email);
       router.push('/dashboard');
     } catch (err: any) {
       setError(err.message || 'Ocorreu um erro inesperado.');
