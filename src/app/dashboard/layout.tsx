@@ -106,9 +106,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     syncRestaurant();
   }, []);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
     logout();
-    router.push('/login');
+    window.location.href = '/login';
   };
 
   const navItems = user?.is_super_admin ? [
