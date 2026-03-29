@@ -58,16 +58,18 @@ export default function AISettingsPage() {
   const [testResult, setTestResult] = useState<TestResult | null>(null);
 
   useEffect(() => {
-    // Busca configurações globais da IA (Tabela 'settings' ou similar)
+    // Busca configurações globais da IA 
     async function fetchSettings() {
       const { data, error } = await supabase
-        .from('settings')
-        .select('*')
-        .single();
+        .from('system_settings')
+        .select('key, value')
+        .in('key', ['ai_api_key', 'ai_model']);
       
       if (data) {
-        if (data.ai_api_key) setApiKey(data.ai_api_key);
-        if (data.ai_model) setSelectedModel(data.ai_model);
+        const apiKeyRow = data.find(r => r.key === 'ai_api_key');
+        const modelRow = data.find(r => r.key === 'ai_model');
+        if (apiKeyRow) setApiKey(apiKeyRow.value);
+        if (modelRow) setSelectedModel(modelRow.value);
       }
     }
     fetchSettings();
@@ -77,15 +79,29 @@ export default function AISettingsPage() {
     setLoading(true);
     setSaved(false);
     try {
-      const { error } = await supabase
-        .from('settings')
-        .update({
-          ai_api_key: apiKey,
-          ai_model: selectedModel,
-        })
-        .eq('id', 1); // Assumindo uma única linha de config global
+      const { data: session } = await supabase.auth.getSession();
+      const token = session.session?.access_token;
+      if (!token) throw new Error("Não autenticado");
 
-      if (error) throw error;
+      const updates = [
+        { key: 'ai_api_key', value: apiKey },
+        { key: 'ai_model', value: selectedModel }
+      ];
+
+      const res = await fetch('/api/admin/settings', {
+         method: 'POST',
+         headers: {
+           'Content-Type': 'application/json',
+           'Authorization': `Bearer ${token}`
+         },
+         body: JSON.stringify({ updates })
+      });
+
+      if (!res.ok) {
+         const errData = await res.json();
+         throw new Error(errData.error || 'Erro do Servidor');
+      }
+
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     } catch (err: any) {
