@@ -22,17 +22,14 @@ import { supabase } from '@/lib/supabase';
 
 interface Client {
   id: string;
+  user_id: string;
   name: string;
   email: string;
-  whatsapp: string | null;
+  whatsapp_number: string | null;
   created_at: string;
   plan: 'free' | 'starter' | 'pro';
   trial_ends_at: string | null;
-  restaurant?: {
-    id: string;
-    name: string;
-    slug: string;
-  };
+  slug: string;
   is_active: boolean;
 }
 
@@ -46,12 +43,10 @@ export default function AdminClientsPage() {
   const fetchClients = async () => {
     try {
       setLoading(true);
-      // No Supabase, buscamos os usuários e seus restaurantes relacionados
       const { data, error } = await supabase
-        .from('profiles') // Assumindo que dados de usuário ficam em profiles
+        .from('restaurants')
         .select(`
-          id, name, email, whatsapp_number, created_at, plan, trial_ends_at, is_active,
-          restaurant:restaurants(id, name, slug)
+          id, user_id, name, whatsapp_number, created_at, plan, trial_ends_at, is_active, slug
         `);
       
       if (error) throw error;
@@ -70,7 +65,7 @@ export default function AdminClientsPage() {
   const toggleClientStatus = async (id: string, currentStatus: boolean) => {
     try {
       const { error } = await supabase
-        .from('profiles')
+        .from('restaurants')
         .update({ is_active: !currentStatus })
         .eq('id', id);
 
@@ -85,7 +80,7 @@ export default function AdminClientsPage() {
   const updatePlan = async (id: string, plan: string) => {
     try {
       const { error } = await supabase
-        .from('profiles')
+        .from('restaurants')
         .update({ plan: plan as any })
         .eq('id', id);
 
@@ -107,11 +102,9 @@ export default function AdminClientsPage() {
   }, [clients]);
 
   const filteredClients = clients.filter(client => {
-    const rName = client.restaurant?.name || '';
-    const matchesSearch = client.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          client.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          client.whatsapp?.includes(searchTerm) ||
-                          rName.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = (client.name || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
+                          (client.slug || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          (client.whatsapp_number || '').includes(searchTerm);
     
     const matchesStatus = filter === 'all' || (filter === 'active' ? client.is_active : !client.is_active);
     const matchesPlan = planFilter === 'all' || client.plan === planFilter;
@@ -124,8 +117,8 @@ export default function AdminClientsPage() {
       {/* Header Profissional */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-4 border-b border-zinc-200 dark:border-zinc-800">
         <div>
-          <h1 className="text-4xl font-serif italic text-amber-500 flex items-center gap-4">
-             <ShieldCheck className="w-10 h-10" />
+          <h1 className="text-4xl font-serif italic gold-gradient-text flex items-center gap-4">
+             <ShieldCheck className="w-10 h-10 text-amber-500" />
              Gestão de Clientes
           </h1>
           <p className="text-zinc-500 mt-1 font-medium tracking-tight">Painel Executivo de Lojistas e Faturamento</p>
@@ -260,15 +253,15 @@ export default function AdminClientsPage() {
                           </div>
                           <div>
                             <p className="text-zinc-900 dark:text-white font-black text-lg group-hover:text-amber-500 transition-colors tracking-tight">
-                              {client.restaurant?.name || client.name}
+                              {client.name}
                             </p>
                             <div className="flex flex-wrap items-center gap-2 mt-1.5">
                                <span className="flex items-center gap-1 text-zinc-500 text-[10px] font-bold bg-zinc-100 dark:bg-zinc-800/50 px-2 py-0.5 rounded-md border border-zinc-200 dark:border-zinc-800">
-                                <CreditCard className="w-3 h-3" /> {client.email}
+                                <CreditCard className="w-3 h-3" /> /{client.slug}
                                </span>
-                               {client.whatsapp && (
+                               {client.whatsapp_number && (
                                  <span className="flex items-center gap-1 text-zinc-500 text-[10px] font-bold bg-zinc-100 dark:bg-zinc-800/50 px-2 py-0.5 rounded-md border border-zinc-200 dark:border-zinc-800">
-                                  <Phone className="w-3 h-3" /> {client.whatsapp}
+                                  <Phone className="w-3 h-3" /> {client.whatsapp_number}
                                  </span>
                                )}
                             </div>
@@ -315,9 +308,9 @@ export default function AdminClientsPage() {
                             <option value="starter">Starter</option>
                             <option value="pro">Pro</option>
                           </select>
-                          {client.restaurant?.slug && (
+                          {client.slug && (
                             <a 
-                              href={`/${client.restaurant.slug}`}
+                              href={`/${client.slug}`}
                               target="_blank"
                               rel="noreferrer"
                               className="p-3 text-zinc-400 hover:text-amber-500 bg-zinc-100 dark:bg-zinc-800 rounded-2xl transition-all shadow-sm"
