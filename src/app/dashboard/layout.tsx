@@ -93,7 +93,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { to: '/dashboard/branding', icon: Palette, label: 'Minha Marca' },
     { to: '/dashboard/products', icon: Store, label: 'Cardápio' },
     { to: '/dashboard/biolink', icon: LinkIcon, label: 'Link na Bio' },
-    { to: '/dashboard/labels', icon: Printer, label: 'Etiquetas' },
+    { to: '/dashboard/delivery', icon: Printer, label: 'Etiquetas' },
     { to: '/dashboard/metrics', icon: BarChart3, label: 'Métricas' },
     { to: '/dashboard/finance', icon: CreditCard, label: 'Financeiro' },
     { to: '/dashboard/hours', icon: Clock, label: 'Horários' },

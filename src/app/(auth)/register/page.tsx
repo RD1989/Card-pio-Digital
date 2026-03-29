@@ -25,6 +25,7 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [generatedSlug, setGeneratedSlug] = useState('');
 
   async function handleRegister(e: React.FormEvent) {
     e.preventDefault();
@@ -55,11 +56,12 @@ export default function RegisterPage() {
       const slug = restaurantName.toLowerCase()
         .replace(/\s+/g, '-')
         .replace(/[^a-z0-9-]/g, '');
-      
+        
+      const finalSlug = `${slug}-${Date.now().toString().slice(-4)}`;
       const { error: restaurantError } = await supabase.from('restaurants').insert({
         user_id: authData.user.id,
         name: restaurantName,
-        slug: `${slug}-${Date.now().toString().slice(-4)}`,
+        slug: finalSlug,
         whatsapp_number: whatsapp,
         plan: 'free',
         is_active: true,
@@ -68,14 +70,14 @@ export default function RegisterPage() {
 
       if (restaurantError) {
         console.error('Erro ao criar restaurante:', restaurantError);
-        // Se houver erro aqui, é provável que o e-mail não tenha sido confirmado (RLS)
         setSuccess(true);
         setError('Conta criada! Verifique seu e-mail para ativar seu restaurante.');
         return;
       }
 
+      setGeneratedSlug(finalSlug);
       setSuccess(true);
-      setTimeout(() => router.push('/dashboard'), 3000);
+      setTimeout(() => router.push('/dashboard'), 6000);
 
     } catch (err: any) {
       setError(err.message || 'Ocorreu um erro inesperado.');
@@ -157,10 +159,21 @@ export default function RegisterPage() {
                 <motion.div 
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
-                  className="flex items-center gap-3 p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold uppercase tracking-widest"
+                  className="space-y-4"
                 >
-                  <CheckCircle2 className="w-4 h-4 shrink-0" />
-                  Sucesso! Redirecionando...
+                  <div className="flex items-center gap-3 p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold uppercase tracking-widest">
+                    <CheckCircle2 className="w-4 h-4 shrink-0" />
+                    Conta criada com sucesso!
+                  </div>
+                  
+                  {generatedSlug && (
+                    <div className="p-4 rounded-2xl bg-zinc-900 border border-zinc-800 text-center space-y-2">
+                       <p className="text-[10px] font-black uppercase text-zinc-500 tracking-widest">Seu link oficial:</p>
+                       <p className="text-amber-500 font-serif italic text-lg select-all">
+                          {window.location.origin}/b/{generatedSlug}
+                       </p>
+                    </div>
+                  )}
                 </motion.div>
               )}
             </AnimatePresence>

@@ -44,9 +44,14 @@ export default function PublicBioLinkPage() {
           .single();
         
         if (error) throw error;
-        setData(r);
-      } catch (error) {
+        if (!r) {
+           setData(null);
+        } else {
+           setData(r);
+        }
+      } catch (error: any) {
         console.error('Erro ao buscar bio:', error);
+        setData(null);
       } finally {
         setLoading(false);
       }
