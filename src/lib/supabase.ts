@@ -1,3 +1,4 @@
+import { createBrowserClient } from '@supabase/ssr';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 // Inicialização lazy: evita que o build quebre quando as variáveis ainda
@@ -17,7 +18,8 @@ export function getSupabase(): SupabaseClient {
       );
     }
 
-    _supabase = createClient(
+    console.log("🌐 INICIALIZANDO SUPABASE BROWSER CLIENT");
+    _supabase = createBrowserClient(
       url || 'https://placeholder.supabase.co', 
       key || 'placeholder_anon_key'
     );

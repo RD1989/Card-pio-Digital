@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   let response = NextResponse.next({
     request: {
       headers: request.headers,
@@ -35,6 +35,9 @@ export async function middleware(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser();
   const { pathname } = request.nextUrl;
+
+  // Log de diagnóstico no servidor
+  console.log(`🛡️ MIDDLEWARE: Usuário [${user?.email || 'NÃO LOGADO'}] acessando [${pathname}]`);
 
   // Proteção do /dashboard
   if (pathname.startsWith('/dashboard') && !user) {
