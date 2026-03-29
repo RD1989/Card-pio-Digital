@@ -15,7 +15,10 @@ import {
   CreditCard,
   Phone,
   ArrowRight,
-  Loader2
+  Loader2,
+  Trash2,
+  LogIn,
+  Download
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
@@ -39,6 +42,10 @@ export default function AdminClientsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState<'all' | 'active' | 'inactive'>('all');
   const [planFilter, setPlanFilter] = useState<'all' | 'free' | 'starter' | 'pro'>('all');
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  
+  const [newMerchant, setNewMerchant] = useState({ name: '', email: '', whatsapp: '', password: '', plan: 'free' });
+  const [creating, setCreating] = useState(false);
 
   const fetchClients = async () => {
     try {
@@ -92,6 +99,74 @@ export default function AdminClientsPage() {
     }
   };
 
+  const deleteMerchant = async (userId: string, restaurantName: string) => {
+    if (!confirm(`TEM CERTEZA ABSOLUTA? Isso apagará a loja ${restaurantName} inteira, menus, imagens e faturas. Não há volta.`)) return;
+    
+    try {
+      setLoading(true);
+      const { data: sessionData } = await supabase.auth.getSession();
+      const res = await fetch(`/api/admin/delete-merchant?userId=${userId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${sessionData.session?.access_token}` }
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      
+      alert('Loja e usuário erradicados com sucesso!');
+      fetchClients();
+    } catch (error: any) {
+      alert(error.message || 'Erro ao deletar Lojista');
+      setLoading(false);
+    }
+  };
+
+  const createMerchant = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setCreating(true);
+    try {
+       const { data: sessionData } = await supabase.auth.getSession();
+       const res = await fetch('/api/admin/create-merchant', {
+          method: 'POST',
+          headers: { 
+             'Content-Type': 'application/json',
+             'Authorization': `Bearer ${sessionData.session?.access_token}` 
+          },
+          body: JSON.stringify(newMerchant)
+       });
+       const data = await res.json();
+       if (!res.ok) throw new Error(data.error);
+
+       alert('Lojista registrado com sucesso e já pronto pra uso!');
+       setIsCreateModalOpen(false);
+       setNewMerchant({ name: '', email: '', whatsapp: '', password: '', plan: 'free' });
+       fetchClients();
+    } catch(err: any) {
+       alert(err.message || "Erro no cadastro manual.");
+    } finally {
+       setCreating(false);
+    }
+  };
+
+  const impersonate = (userId: string) => {
+    sessionStorage.setItem('impersonate_user_id', userId);
+    window.location.href = '/dashboard/products';
+  };
+
+  const exportCSV = () => {
+    const headers = ['ID,Nome,Slug,WhatsApp,Plano,Criado_Em,Ativo,Vencimento'];
+    const rows = filteredClients.map(c => 
+      `"${c.id}","${c.name}","${c.slug}","${c.whatsapp_number||''}","${c.plan}","${c.created_at}","${c.is_active}","${c.trial_ends_at||''}"`
+    );
+    const csvContent = "data:text/csv;charset=utf-8," + headers.concat(rows).join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "lojistas_cardapio.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const metrics = useMemo(() => {
     return {
       total: clients.length,
@@ -125,10 +200,13 @@ export default function AdminClientsPage() {
         </div>
         
         <div className="flex items-center gap-3">
-           <button onClick={fetchClients} className="p-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors shadow-sm">
+           <button onClick={exportCSV} title="Exportar Planilha CSV" className="p-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors shadow-sm text-zinc-400 hover:text-emerald-500">
+              <Download className="w-5 h-5 flex-shrink-0" />
+           </button>
+           <button onClick={fetchClients} title="Recarregar" className="p-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors shadow-sm">
               <TrendingUp className="w-5 h-5 text-zinc-400" />
            </button>
-           <button className="bg-zinc-950 dark:bg-amber-500 text-white dark:text-zinc-950 font-black px-6 py-3 rounded-2xl text-xs uppercase tracking-widest shadow-lg shadow-amber-500/10 active:scale-95 transition-all">
+           <button onClick={() => setIsCreateModalOpen(true)} className="bg-zinc-950 dark:bg-amber-500 text-white dark:text-zinc-950 font-black px-6 py-3 rounded-2xl text-xs uppercase tracking-widest shadow-lg shadow-amber-500/10 active:scale-95 transition-all">
               Novo Lojista
            </button>
         </div>
@@ -298,26 +376,44 @@ export default function AdminClientsPage() {
                         </button>
                       </td>
                       <td className="px-8 py-7 text-right">
-                        <div className="flex items-center justify-end gap-3">
+                        <div className="flex items-center justify-end gap-2">
                           <select 
                             value={client.plan}
                             onChange={(e) => updatePlan(client.id, e.target.value)}
-                            className="bg-white dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 text-[10px] font-black uppercase px-2 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 focus:outline-none shadow-sm"
+                            className="bg-white dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 text-[10px] font-black uppercase px-2 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 focus:outline-none shadow-sm mr-2"
                           >
                             <option value="free">Free</option>
                             <option value="starter">Starter</option>
                             <option value="pro">Pro</option>
                           </select>
+                          
+                          <button
+                            title="Administrar Resturante"
+                            onClick={() => impersonate(client.user_id)}
+                            className="p-3 text-indigo-500 hover:text-white bg-indigo-500/10 hover:bg-indigo-500 rounded-2xl transition-all shadow-sm"
+                          >
+                            <LogIn className="w-4 h-4" />
+                          </button>
+
                           {client.slug && (
                             <a 
+                              title="Página Pública"
                               href={`/${client.slug}`}
                               target="_blank"
                               rel="noreferrer"
-                              className="p-3 text-zinc-400 hover:text-amber-500 bg-zinc-100 dark:bg-zinc-800 rounded-2xl transition-all shadow-sm"
+                              className="p-3 text-amber-500 hover:text-white bg-amber-500/10 hover:bg-amber-500 rounded-2xl transition-all shadow-sm"
                             >
-                              <ExternalLink className="w-5 h-5" />
+                              <ExternalLink className="w-4 h-4" />
                             </a>
                           )}
+                          
+                          <button
+                            title="Excluir Definitivamente"
+                            onClick={() => deleteMerchant(client.user_id, client.name)}
+                            className="p-3 text-red-500 hover:text-white bg-red-500/10 hover:bg-red-500 rounded-2xl transition-all shadow-sm"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
                         </div>
                       </td>
                     </motion.tr>
@@ -328,6 +424,55 @@ export default function AdminClientsPage() {
           </table>
         </div>
       </div>
+
+      {isCreateModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+           <motion.form 
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              onSubmit={createMerchant} 
+              className="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 p-8 rounded-[2rem] w-full max-w-md shadow-2xl relative"
+           >
+              <h2 className="text-2xl font-serif italic text-zinc-900 dark:text-white mb-6">Novo Lojista</h2>
+              
+              <div className="space-y-4">
+                 <div>
+                   <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-1 block">Nome do Restaurante</label>
+                   <input required value={newMerchant.name} onChange={e => setNewMerchant({...newMerchant, name: e.target.value})} className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3 text-zinc-900 dark:text-white" />
+                 </div>
+                 <div>
+                   <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-1 block">E-mail (Login)</label>
+                   <input type="email" required value={newMerchant.email} onChange={e => setNewMerchant({...newMerchant, email: e.target.value})} className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3 text-zinc-900 dark:text-white" />
+                 </div>
+                 <div>
+                   <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-1 block">WhatsApp</label>
+                   <input required value={newMerchant.whatsapp} onChange={e => setNewMerchant({...newMerchant, whatsapp: e.target.value})} className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3 text-zinc-900 dark:text-white" />
+                 </div>
+                 <div>
+                   <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-1 block">Plano Inicial</label>
+                   <select value={newMerchant.plan} onChange={e => setNewMerchant({...newMerchant, plan: e.target.value})} className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3 text-zinc-900 dark:text-white">
+                      <option value="free">Free</option>
+                      <option value="monthly">PRO Mensal</option>
+                      <option value="yearly">PRO Anual</option>
+                   </select>
+                 </div>
+                 <div>
+                   <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-1 block">Senha do Cliente</label>
+                   <input required minLength={6} type="text" value={newMerchant.password} onChange={e => setNewMerchant({...newMerchant, password: e.target.value})} className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3 text-zinc-900 dark:text-white" placeholder="Mínimo 6 chars" />
+                 </div>
+              </div>
+
+              <div className="flex gap-3 mt-8">
+                 <button type="button" onClick={() => setIsCreateModalOpen(false)} className="flex-1 py-3 text-sm font-bold text-zinc-500 hover:text-zinc-800 dark:hover:text-white transition-colors">
+                   Cancelar
+                 </button>
+                 <button type="submit" disabled={creating} className="flex-1 py-3 bg-amber-500 text-black rounded-xl text-sm font-black uppercase tracking-widest hover:bg-amber-400 transition-colors shadow-lg shadow-amber-500/20 disabled:opacity-50">
+                   {creating ? 'Criando...' : 'Cadastrar Mestre'}
+                 </button>
+              </div>
+           </motion.form>
+        </div>
+      )}
     </div>
   );
 }

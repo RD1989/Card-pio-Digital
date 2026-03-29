@@ -85,14 +85,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       const { data: { user: authUser } } = await supabase.auth.getUser();
       if (!authUser) return;
 
+      const impersonatedUserId = sessionStorage.getItem('impersonate_user_id');
+      const targetUserId = authUser.email === 'rodrigotechpro@gmail.com' && impersonatedUserId ? impersonatedUserId : authUser.id;
+
       const { data: restaurantData } = await supabase
         .from('restaurants')
         .select('*')
-        .eq('user_id', authUser.id)
+        .eq('user_id', targetUserId)
         .maybeSingle();
 
       if (setUser && user) {
-        setUser({ ...user, restaurant: restaurantData || null });
+        setUser({ ...user, restaurant: restaurantData || null, isImpersonating: !!impersonatedUserId });
       } else if (setAuth) {
         setAuth({
           id: authUser.id,
@@ -100,6 +103,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           name: restaurantData?.name || authUser.email || '',
           restaurant: restaurantData || null,
           is_super_admin: authUser.email === 'rodrigotechpro@gmail.com',
+          isImpersonating: !!impersonatedUserId
         }, (await supabase.auth.getSession()).data.session?.access_token || '');
       }
     };
@@ -112,7 +116,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     window.location.href = '/login';
   };
 
-  const navItems = user?.is_super_admin ? [
+  const isImpersonating = typeof window !== 'undefined' && sessionStorage.getItem('impersonate_user_id') !== null;
+  const navItems = user?.is_super_admin && !isImpersonating ? [
     { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard Global' },
     { to: '/dashboard/clients', icon: Users, label: 'Gestão de Clientes' },
     { to: '/dashboard/settings/ia', icon: Cpu, label: 'Config. IA' },
@@ -135,6 +140,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         ? 'theme-light bg-slate-50 text-slate-900' 
         : 'bg-zinc-950 text-zinc-100'
     }`}>
+      {/* Banner de Impersonation */}
+      {isImpersonating && (
+        <div className="absolute top-0 inset-x-0 z-[100] bg-rose-500 text-white text-[10px] md:text-sm font-black px-4 py-2 flex items-center justify-between shadow-lg">
+           <span className="animate-pulse">⚠️ ALERTA: MODO ADMINISTRAÇÃO REMOTA ACIONADO — Alterações feitas aqui afetarão a loja {user?.restaurant?.name}</span>
+           <button 
+             onClick={() => {
+                sessionStorage.removeItem('impersonate_user_id');
+                window.location.href = '/dashboard/clients';
+             }}
+             className="bg-white text-rose-500 hover:bg-rose-50 px-3 py-1 rounded-full uppercase tracking-tighter transition-all"
+           >
+             Encerrar Sessão
+           </button>
+        </div>
+      )}
+
       {/* Mobile Overlay */}
       <AnimatePresence>
         {mobileMenuOpen && (
