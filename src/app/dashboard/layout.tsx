@@ -89,7 +89,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         .from('restaurants')
         .select('*')
         .eq('user_id', authUser.id)
-        .single();
+        .maybeSingle();
 
       if (setUser && user) {
         setUser({ ...user, restaurant: restaurantData || null });
