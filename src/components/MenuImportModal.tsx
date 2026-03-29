@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useThemeStore } from '@/store/useThemeStore';
+import { useAuthStore } from '@/store/useAuthStore';
 import { supabase } from '@/lib/supabase';
 import type { Category } from '@/types';
 
@@ -93,11 +94,6 @@ export function MenuImportModal({ onClose, onImported }: MenuImportModalProps) {
   const processWithAI = async () => {
     if (!file) return;
 
-    if (file.type === 'application/pdf') {
-      setError('PDFs não são suportados. Envie uma imagem (JPG ou PNG).');
-      return;
-    }
-
     setStep('processing');
     setProgress(0);
     setError('');
@@ -125,12 +121,14 @@ export function MenuImportModal({ onClose, onImported }: MenuImportModalProps) {
       });
 
       const base64 = await base64Promise;
+      const isPdf = file.type === 'application/pdf';
 
       const res = await fetch('/api/ai/menu-import', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          image_base64: base64,
+          image_base64: isPdf ? undefined : base64,
+          pdf_base64: isPdf ? base64 : undefined,
           prompt: 'Extraia produtos do cardápio: nome, descrição e preço. Formato JSON: {"products": [{"name": "P1", "description": "D1", "price": 10.5, "category": "Lanches"}]}'
         })
       });
@@ -200,23 +198,29 @@ export function MenuImportModal({ onClose, onImported }: MenuImportModalProps) {
     setProgress(0);
     let imported = 0;
 
-    const categoryMap = new Map<string, number>();
+    const categoryMap = new Map<string, string>();
     for (const cat of categories) {
-      categoryMap.set(cat.name.toLowerCase(), cat.id);
+      categoryMap.set(cat.name.toLowerCase(), String(cat.id));
     }
+
+    const restaurantId = useAuthStore.getState().user?.restaurant?.id;
 
     for (const product of selected) {
       try {
         let categoryId = categoryMap.get(product.category_name.toLowerCase());
         if (!categoryId) {
           try {
-            const { data } = await supabase.from('categories').insert([{ name: product.category_name, sort_order: categories.length }]).select().single();
+            const { data } = await supabase.from('categories').insert([{ 
+              name: product.category_name, 
+              sort_order: categories.length,
+              restaurant_id: restaurantId
+            }]).select().single();
             if (data) {
               categoryId = data.id;
               categoryMap.set(product.category_name.toLowerCase(), data.id);
             }
           } catch {
-            categoryId = categories[0]?.id;
+            categoryId = categories[0]?.id as unknown as string;
           }
         }
 
@@ -225,6 +229,7 @@ export function MenuImportModal({ onClose, onImported }: MenuImportModalProps) {
           description: product.description || null,
           price: product.price,
           category_id: categoryId,
+          restaurant_id: restaurantId,
           is_available: true,
           is_upsell: false,
         }]);

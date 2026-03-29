@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useThemeStore } from '@/store/useThemeStore';
+import { useAuthStore } from '@/store/useAuthStore';
 import { supabase } from '@/lib/supabase';
 import type { Product, Category } from '@/types';
 
@@ -110,7 +111,8 @@ export function ProductFormModal({ product, onClose, onSaved }: ProductFormModal
         image_url: finalImgUrl,
         category_id: Number(form.category_id) || null,
         is_available: form.is_available,
-        is_upsell: form.is_upsell
+        is_upsell: form.is_upsell,
+        restaurant_id: useAuthStore.getState().user?.restaurant?.id
       };
 
       if (product?.id) {

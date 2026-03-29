@@ -28,10 +28,18 @@ export async function DELETE(req: NextRequest) {
        return NextResponse.json({ error: "Você não pode deletar a si mesmo." }, { status: 400 });
     }
 
-    // 3. Deletar usando a Master Key. O PostgreSQL Cascade vai destruir todos os registros vinculados automaticamente.
+    // 3. Deletar arquivos remanescentes vinculados a esse Owner p/ o Supabase Auth não rejeitar a deleção por FK Constraint.
+    try {
+       await adminDb.schema('storage').from('objects').delete().eq('owner', targetUserId);
+    } catch(err) {
+       console.log("Aviso: Falha ao tentar limpar storage objects preventivamente. Pode ser que não existam ou RLS impediu.");
+    }
+
+    // 4. Deletar usando a Master Key. O PostgreSQL Cascade vai destruir todos os registros vinculados automaticamente.
     const { data: delResult, error: delError } = await adminDb.auth.admin.deleteUser(targetUserId);
 
     if (delError) {
+       console.error("Supabase Admin Auth Delete Error:", delError);
        throw delError;
     }
 

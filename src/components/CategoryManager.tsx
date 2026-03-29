@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Plus, Trash2, Edit3, Check, X, Loader2 } from 'lucide-react';
 import { useThemeStore } from '@/store/useThemeStore';
+import { useAuthStore } from '@/store/useAuthStore';
 import { supabase } from '@/lib/supabase';
 import type { Category } from '@/types';
 
@@ -50,9 +51,11 @@ export function CategoryManager({ onCategoriesChange }: Props) {
     if (!newName.trim()) return;
     setSaving(true);
     try {
+      const restaurantId = useAuthStore.getState().user?.restaurant?.id;
       const { error } = await supabase.from('categories').insert([{ 
         name: newName.trim(),
-        sort_order: categories.length
+        sort_order: categories.length,
+        restaurant_id: restaurantId
       }]);
       if (error) throw error;
       
