@@ -2,11 +2,12 @@ import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import axios from 'axios';
 
-// =========================================================================
-// HACK DA VERCEL: Configuração mágica para impedir o timeout Vercel (Hobby) 
-// por limite de 10s. O Next.js autorizará a persistência de até 60 segundos 
-// =========================================================================
-export const maxDuration = 60; 
+// Força execução em runtime (não durante o build estático da Vercel)
+export const dynamic = 'force-dynamic';
+
+// Estende o timeout para até 60s (proteção contra lentidão do OpenRouter)
+export const maxDuration = 60;
+
 
 export async function POST(req: Request) {
   try {
