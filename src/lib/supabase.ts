@@ -7,9 +7,20 @@ let _supabaseAdmin: SupabaseClient | null = null;
 
 export function getSupabase(): SupabaseClient {
   if (!_supabase) {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
-    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder_anon_key';
-    _supabase = createClient(url, key);
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    if (!url || !key) {
+      console.error(
+        "❌ CONFIGURAÇÃO DO SUPABASE AUSENTE:\n" +
+        "Certifique-se de configurar NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_ANON_KEY no seu painel da Vercel ou no arquivo .env.local localmente."
+      );
+    }
+
+    _supabase = createClient(
+      url || 'https://placeholder.supabase.co', 
+      key || 'placeholder_anon_key'
+    );
   }
   return _supabase;
 }
@@ -18,6 +29,7 @@ export function getSupabaseAdmin(): SupabaseClient {
   if (!_supabaseAdmin) {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
     const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder_admin_key';
+    
     _supabaseAdmin = createClient(url, key, {
       auth: { autoRefreshToken: false, persistSession: false },
     });
