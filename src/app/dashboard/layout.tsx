@@ -91,15 +91,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         .eq('user_id', authUser.id)
         .single();
 
-      if (restaurantData && setUser && user) {
-        setUser({ ...user, restaurant: restaurantData });
-      } else if (restaurantData && setAuth) {
+      if (setUser && user) {
+        setUser({ ...user, restaurant: restaurantData || null });
+      } else if (setAuth) {
         setAuth({
           id: authUser.id,
           email: authUser.email || '',
-          name: restaurantData.name || authUser.email || '',
-          restaurant: restaurantData,
-          is_super_admin: false,
+          name: restaurantData?.name || authUser.email || '',
+          restaurant: restaurantData || null,
+          is_super_admin: authUser.email === 'rodrigotechpro@gmail.com',
         }, (await supabase.auth.getSession()).data.session?.access_token || '');
       }
     };

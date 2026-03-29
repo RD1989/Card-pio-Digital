@@ -58,7 +58,7 @@ export default function LoginPage() {
         email: data.user!.email || '',
         name: restaurantData?.name || data.user!.email || '',
         restaurant: restaurantData || null,
-        is_super_admin: false,
+        is_super_admin: data.user!.email === 'rodrigotechpro@gmail.com',
       }, data.session?.access_token || '');
 
       // Sincroniza cookies com o servidor antes de redirecionar

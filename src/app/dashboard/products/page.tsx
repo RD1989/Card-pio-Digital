@@ -88,15 +88,22 @@ export default function ProductManager() {
 
   const fetchProducts = async () => {
     setLoading(true);
+    const restaurantId = user?.restaurant?.id;
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('products')
         .select(`
           *,
           category:categories(*)
         `)
         .order('created_at', { ascending: false });
-        
+
+      // Filtra apenas produtos do restaurante do lojista logado
+      if (restaurantId) {
+        query = query.eq('restaurant_id', restaurantId);
+      }
+
+      const { data, error } = await query;
       if (error) throw error;
       setProducts(data || []);
     } catch (error) {

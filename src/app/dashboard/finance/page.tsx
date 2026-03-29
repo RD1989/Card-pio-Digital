@@ -15,6 +15,7 @@ import {
   Calendar
 } from 'lucide-react';
 import { useThemeStore } from '@/store/useThemeStore';
+import { useAuthStore } from '@/store/useAuthStore';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { supabase } from '@/lib/supabase';
@@ -37,6 +38,7 @@ interface Order {
 
 export default function FinancePage() {
   const { theme, accentColor } = useThemeStore() as any;
+  const { user } = useAuthStore() as any;
   const isLight = theme === 'light';
 
   const [stats, setStats] = useState<FinanceStats | null>(null);
@@ -53,11 +55,14 @@ export default function FinancePage() {
   const fetchFinanceData = async () => {
     try {
       setLoading(true);
+      const restaurantId = user?.restaurant?.id;
+      if (!restaurantId) return;
       
-      // Consultando ordens reais do Supabase
+      // Consultando ordens reais do Supabase filtradas pelo restaurante
       let query = supabase
         .from('orders')
         .select('*')
+        .eq('restaurant_id', restaurantId)
         .order('created_at', { ascending: false });
 
       if (statusFilter !== 'all') {

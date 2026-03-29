@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { Eye, Package, Tag, TrendingUp, Loader2 } from 'lucide-react';
 import { useThemeStore } from '@/store/useThemeStore';
+import { useAuthStore } from '@/store/useAuthStore';
 import { supabase } from '@/lib/supabase';
 
 interface MetricCard {
@@ -28,6 +29,7 @@ interface DashboardData {
 
 export default function MetricsPage() {
   const { theme, accentColor } = useThemeStore() as any;
+  const { user } = useAuthStore() as any;
   const isLight = theme === 'light';
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -35,41 +37,50 @@ export default function MetricsPage() {
 
   useEffect(() => {
     const fetchMetrics = async () => {
+      const restaurantId = user?.restaurant?.id;
+      if (!restaurantId) return;
       setLoading(true);
       try {
-        const [prodRes, catRes] = await Promise.all([
-          supabase.from('products').select('*', { count: 'exact', head: true }),
-          supabase.from('categories').select('*', { count: 'exact', head: true })
+        const [prodRes, catRes, viewsRes] = await Promise.all([
+          supabase.from('products').select('*', { count: 'exact', head: true }).eq('restaurant_id', restaurantId).eq('is_active', true),
+          supabase.from('categories').select('*', { count: 'exact', head: true }).eq('restaurant_id', restaurantId),
+          supabase.from('views').select('created_at').eq('restaurant_id', restaurantId).order('created_at', { ascending: true })
         ]);
 
         const totalProds = prodRes.count || 0;
         const totalCats = catRes.count || 0;
+        const totalVisitas = viewsRes.data?.length || 0;
 
-        // Simulando visitas e dados de gráfico (Variação de migração)
+        // Gráfico por mês dos últimos 6 meses
+        const meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+        const agora = new Date();
+        const chartMap: Record<string, number> = {};
+        for (let i = 5; i >= 0; i--) {
+          const d = new Date(agora.getFullYear(), agora.getMonth() - i, 1);
+          chartMap[meses[d.getMonth()]] = 0;
+        }
+        (viewsRes.data || []).forEach((v: any) => {
+          const mes = meses[new Date(v.created_at).getMonth()];
+          if (chartMap[mes] !== undefined) chartMap[mes]++;
+        });
+
         setData({
           total_produtos: totalProds,
-          produtos_ativos: totalProds, // Atualmente tratamos todos como ativos na listagem inicial
+          produtos_ativos: totalProds,
           total_categorias: totalCats,
-          visitas_cardapio: 312, // Mock por enquanto
-          chart_data: [
-            { name: 'Jan', value: 120 },
-            { name: 'Fev', value: 200 },
-            { name: 'Mar', value: 150 },
-            { name: 'Abr', value: 300 },
-            { name: 'Mai', value: 485 },
-            { name: 'Jun', value: 600 }
-          ]
+          visitas_cardapio: totalVisitas,
+          chart_data: Object.entries(chartMap).map(([name, value]) => ({ name, value }))
         });
         setError(null);
       } catch (err: any) {
         console.error('Erro ao buscar métricas:', err);
-        setError("Não foi possível carregar as métricas detalhadas.");
+        setError('Não foi possível carregar as métricas detalhadas.');
       } finally {
         setLoading(false);
       }
     };
     fetchMetrics();
-  }, []);
+  }, [user?.restaurant?.id]);
 
   if (loading) {
     return (
