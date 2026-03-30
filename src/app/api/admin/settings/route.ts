@@ -3,7 +3,7 @@ import { getSupabaseAdmin } from "@/lib/supabase";
 
 export async function POST(req: NextRequest) {
   try {
-    const adminDb = getSupabaseAdmin();
+    const adminDb = getSupabaseAdmin(true);
     const authHeader = req.headers.get("authorization");
     
     if (!authHeader) {

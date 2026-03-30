@@ -3,9 +3,10 @@ import { getSupabaseAdmin } from "@/lib/supabase";
 
 export async function DELETE(req: NextRequest) {
   try {
-    const adminDb = getSupabaseAdmin();
+    // Forçamos o refresh da chave mestre para garantir bypass de RLS
+    const adminDb = getSupabaseAdmin(true);
+    
     // 1. Validar se o request vem do próprio super-admin (Security Layer via Auth)
-    // Extraímos o jwt do header para bater no Supabase
     const authHeader = req.headers.get("authorization");
     if (!authHeader) {
       return NextResponse.json({ error: "No token provided" }, { status: 401 });
@@ -39,10 +40,10 @@ export async function DELETE(req: NextRequest) {
     try {
        await adminDb.schema('storage').from('objects').delete().eq('owner', targetUserId);
     } catch(err) {
-       console.log("Aviso: Falha ao tentar limpar storage objects preventivamente. Pode ser que não existam ou RLS impediu.");
+       console.log("Aviso: Falha ao tentar limpar storage objects preventivamente.");
     }
 
-    // 4. Deletar usando a Master Key. O PostgreSQL Cascade vai destruir todos os registros vinculados automaticamente.
+    // 4. Deletar usando a Master Key.
     const { data: delResult, error: delError } = await adminDb.auth.admin.deleteUser(targetUserId);
 
     if (delError) {

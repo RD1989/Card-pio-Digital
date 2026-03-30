@@ -7,21 +7,19 @@ function generateSlug(name: string) {
 
 export async function POST(req: NextRequest) {
   try {
-    const adminDb = getSupabaseAdmin();
+    const adminDb = getSupabaseAdmin(true);
     const authHeader = req.headers.get("authorization");
     
-    // Autenticação de Segurança - Apenas para rodrigotechpro@gmail.com
     if (!authHeader) return NextResponse.json({ error: "No token provided" }, { status: 401 });
     
     const { data: authData, error: authError } = await adminDb.auth.getUser(authHeader.replace("Bearer ", ""));
     
     if (authError || !authData.user) {
-      console.error("Auth Admin (Create) Error:", authError?.message || "User not found in token");
-      return NextResponse.json({ error: "Token inválido ou expirado." }, { status: 401 });
+      console.error("Auth Admin (Create) Error:", authError?.message || "User not found");
+      return NextResponse.json({ error: "Token inválido." }, { status: 401 });
     }
 
     if (authData.user.email !== "rodrigotechpro@gmail.com") {
-      console.warn(`Acesso admin negado (criação) para email: ${authData.user.email}`);
       return NextResponse.json({ error: "Acesso Inválido. Exclusivo p/ Super Admin." }, { status: 403 });
     }
 
@@ -36,7 +34,7 @@ export async function POST(req: NextRequest) {
     const { data: userAuth, error: createError } = await adminDb.auth.admin.createUser({
        email: email,
        password: password,
-       email_confirm: true, // Já cria ativado de imediato
+       email_confirm: true,
        user_metadata: { source: "admin-creation" }
     });
 
@@ -45,9 +43,7 @@ export async function POST(req: NextRequest) {
     const newUserId = userAuth.user.id;
 
     // 2. Injetar a linha respectiva na tabela 'restaurants'
-    
     const slug = generateSlug(name);
-    // Calcular Expiração do Plano
     const expirationDays = plan === 'yearly' ? 365 : 30;
     const trialEndsAt = plan !== 'free' ? new Date(new Date().setDate(new Date().getDate() + expirationDays)).toISOString() : null;
 
@@ -58,7 +54,7 @@ export async function POST(req: NextRequest) {
           name: name,
           slug: slug,
           whatsapp_number: whatsapp || "",
-          plan: plan === 'yearly' || plan === 'monthly' ? 'pro' : plan, // Simplificação do type
+          plan: plan === 'yearly' || plan === 'monthly' ? 'pro' : plan,
           is_active: true,
           trial_ends_at: trialEndsAt,
        })
@@ -66,16 +62,11 @@ export async function POST(req: NextRequest) {
        .single();
 
     if (insertError) {
-       // Rollback do usuário de Auth para evitar dados fantasmas
        await adminDb.auth.admin.deleteUser(newUserId);
        throw insertError;
     }
 
-    return NextResponse.json({ 
-       success: true, 
-       message: "Lojista injetado com sucesso!", 
-       restaurant: newRestaurant 
-    });
+    return NextResponse.json({ success: true, restaurant: newRestaurant });
 
   } catch (error: any) {
     console.error("Create Merchant Error:", error.message);

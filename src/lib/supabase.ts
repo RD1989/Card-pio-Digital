@@ -9,8 +9,11 @@ let _supabaseAdmin: SupabaseClient | null = null;
 // Função auxiliar interna para ler variáveis do .env.local de forma robusta no servidor
 function getEnvVar(name: string): string | undefined {
   // 1. Tenta o padrão do Node/Vercel
-  if (typeof process !== 'undefined' && process.env[name]) {
-    return process.env[name];
+  const value = typeof process !== 'undefined' ? process.env[name] : undefined;
+  
+  // Se o valor existe e não é um placeholder comum do nosso template, retornamos ele.
+  if (value && value !== 'placeholder_admin_key' && !value.includes('placeholder')) {
+    return value;
   }
 
   // 2. Fallback: Leitura direta do arquivo no servidor (ignorado no browser)
@@ -23,17 +26,18 @@ function getEnvVar(name: string): string | undefined {
         const content = fs.readFileSync(envPath, 'utf8');
         const lines = content.split('\n');
         for (const line of lines) {
-          const [key, ...valueParts] = line.split('=');
-          if (key?.trim() === name) {
-            return valueParts.join('=').trim().replace(/^["']|["']$/g, '');
+          const trimmedLine = line.trim();
+          if (trimmedLine.startsWith(name + '=')) {
+            const val = trimmedLine.split('=')[1]?.trim().replace(/^["']|["']$/g, '');
+            if (val && !val.includes('placeholder')) return val;
           }
         }
       }
     } catch (e) {
-      // Silencioso: Fallback falhou ou fs não disponível (ex: Edge Runtime limitado)
+      // Silencioso
     }
   }
-  return undefined;
+  return value || undefined;
 }
 
 export function getSupabase(): SupabaseClient {
@@ -41,29 +45,27 @@ export function getSupabase(): SupabaseClient {
     const url = getEnvVar('NEXT_PUBLIC_SUPABASE_URL');
     const key = getEnvVar('NEXT_PUBLIC_SUPABASE_ANON_KEY');
 
-    if (!url || !key) {
-      console.error(
-        "❌ CONFIGURAÇÃO DO SUPABASE AUSENTE:\n" +
-        "Certifique-se de configurar NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_ANON_KEY."
-      );
-    }
-
     _supabase = createBrowserClient(
-      url || 'https://placeholder.supabase.co', 
-      key || 'placeholder_anon_key'
+      url || 'https://upgdrlotzruvbneodrqj.supabase.co', 
+      key || 'sb_publishable_placeholder'
     );
   }
   return _supabase;
 }
 
-export function getSupabaseAdmin(): SupabaseClient {
-  if (!_supabaseAdmin) {
+export function getSupabaseAdmin(forceRefresh = false): SupabaseClient {
+  if (!_supabaseAdmin || forceRefresh) {
     const url = getEnvVar('NEXT_PUBLIC_SUPABASE_URL') || 'https://upgdrlotzruvbneodrqj.supabase.co';
-    const key = getEnvVar('SUPABASE_SERVICE_ROLE_KEY') || getEnvVar('NEXT_PUBLIC_SUPABASE_ANON_KEY') || 'placeholder_admin_key';
+    const key = getEnvVar('SUPABASE_SERVICE_ROLE_KEY') || getEnvVar('NEXT_PUBLIC_SUPABASE_ANON_KEY');
     
-    _supabaseAdmin = createClient(url, key, {
+    _supabaseAdmin = createClient(url, key || 'placeholder_admin_key', {
       auth: { autoRefreshToken: false, persistSession: false },
     });
+
+    // Diagnóstico simples no console do servidor (mascarado)
+    if (typeof window === 'undefined') {
+      console.log(`[SupabaseAdmin] Inicializado com key: ${key?.substring(0, 10)}... (Ref: ${forceRefresh ? 'FORCE' : 'LAZY'})`);
+    }
   }
   return _supabaseAdmin;
 }
