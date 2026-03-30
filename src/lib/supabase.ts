@@ -1,20 +1,21 @@
 import { createBrowserClient } from '@supabase/ssr';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-// Variáveis de cache
+// Variáveis de cache para os instâncias
 let _supabase: SupabaseClient | null = null;
 let _supabaseAdmin: SupabaseClient | null = null;
 
-// Função auxiliar interna para ler variáveis do .env.local de forma robusta no servidor
+/**
+ * Função auxiliar interna para ler variáveis do .env.local de forma robusta no servidor.
+ * Prioriza process.env, mas lê o arquivo se necessário (ex: em tempo de build ou cache estático).
+ */
 function getEnvVar(name: string): string | undefined {
-  // 1. Tenta o padrão do Node/Vercel
-  const value = typeof process !== 'undefined' ? process.env[name] : undefined;
-  
-  if (value && !value.includes('placeholder')) {
-    return value;
+  if (typeof process !== 'undefined' && process.env[name]) {
+    const v = process.env[name];
+    if (v && !v.includes('placeholder')) return v;
   }
 
-  // 2. Fallback: Leitura direta do arquivo no servidor (ignorado no browser)
+  // Fallback: Leitura direta de arquivo no servidor (ignorado no browser)
   if (typeof window === 'undefined') {
     try {
       const fs = require('fs');
@@ -32,38 +33,76 @@ function getEnvVar(name: string): string | undefined {
         }
       }
     } catch (e) {
-      // Silencioso
+      // Silencioso para não quebrar o build
     }
   }
-  return value || undefined;
+  return undefined;
 }
 
-// Inicializa o cliente público (Browser/Client Components)
+/**
+ * Inicializa o cliente público (Browser/Client Components).
+ * Retorna um objeto Supabase válido ou um placeholder seguro para o build.
+ */
 export function getSupabase(): SupabaseClient {
   if (!_supabase) {
     const url = getEnvVar('NEXT_PUBLIC_SUPABASE_URL') || 'https://upgdrlotzruvbneodrqj.supabase.co';
-    const key = getEnvVar('NEXT_PUBLIC_SUPABASE_ANON_KEY') || '';
+    const key = getEnvVar('NEXT_PUBLIC_SUPABASE_ANON_KEY');
 
-    // No SSR (Next.js 15), evitamos logs pesados que podem travar o render
+    // Se estivermos em build e sem chaves, não chamamos o criador oficial para não dar throw
+    if (!key || key.includes('placeholder')) {
+      if (typeof window === 'undefined') {
+        console.warn("[Supabase] Aviso: Chave Anon ausente. Usando placeholder seguro para build.");
+      }
+      // Retornamos um mock parcial para evitar crash de inicialização no build
+      return { auth: {}, from: () => ({}) } as any; 
+    }
+
     _supabase = createBrowserClient(url, key);
   }
   return _supabase;
 }
 
-// Inicializa o cliente administrativo (Server Components/API Routes)
+/**
+ * Inicializa o cliente administrativo (Server Components/API Routes).
+ * Retorna um objeto Supabase válido ou um placeholder seguro para o build.
+ */
 export function getSupabaseAdmin(forceRefresh = false): SupabaseClient {
   if (!_supabaseAdmin || forceRefresh) {
     const url = getEnvVar('NEXT_PUBLIC_SUPABASE_URL') || 'https://upgdrlotzruvbneodrqj.supabase.co';
     const key = getEnvVar('SUPABASE_SERVICE_ROLE_KEY') || getEnvVar('NEXT_PUBLIC_SUPABASE_ANON_KEY');
     
-    _supabaseAdmin = createClient(url, key || 'placeholder_admin_key', {
+    if (!key || key.includes('placeholder')) {
+      if (typeof window === 'undefined') {
+         console.warn("[SupabaseAdmin] Aviso: Chave Admin ausente/placeholder. Mocking para build.");
+      }
+      return { auth: { admin: {} }, from: () => ({}) } as any;
+    }
+
+    _supabaseAdmin = createClient(url, key, {
       auth: { autoRefreshToken: false, persistSession: false },
     });
   }
   return _supabaseAdmin;
 }
 
-// Exportações legadas para compatibilidade (Evitando Proxy problemático no SSR)
-// Nota: Em Next.js 15, Proxies em módulos exportados podem causar 500 se acessados no render
-export const supabase = getSupabase();
-export const supabaseAdmin = getSupabaseAdmin();
+/**
+ * EXPORTAÇÕES LAZY (PROXIES): 
+ * Garante que o Supabase só seja instanciado no momento do uso real.
+ * Isso resolve o erro de "API key is required" durante o `next build`.
+ */
+export const supabase = new Proxy({} as SupabaseClient, {
+  get(_, prop) {
+    // Evita loop no console e ferramentas de inspeção
+    if (prop === 'then' || prop === '__esModule' || typeof prop === 'symbol') return undefined;
+    const client = getSupabase();
+    return (client as any)[prop];
+  }
+});
+
+export const supabaseAdmin = new Proxy({} as SupabaseClient, {
+  get(_, prop) {
+    if (prop === 'then' || prop === '__esModule' || typeof prop === 'symbol') return undefined;
+    const client = getSupabaseAdmin();
+    return (client as any)[prop];
+  }
+});
