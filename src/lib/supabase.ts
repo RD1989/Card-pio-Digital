@@ -45,9 +45,13 @@ export function getSupabase(): SupabaseClient {
     const url = getEnvVar('NEXT_PUBLIC_SUPABASE_URL');
     const key = getEnvVar('NEXT_PUBLIC_SUPABASE_ANON_KEY');
 
+    if (!url || !key || key.includes('placeholder')) {
+       console.error("❌ SUPABASE_ANON_KEY NÃO CONFIGURADA OU INVÁLIDA NO NAVEGADOR");
+    }
+
     _supabase = createBrowserClient(
       url || 'https://upgdrlotzruvbneodrqj.supabase.co', 
-      key || 'sb_publishable_placeholder'
+      key || ''
     );
   }
   return _supabase;
