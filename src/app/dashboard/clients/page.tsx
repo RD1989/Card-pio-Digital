@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
+import { useAuthStore } from '@/store/useAuthStore';
 
 interface Client {
   id: string;
@@ -104,10 +105,13 @@ export default function AdminClientsPage() {
     
     try {
       setLoading(true);
-      const { data: sessionData } = await supabase.auth.getSession();
+      const token = useAuthStore.getState().token;
+      
+      if (!token) throw new Error("Não autenticado");
+
       const res = await fetch(`/api/admin/delete-merchant?userId=${userId}`, {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${sessionData.session?.access_token}` }
+        headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
@@ -124,12 +128,15 @@ export default function AdminClientsPage() {
     e.preventDefault();
     setCreating(true);
     try {
-       const { data: sessionData } = await supabase.auth.getSession();
+       const token = useAuthStore.getState().token;
+
+       if (!token) throw new Error("Não autenticado");
+
        const res = await fetch('/api/admin/create-merchant', {
           method: 'POST',
           headers: { 
              'Content-Type': 'application/json',
-             'Authorization': `Bearer ${sessionData.session?.access_token}` 
+             'Authorization': `Bearer ${token}` 
           },
           body: JSON.stringify(newMerchant)
        });

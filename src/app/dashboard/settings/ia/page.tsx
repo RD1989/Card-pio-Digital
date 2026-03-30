@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Cpu, Save, ShieldCheck, CheckCircle2, XCircle, Loader2, Zap, ExternalLink, Bot } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { useAuthStore } from '@/store/useAuthStore';
 
 interface TestResult {
   status: 'ok' | 'error';
@@ -79,8 +80,15 @@ export default function AISettingsPage() {
     setLoading(true);
     setSaved(false);
     try {
-      const { data: session } = await supabase.auth.getSession();
-      const token = session.session?.access_token;
+      // Prioridade para o token do store, que é mais confiável em sistemas persistidos
+      let token = useAuthStore.getState().token;
+      
+      // Fallback para o session do Supabase se o store estiver vazio
+      if (!token) {
+        const { data: sessionData } = await supabase.auth.getSession();
+        token = sessionData.session?.access_token || null;
+      }
+
       if (!token) throw new Error("Não autenticado");
 
       const updates = [
