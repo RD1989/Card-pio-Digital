@@ -12,8 +12,15 @@ export async function DELETE(req: NextRequest) {
     }
 
     const { data: authData, error: authError } = await adminDb.auth.getUser(authHeader.replace("Bearer ", ""));
-    if (authError || authData.user?.email !== "rodrigotechpro@gmail.com") {
-      return NextResponse.json({ error: "Acesso Negado. Requer privilégios de Super Admin." }, { status: 403 });
+    
+    if (authError || !authData.user) {
+      console.error("Auth Admin (Delete) Error:", authError?.message || "User not found in token");
+      return NextResponse.json({ error: "Token inválido ou expirado." }, { status: 401 });
+    }
+
+    if (authData.user.email !== "rodrigotechpro@gmail.com") {
+      console.warn(`Acesso admin negado para email: ${authData.user.email}`);
+      return NextResponse.json({ error: "Acesso Negado. Exclusivo para Super Admin." }, { status: 403 });
     }
 
     // 2. Coletar o userId que deve ser delatado

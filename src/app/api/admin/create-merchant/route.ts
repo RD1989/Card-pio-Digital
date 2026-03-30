@@ -14,7 +14,14 @@ export async function POST(req: NextRequest) {
     if (!authHeader) return NextResponse.json({ error: "No token provided" }, { status: 401 });
     
     const { data: authData, error: authError } = await adminDb.auth.getUser(authHeader.replace("Bearer ", ""));
-    if (authError || authData.user?.email !== "rodrigotechpro@gmail.com") {
+    
+    if (authError || !authData.user) {
+      console.error("Auth Admin (Create) Error:", authError?.message || "User not found in token");
+      return NextResponse.json({ error: "Token inválido ou expirado." }, { status: 401 });
+    }
+
+    if (authData.user.email !== "rodrigotechpro@gmail.com") {
+      console.warn(`Acesso admin negado (criação) para email: ${authData.user.email}`);
       return NextResponse.json({ error: "Acesso Inválido. Exclusivo p/ Super Admin." }, { status: 403 });
     }
 

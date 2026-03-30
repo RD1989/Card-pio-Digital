@@ -6,19 +6,48 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 let _supabase: SupabaseClient | null = null;
 let _supabaseAdmin: SupabaseClient | null = null;
 
+// Função auxiliar interna para ler variáveis do .env.local de forma robusta no servidor
+function getEnvVar(name: string): string | undefined {
+  // 1. Tenta o padrão do Node/Vercel
+  if (typeof process !== 'undefined' && process.env[name]) {
+    return process.env[name];
+  }
+
+  // 2. Fallback: Leitura direta do arquivo no servidor (ignorado no browser)
+  if (typeof process !== 'undefined' && typeof window === 'undefined') {
+    try {
+      const fs = require('fs');
+      const path = require('path');
+      const envPath = path.resolve(process.cwd(), '.env.local');
+      if (fs.existsSync(envPath)) {
+        const content = fs.readFileSync(envPath, 'utf8');
+        const lines = content.split('\n');
+        for (const line of lines) {
+          const [key, ...valueParts] = line.split('=');
+          if (key?.trim() === name) {
+            return valueParts.join('=').trim().replace(/^["']|["']$/g, '');
+          }
+        }
+      }
+    } catch (e) {
+      // Silencioso: Fallback falhou ou fs não disponível (ex: Edge Runtime limitado)
+    }
+  }
+  return undefined;
+}
+
 export function getSupabase(): SupabaseClient {
   if (!_supabase) {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    const url = getEnvVar('NEXT_PUBLIC_SUPABASE_URL');
+    const key = getEnvVar('NEXT_PUBLIC_SUPABASE_ANON_KEY');
 
     if (!url || !key) {
       console.error(
         "❌ CONFIGURAÇÃO DO SUPABASE AUSENTE:\n" +
-        "Certifique-se de configurar NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_ANON_KEY no seu painel da Vercel ou no arquivo .env.local localmente."
+        "Certifique-se de configurar NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_ANON_KEY."
       );
     }
 
-    console.log("🌐 INICIALIZANDO SUPABASE BROWSER CLIENT");
     _supabase = createBrowserClient(
       url || 'https://placeholder.supabase.co', 
       key || 'placeholder_anon_key'
@@ -29,8 +58,8 @@ export function getSupabase(): SupabaseClient {
 
 export function getSupabaseAdmin(): SupabaseClient {
   if (!_supabaseAdmin) {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
-    const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder_admin_key';
+    const url = getEnvVar('NEXT_PUBLIC_SUPABASE_URL') || 'https://upgdrlotzruvbneodrqj.supabase.co';
+    const key = getEnvVar('SUPABASE_SERVICE_ROLE_KEY') || getEnvVar('NEXT_PUBLIC_SUPABASE_ANON_KEY') || 'placeholder_admin_key';
     
     _supabaseAdmin = createClient(url, key, {
       auth: { autoRefreshToken: false, persistSession: false },

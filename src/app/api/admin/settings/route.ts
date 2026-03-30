@@ -12,8 +12,15 @@ export async function POST(req: NextRequest) {
 
     const { data: authData, error: authError } = await adminDb.auth.getUser(authHeader.replace("Bearer ", ""));
     
-    if (authError || authData.user?.email !== "rodrigotechpro@gmail.com") {
-      return NextResponse.json({ error: "Acesso Negado. Requer privilégios de Super Admin." }, { status: 403 });
+    if (authError || !authData.user) {
+      console.error("Auth Admin Error:", authError?.message || "User not found in token");
+      return NextResponse.json({ error: "Token inválido ou expirado." }, { status: 401 });
+    }
+
+    console.log(`Tentativa de acesso admin por: ${authData.user.email}`);
+
+    if (authData.user.email !== "rodrigotechpro@gmail.com") {
+      return NextResponse.json({ error: "Acesso Negado. Seu e-mail não tem privilégios de Super Admin." }, { status: 403 });
     }
 
     const body = await req.json();
