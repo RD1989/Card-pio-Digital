@@ -1,13 +1,30 @@
 import { createBrowserClient } from '@supabase/ssr';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-// Variáveis de cache para os instâncias
+// Cache para instâncias
 let _supabase: SupabaseClient | null = null;
 let _supabaseAdmin: SupabaseClient | null = null;
 
 /**
+ * Função recursiva para criar um mock indestrutível que permite encadeamento infinito.
+ * Ex: supabase.from().select().eq().order().then()
+ */
+function createRecursiveMock(): any {
+  const mock: any = new Proxy(() => mock, {
+    get: (target, prop) => {
+      if (prop === 'then') return (cb: any) => cb({ data: null, error: null });
+      if (prop === 'catch') return () => mock;
+      if (prop === 'finally') return (cb: any) => cb();
+      if (typeof prop === 'symbol') return undefined;
+      return mock;
+    },
+    apply: () => mock
+  });
+  return mock;
+}
+
+/**
  * Função auxiliar interna para ler variáveis do .env.local de forma robusta no servidor.
- * Prioriza process.env, mas lê o arquivo se necessário (ex: em tempo de build ou cache estático).
  */
 function getEnvVar(name: string): string | undefined {
   if (typeof process !== 'undefined' && process.env[name]) {
@@ -15,7 +32,6 @@ function getEnvVar(name: string): string | undefined {
     if (v && !v.includes('placeholder')) return v;
   }
 
-  // Fallback: Leitura direta de arquivo no servidor (ignorado no browser)
   if (typeof window === 'undefined') {
     try {
       const fs = require('fs');
@@ -33,28 +49,22 @@ function getEnvVar(name: string): string | undefined {
         }
       }
     } catch (e) {
-      // Silencioso para não quebrar o build
+      // Silencioso
     }
   }
   return undefined;
 }
 
-/**
- * Inicializa o cliente público (Browser/Client Components).
- * Retorna um objeto Supabase válido ou um placeholder seguro para o build.
- */
 export function getSupabase(): SupabaseClient {
   if (!_supabase) {
     const url = getEnvVar('NEXT_PUBLIC_SUPABASE_URL') || 'https://upgdrlotzruvbneodrqj.supabase.co';
     const key = getEnvVar('NEXT_PUBLIC_SUPABASE_ANON_KEY');
 
-    // Se estivermos em build e sem chaves, não chamamos o criador oficial para não dar throw
     if (!key || key.includes('placeholder')) {
       if (typeof window === 'undefined') {
-        console.warn("[Supabase] Aviso: Chave Anon ausente. Usando placeholder seguro para build.");
+        console.warn(`[Supabase] DIAGNÓSTICO: Chave Anon ausente (Site renderizando em Mock).`);
       }
-      // Retornamos um mock parcial para evitar crash de inicialização no build
-      return { auth: {}, from: () => ({}) } as any; 
+      return createRecursiveMock() as SupabaseClient;
     }
 
     _supabase = createBrowserClient(url, key);
@@ -62,10 +72,6 @@ export function getSupabase(): SupabaseClient {
   return _supabase;
 }
 
-/**
- * Inicializa o cliente administrativo (Server Components/API Routes).
- * Retorna um objeto Supabase válido ou um placeholder seguro para o build.
- */
 export function getSupabaseAdmin(forceRefresh = false): SupabaseClient {
   if (!_supabaseAdmin || forceRefresh) {
     const url = getEnvVar('NEXT_PUBLIC_SUPABASE_URL') || 'https://upgdrlotzruvbneodrqj.supabase.co';
@@ -73,36 +79,33 @@ export function getSupabaseAdmin(forceRefresh = false): SupabaseClient {
     
     if (!key || key.includes('placeholder')) {
       if (typeof window === 'undefined') {
-         console.warn("[SupabaseAdmin] Aviso: Chave Admin ausente/placeholder. Mocking para build.");
+         console.warn(`[SupabaseAdmin] DIAGNÓSTICO: Chave Admin ausente (Executando Mock).`);
       }
-      return { auth: { admin: {} }, from: () => ({}) } as any;
+      return createRecursiveMock() as SupabaseClient;
     }
 
     _supabaseAdmin = createClient(url, key, {
       auth: { autoRefreshToken: false, persistSession: false },
     });
+
+    if (typeof window === 'undefined') {
+      console.log(`[SupabaseAdmin] ✅ CONECTADO (Key: ${key.substring(0, 5)}...)`);
+    }
   }
   return _supabaseAdmin;
 }
 
-/**
- * EXPORTAÇÕES LAZY (PROXIES): 
- * Garante que o Supabase só seja instanciado no momento do uso real.
- * Isso resolve o erro de "API key is required" durante o `next build`.
- */
+// Proxies estáveis para o ecossistema Next.js
 export const supabase = new Proxy({} as SupabaseClient, {
   get(_, prop) {
-    // Evita loop no console e ferramentas de inspeção
     if (prop === 'then' || prop === '__esModule' || typeof prop === 'symbol') return undefined;
-    const client = getSupabase();
-    return (client as any)[prop];
+    return (getSupabase() as any)[prop];
   }
 });
 
 export const supabaseAdmin = new Proxy({} as SupabaseClient, {
   get(_, prop) {
     if (prop === 'then' || prop === '__esModule' || typeof prop === 'symbol') return undefined;
-    const client = getSupabaseAdmin();
-    return (client as any)[prop];
+    return (getSupabaseAdmin() as any)[prop];
   }
 });
