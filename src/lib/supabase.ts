@@ -1,8 +1,7 @@
 import { createBrowserClient } from '@supabase/ssr';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-// Inicialização lazy: evita que o build quebre quando as variáveis ainda
-// não estão disponíveis no servidor (ex: build na Vercel sem env vars)
+// Variáveis de cache
 let _supabase: SupabaseClient | null = null;
 let _supabaseAdmin: SupabaseClient | null = null;
 
@@ -11,13 +10,12 @@ function getEnvVar(name: string): string | undefined {
   // 1. Tenta o padrão do Node/Vercel
   const value = typeof process !== 'undefined' ? process.env[name] : undefined;
   
-  // Se o valor existe e não é um placeholder comum do nosso template, retornamos ele.
-  if (value && value !== 'placeholder_admin_key' && !value.includes('placeholder')) {
+  if (value && !value.includes('placeholder')) {
     return value;
   }
 
   // 2. Fallback: Leitura direta do arquivo no servidor (ignorado no browser)
-  if (typeof process !== 'undefined' && typeof window === 'undefined') {
+  if (typeof window === 'undefined') {
     try {
       const fs = require('fs');
       const path = require('path');
@@ -40,23 +38,19 @@ function getEnvVar(name: string): string | undefined {
   return value || undefined;
 }
 
+// Inicializa o cliente público (Browser/Client Components)
 export function getSupabase(): SupabaseClient {
   if (!_supabase) {
-    const url = getEnvVar('NEXT_PUBLIC_SUPABASE_URL');
-    const key = getEnvVar('NEXT_PUBLIC_SUPABASE_ANON_KEY');
+    const url = getEnvVar('NEXT_PUBLIC_SUPABASE_URL') || 'https://upgdrlotzruvbneodrqj.supabase.co';
+    const key = getEnvVar('NEXT_PUBLIC_SUPABASE_ANON_KEY') || '';
 
-    if (!url || !key || key.includes('placeholder')) {
-       console.error("❌ SUPABASE_ANON_KEY NÃO CONFIGURADA OU INVÁLIDA NO NAVEGADOR");
-    }
-
-    _supabase = createBrowserClient(
-      url || 'https://upgdrlotzruvbneodrqj.supabase.co', 
-      key || ''
-    );
+    // No SSR (Next.js 15), evitamos logs pesados que podem travar o render
+    _supabase = createBrowserClient(url, key);
   }
   return _supabase;
 }
 
+// Inicializa o cliente administrativo (Server Components/API Routes)
 export function getSupabaseAdmin(forceRefresh = false): SupabaseClient {
   if (!_supabaseAdmin || forceRefresh) {
     const url = getEnvVar('NEXT_PUBLIC_SUPABASE_URL') || 'https://upgdrlotzruvbneodrqj.supabase.co';
@@ -65,27 +59,11 @@ export function getSupabaseAdmin(forceRefresh = false): SupabaseClient {
     _supabaseAdmin = createClient(url, key || 'placeholder_admin_key', {
       auth: { autoRefreshToken: false, persistSession: false },
     });
-
-    // Diagnóstico simples no console do servidor (mascarado)
-    if (typeof window === 'undefined') {
-      console.log(`[SupabaseAdmin] Inicializado com key: ${key?.substring(0, 10)}... (Ref: ${forceRefresh ? 'FORCE' : 'LAZY'})`);
-    }
   }
   return _supabaseAdmin;
 }
 
-// Aliases de conveniência para componentes Client-Side (browser)
-// Esses só funcionam com NEXT_PUBLIC_ vars, disponíveis no cliente
-export const supabase = new Proxy({} as SupabaseClient, {
-  get(_, prop) {
-    if (prop === 'then' || prop === '__esModule' || typeof prop === 'symbol') return undefined;
-    return (getSupabase() as any)[prop];
-  },
-});
-
-export const supabaseAdmin = new Proxy({} as SupabaseClient, {
-  get(_, prop) {
-    if (prop === 'then' || prop === '__esModule' || typeof prop === 'symbol') return undefined;
-    return (getSupabaseAdmin() as any)[prop];
-  },
-});
+// Exportações legadas para compatibilidade (Evitando Proxy problemático no SSR)
+// Nota: Em Next.js 15, Proxies em módulos exportados podem causar 500 se acessados no render
+export const supabase = getSupabase();
+export const supabaseAdmin = getSupabaseAdmin();
