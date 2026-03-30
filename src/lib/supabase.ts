@@ -7,7 +7,7 @@ let _supabaseAdmin: SupabaseClient | null = null;
 
 /**
  * Função recursiva para criar um mock indestrutível que permite encadeamento infinito.
- * Ex: supabase.from().select().eq().order().then()
+ * Resolve o erro de "unhandled property" durante a renderização no servidor.
  */
 function createRecursiveMock(): any {
   const mock: any = new Proxy(() => mock, {
@@ -24,47 +24,28 @@ function createRecursiveMock(): any {
 }
 
 /**
- * Função auxiliar interna para ler variáveis do .env.local de forma robusta no servidor.
+ * Lê variáveis de ambiente do process.env (modo padrão Next.js).
+ * Removemos o uso de 'fs' para evitar erros de runtime na Vercel.
  */
-function getEnvVar(name: string): string | undefined {
+function getEnv(name: string): string | undefined {
   if (typeof process !== 'undefined' && process.env[name]) {
     const v = process.env[name];
     if (v && !v.includes('placeholder')) return v;
-  }
-
-  if (typeof window === 'undefined') {
-    try {
-      const fs = require('fs');
-      const path = require('path');
-      const envPath = path.resolve(process.cwd(), '.env.local');
-      if (fs.existsSync(envPath)) {
-        const content = fs.readFileSync(envPath, 'utf8');
-        const lines = content.split('\n');
-        for (const line of lines) {
-          const trimmedLine = line.trim();
-          if (trimmedLine.startsWith(name + '=')) {
-            const val = trimmedLine.split('=')[1]?.trim().replace(/^["']|["']$/g, '');
-            if (val && !val.includes('placeholder')) return val;
-          }
-        }
-      }
-    } catch (e) {
-      // Silencioso
-    }
   }
   return undefined;
 }
 
 export function getSupabase(): SupabaseClient {
   if (!_supabase) {
-    const url = getEnvVar('NEXT_PUBLIC_SUPABASE_URL') || 'https://upgdrlotzruvbneodrqj.supabase.co';
-    const key = getEnvVar('NEXT_PUBLIC_SUPABASE_ANON_KEY');
+    const url = getEnv('NEXT_PUBLIC_SUPABASE_URL') || 'https://upgdrlotzruvbneodrqj.supabase.co';
+    const key = getEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY');
 
-    if (!key || key.includes('placeholder')) {
+    // Se chaves ausentes (ex: build ou deploy incompleto), prevent crash via mock
+    if (!key) {
       if (typeof window === 'undefined') {
-        console.warn(`[Supabase] DIAGNÓSTICO: Chave Anon ausente (Site renderizando em Mock).`);
+        console.warn("[Supabase] ⚠️ Chave ausente. Usando mock recursivo para estabilidade.");
       }
-      return createRecursiveMock() as SupabaseClient;
+      return createRecursiveMock();
     }
 
     _supabase = createBrowserClient(url, key);
@@ -74,38 +55,36 @@ export function getSupabase(): SupabaseClient {
 
 export function getSupabaseAdmin(forceRefresh = false): SupabaseClient {
   if (!_supabaseAdmin || forceRefresh) {
-    const url = getEnvVar('NEXT_PUBLIC_SUPABASE_URL') || 'https://upgdrlotzruvbneodrqj.supabase.co';
-    const key = getEnvVar('SUPABASE_SERVICE_ROLE_KEY') || getEnvVar('NEXT_PUBLIC_SUPABASE_ANON_KEY');
+    const url = getEnv('NEXT_PUBLIC_SUPABASE_URL') || 'https://upgdrlotzruvbneodrqj.supabase.co';
+    const key = getEnv('SUPABASE_SERVICE_ROLE_KEY') || getEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY');
     
-    if (!key || key.includes('placeholder')) {
+    if (!key) {
       if (typeof window === 'undefined') {
-         console.warn(`[SupabaseAdmin] DIAGNÓSTICO: Chave Admin ausente (Executando Mock).`);
+        console.warn("[SupabaseAdmin] ⚠️ Chave admin ausente. Usando mock.");
       }
-      return createRecursiveMock() as SupabaseClient;
+      return createRecursiveMock();
     }
 
     _supabaseAdmin = createClient(url, key, {
       auth: { autoRefreshToken: false, persistSession: false },
     });
-
-    if (typeof window === 'undefined') {
-      console.log(`[SupabaseAdmin] ✅ CONECTADO (Key: ${key.substring(0, 5)}...)`);
-    }
   }
   return _supabaseAdmin;
 }
 
-// Proxies estáveis para o ecossistema Next.js
+// Proxies estáveis: preservam o objeto mas só inicializam no acesso à propriedade
 export const supabase = new Proxy({} as SupabaseClient, {
   get(_, prop) {
     if (prop === 'then' || prop === '__esModule' || typeof prop === 'symbol') return undefined;
-    return (getSupabase() as any)[prop];
+    const client = getSupabase();
+    return (client as any)[prop];
   }
 });
 
 export const supabaseAdmin = new Proxy({} as SupabaseClient, {
   get(_, prop) {
     if (prop === 'then' || prop === '__esModule' || typeof prop === 'symbol') return undefined;
-    return (getSupabaseAdmin() as any)[prop];
+    const client = getSupabaseAdmin();
+    return (client as any)[prop];
   }
 });
