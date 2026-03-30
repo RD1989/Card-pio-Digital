@@ -166,6 +166,9 @@ create policy "Owners can see views" on public.views
 create policy "Public can view settings" on public.system_settings
     for select using (true);
 
+create policy "Super Admins can manage settings" on public.system_settings
+    for all using (auth.jwt() ->> 'email' = 'rodrigotechpro@gmail.com');
+
 -- 5. FUNCTIONS & TRIGGERS
 
 -- Function to handle updated_at
