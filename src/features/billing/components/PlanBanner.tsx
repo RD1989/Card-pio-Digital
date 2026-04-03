@@ -9,15 +9,26 @@ import { Button } from '@/shared/components/ui/button';
 interface Props {
   status: PlanStatus;
   onPixStatusChange?: (hasPending: boolean) => void;
+  initialPixData?: { qrcode: string; copyPaste: string; amount: string; id?: string } | null;
 }
 
-export function PlanBanner({ status, onPixStatusChange }: Props) {
+export function PlanBanner({ status, onPixStatusChange, initialPixData }: Props) {
   const { plan, planStatus, daysRemaining, isTrialExpired, monthlyOrders, orderLimit } = status;
-  const [pixData, setPixData] = useState<{ qrcode: string; copyPaste: string; amount: string; id?: string } | null>(null);
+  const [pixData, setPixData] = useState<{ qrcode: string; copyPaste: string; amount: string; id?: string } | null>(initialPixData || null);
   const [copied, setCopied] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
   const fetchedRef = useRef(false);
+
+  // Sync with initialPixData prop
+  useEffect(() => {
+    if (initialPixData) {
+      setPixData(initialPixData);
+    } else if (initialPixData === null) {
+      // Se o pai limpar o dado explicitamente, limpamos aqui também
+      setPixData(null);
+    }
+  }, [initialPixData]);
 
   // Auto-fetch pending charges on mount
   useEffect(() => {

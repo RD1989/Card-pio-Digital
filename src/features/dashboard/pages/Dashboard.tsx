@@ -135,8 +135,16 @@ export default function Dashboard() {
 
       toast.success('Pix gerado! Veja o QR Code abaixo.');
       setHasPendingPix(true);
-      // O PlanBanner irá detectar a nova intenção via Realtime ou Auto-fetch para mostrar o QR Code
-
+      
+      // Armazena os dados do Pix para passar diretamente ao PlanBanner (instantâneo)
+      if (data.brCode) {
+        setGeneratedPixData({
+          id: data.intent_id,
+          qrcode: `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(data.brCode)}&size=300x300`,
+          copyPaste: data.brCode,
+          amount: data.amount,
+        });
+      }
     } catch (err: any) {
       console.error('Falha ao gerar Pix:', err);
       toast.error('Não foi possível gerar o Pix', {
@@ -157,9 +165,14 @@ export default function Dashboard() {
   const { status: planStatus, loading: planLoading } = usePlanStatus();
   const { isSuperAdmin } = useSuperAdmin();
   const [hasPendingPix, setHasPendingPix] = useState(false);
+  const [generatedPixData, setGeneratedPixData] = useState<{ qrcode: string; copyPaste: string; amount: string; id?: string } | null>(null);
 
   const handlePixStatusChange = useCallback((pending: boolean) => {
     setHasPendingPix(pending);
+    // Se o status mudar para false, limpamos o dado gerado
+    if (!pending) {
+      setGeneratedPixData(null);
+    }
   }, []);
 
   if (loading || planLoading) return <DashboardSkeleton />;
@@ -173,6 +186,7 @@ export default function Dashboard() {
         <PlanBanner 
           status={planStatus} 
           onPixStatusChange={handlePixStatusChange}
+          initialPixData={generatedPixData}
         />
       )}
 
