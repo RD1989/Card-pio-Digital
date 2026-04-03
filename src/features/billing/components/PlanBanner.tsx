@@ -16,11 +16,12 @@ export function PlanBanner({ status, onPixStatusChange }: Props) {
   const [pixData, setPixData] = useState<{ qrcode: string; copyPaste: string; amount: string; id?: string } | null>(null);
   const [copied, setCopied] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
 
   // Auto-fetch pending charges on mount
   useEffect(() => {
     async function fetchPending() {
-      if (!status.user_id) return;
+      if (!status.user_id || isCancelling) return;
       
       const { data: intent } = await (supabase as any)
         .from('pix_intents')
@@ -32,7 +33,7 @@ export function PlanBanner({ status, onPixStatusChange }: Props) {
         .limit(1)
         .maybeSingle();
 
-      if (intent && intent.pix_code) {
+      if (intent && intent.pix_code && !isCancelling) {
         setPixData({
           id: intent.id,
           qrcode: `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(intent.pix_code)}&size=300x300`,
@@ -43,11 +44,11 @@ export function PlanBanner({ status, onPixStatusChange }: Props) {
       }
     }
     fetchPending();
-  }, [status.user_id, onPixStatusChange]);
+  }, [status.user_id, onPixStatusChange, isCancelling]);
 
   // Listener Realtime
   useEffect(() => {
-    if (!status.user_id) return;
+    if (!status.user_id || isCancelling) return;
 
     const channel = supabase
       .channel(`pix_updates_${status.user_id}`)
@@ -60,6 +61,7 @@ export function PlanBanner({ status, onPixStatusChange }: Props) {
           filter: `user_id=eq.${status.user_id}`,
         },
         (payload) => {
+          if (isCancelling) return;
           console.log('🆕 Nova intenção de Pix detectada!', payload);
           setPixData({
             id: payload.new.id,
@@ -79,6 +81,7 @@ export function PlanBanner({ status, onPixStatusChange }: Props) {
           filter: pixData?.id ? `id=eq.${pixData.id}` : `user_id=eq.${status.user_id}`,
         },
         (payload) => {
+          if (isCancelling) return;
           if (payload.new.status === 'completed') {
             triggerSuccess();
           }
@@ -93,6 +96,7 @@ export function PlanBanner({ status, onPixStatusChange }: Props) {
           filter: `user_id=eq.${status.user_id}`,
         },
         (payload) => {
+          if (isCancelling) return;
           if (payload.new.is_active === true && (payload.old?.is_active === false || !payload.old)) {
             triggerSuccess();
           }
@@ -101,7 +105,7 @@ export function PlanBanner({ status, onPixStatusChange }: Props) {
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
-  }, [status.user_id, pixData?.id, onPixStatusChange]);
+  }, [status.user_id, pixData?.id, onPixStatusChange, isCancelling]);
 
   const triggerSuccess = () => {
     setIsSuccess(true);
@@ -124,13 +128,29 @@ export function PlanBanner({ status, onPixStatusChange }: Props) {
   };
 
   const handleCancel = async () => {
-    if (pixData?.id) {
-      // Opcional: atualizar status para cancelado no banco
-      await (supabase as any).from('pix_intents').update({ status: 'cancelled' } as any).eq('id', pixData.id);
+    if (isCancelling) return;
+    
+    try {
+      setIsCancelling(true);
+      if (pixData?.id) {
+        await (supabase as any)
+          .from('pix_intents')
+          .update({ status: 'cancelled' } as any)
+          .eq('id', pixData.id);
+      }
+      
+      setPixData(null);
+      if (onPixStatusChange) onPixStatusChange(false);
+      toast.info('Cobrança cancelada. Você pode escolher outro plano.');
+    } catch (err) {
+      console.error('Erro ao cancelar Pix:', err);
+      // Mesmo se falhar no banco, limpamos localmente para não travar a UI
+      setPixData(null);
+      if (onPixStatusChange) onPixStatusChange(false);
+    } finally {
+      // Pequeno delay para garantir que o banco processou antes de liberar novos fetches
+      setTimeout(() => setIsCancelling(false), 1000);
     }
-    setPixData(null);
-    if (onPixStatusChange) onPixStatusChange(false);
-    toast.info('Cobrança cancelada. Você pode escolher outro plano.');
   };
 
   // State: Celebration / Success
@@ -185,6 +205,10 @@ export function PlanBanner({ status, onPixStatusChange }: Props) {
 
   // State: Suspended / Pending payment
   if (isTrialExpired) {
+    // Se não tem Pix pendente, não mostramos o banner de suspensão aqui para 
+    // permitir que o Dashboard mostre os cards de planos de forma limpa.
+    if (!pixData) return null;
+
     return (
       <motion.div
         initial={{ opacity: 0, y: -20 }}
