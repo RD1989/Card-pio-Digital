@@ -77,9 +77,13 @@ export default function Products() {
       userId = user.id;
     }
 
+    const { data: profile } = await supabase.from('profiles').select('id').eq('user_id', userId).single();
+    if (!profile) { toast.error('Perfil não encontrado'); return; }
+
     const { error } = await supabase.from('categories').insert({
       name: categoryName.trim(),
       user_id: userId,
+      restaurant_id: profile.id,
       sort_order: categories.length,
     });
 
@@ -158,6 +162,9 @@ export default function Products() {
 
     const imageUrl = await handleUploadImage();
 
+    const { data: profile } = await supabase.from('profiles').select('id').eq('user_id', userId).single();
+    if (!profile) { toast.error('Perfil não encontrado'); setSaving(false); return; }
+
     const payload = {
       name: productName.trim(),
       description: productDesc.trim() || null,
@@ -166,6 +173,7 @@ export default function Products() {
       is_upsell: productIsUpsell,
       image_url: imageUrl,
       user_id: userId,
+      restaurant_id: profile.id,
     };
 
     if (editingProduct) {

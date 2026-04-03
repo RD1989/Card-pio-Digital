@@ -168,6 +168,20 @@ Retorne APENAS um JSON válido:
 
       console.log(`Iniciando importação de ${selected.length} produtos para o usuário ${userId}`);
 
+      // 0. Get restaurant_id (profile id)
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('user_id', userId)
+        .single();
+
+      if (profileError || !profile) {
+        console.error('Erro ao buscar perfil do restaurante:', profileError);
+        throw new Error('Perfil do restaurante não encontrado. Complete seu cadastro primeiro.');
+      }
+
+      const restaurantId = profile.id;
+
       // 1. Get or create categories
       const categoryNames = [...new Set(selected.map(p => p.category))];
       console.log('Categorias a processar:', categoryNames);
@@ -197,6 +211,7 @@ Retorne APENAS um JSON válido:
             .insert({ 
               name: catName.trim(), 
               user_id: userId, 
+              restaurant_id: restaurantId, // NOVO: Incluindo restaurant_id
               sort_order: Object.keys(categoryMap).length 
             })
             .select('id')
@@ -221,6 +236,7 @@ Retorne APENAS um JSON válido:
           price: Number(p.price) || 0,
           category_id: catId,
           user_id: userId,
+          restaurant_id: restaurantId, // NOVO: Incluindo restaurant_id
           sort_order: i,
           is_active: true,
           is_available: true
