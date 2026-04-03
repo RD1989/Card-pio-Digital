@@ -7,22 +7,43 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  // CORS Preflight
+  if (req.method === "OPTIONS") {
+    return new Response(null, { 
+      status: 204, 
+      headers: corsHeaders 
+    });
+  }
 
   try {
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabaseUrl = Deno.env.get("SB_URL") || Deno.env.get("SUPABASE_URL");
+    const serviceKey = Deno.env.get("SB_SERVICE_ROLE") || Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+
+    if (!supabaseUrl || !serviceKey) {
+      throw new Error("Missing environment variables (SB_URL / SB_SERVICE_ROLE)");
+    }
+
     const supabase = createClient(supabaseUrl, serviceKey);
 
     // 1. Obter Token e Usuário
-    const authHeader = req.headers.get("Authorization")!;
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return new Response(JSON.stringify({ blocked: false, message: "No auth header" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const token = authHeader.replace("Bearer ", "");
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    if (authError || !user) throw new Error("Não autorizado");
+    
+    if (authError || !user) {
+      return new Response(JSON.stringify({ blocked: false, message: "Invalid session" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
-    // 2. TENTAR CAPTURAR IP (Prioridade para X-Forwarded-For do Supabase/Deno)
-    // O header 'x-forwarded-for' contém o IP real do cliente
-    const ipHeader = req.headers.get("x-forwarded-for") || "";
+    // 2. TENTAR CAPTURAR IP
+    const ipHeader = req.headers.get("x-forwarded-for") || req.headers.get("cf-connecting-ip") || "";
     const clientIp = ipHeader.split(',')[0].trim();
 
     if (!clientIp) {

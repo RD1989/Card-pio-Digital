@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Clock, AlertTriangle, Crown, Zap, Copy, Check, QrCode as QrIcon } from 'lucide-react';
+import { Clock, AlertTriangle, Crown, Zap, Copy, Check, X, QrCode as QrIcon } from 'lucide-react';
 import { PlanStatus } from '@/features/billing/hooks/usePlanStatus';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -54,6 +54,25 @@ export function PlanBanner({ status, onPixStatusChange }: Props) {
       .on(
         'postgres_changes',
         {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'pix_intents',
+          filter: `user_id=eq.${status.user_id}`,
+        },
+        (payload) => {
+          console.log('🆕 Nova intenção de Pix detectada!', payload);
+          setPixData({
+            id: payload.new.id,
+            qrcode: `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(payload.new.pix_code)}&size=300x300`,
+            copyPaste: payload.new.pix_code,
+            amount: payload.new.amount?.toString() || '0.00',
+          });
+          if (onPixStatusChange) onPixStatusChange(true);
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
           event: 'UPDATE',
           schema: 'public',
           table: 'pix_intents',
@@ -82,7 +101,7 @@ export function PlanBanner({ status, onPixStatusChange }: Props) {
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
-  }, [status.user_id, pixData?.id]);
+  }, [status.user_id, pixData?.id, onPixStatusChange]);
 
   const triggerSuccess = () => {
     setIsSuccess(true);
@@ -102,6 +121,16 @@ export function PlanBanner({ status, onPixStatusChange }: Props) {
       toast.success('Código Pix copiado!');
       setTimeout(() => setCopied(false), 3000);
     }
+  };
+
+  const handleCancel = async () => {
+    if (pixData?.id) {
+      // Opcional: atualizar status para cancelado no banco
+      await (supabase as any).from('pix_intents').update({ status: 'cancelled' } as any).eq('id', pixData.id);
+    }
+    setPixData(null);
+    if (onPixStatusChange) onPixStatusChange(false);
+    toast.info('Cobrança cancelada. Você pode escolher outro plano.');
   };
 
   // State: Celebration / Success
@@ -180,8 +209,18 @@ export function PlanBanner({ status, onPixStatusChange }: Props) {
               <motion.div
                 initial={{ opacity: 0, scale: 0.9, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 20 }}
                 className="w-full max-w-[380px] mx-auto rounded-[2rem] border-2 border-primary/10 bg-background/40 backdrop-blur-2xl p-6 lg:p-8 relative shadow-[0_40px_80px_-15px_rgba(0,0,0,0.15)] overflow-hidden group"
               >
+                {/* Botão de Fechar/Cancelar */}
+                <button
+                  onClick={handleCancel}
+                  className="absolute top-4 right-4 z-20 p-2 rounded-full bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                  title="Cancelar e escolher outro plano"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+
                 <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
                   <QrIcon className="w-16 h-16" />
                 </div>

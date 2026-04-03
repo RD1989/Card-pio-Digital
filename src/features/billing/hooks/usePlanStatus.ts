@@ -74,7 +74,7 @@ export function usePlanStatus() {
     fetch();
 
     // Iniciar listener de Tempo Real para o perfil do usuário
-    let userIdSync: string | null = null;
+    let channel: any = null;
     const setupRealtime = async () => {
       let currentId = impersonatedUserId;
       if (!currentId) {
@@ -83,36 +83,40 @@ export function usePlanStatus() {
       }
       
       if (!currentId) return;
-      userIdSync = currentId;
 
-      const channel = supabase
-        .channel(`profile_status_${userIdSync}`)
+      // Se já houver um canal, remova-o antes de recriar
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
+
+      // Criar novo canal com timestamp para garantir unicidade
+      channel = supabase
+        .channel(`profile_status_${currentId}_${Date.now()}`)
         .on(
           'postgres_changes',
           {
             event: '*',
             schema: 'public',
             table: 'profiles',
-            filter: `user_id=eq.${userIdSync}`,
+            filter: `user_id=eq.${currentId}`,
           },
           (payload) => {
-            console.log('🔄 Mudança de perfil detectada!', payload);
+            console.log('🔄 Mudança de perfil detectada no Realtime!', payload);
             fetch(); // Forçar nova busca de dados quando o perfil mudar
           }
         )
         .subscribe((status) => {
-          console.log(`🔌 Status da conexão Realtime: ${status}`);
+          console.log(`🔌 Conexão Realtime (Status): ${status}`);
         });
-
-      return channel;
     };
 
-    const channelPromise = setupRealtime();
+    setupRealtime();
 
     return () => {
-      channelPromise.then(channel => {
-        if (channel) supabase.removeChannel(channel);
-      });
+      if (channel) {
+        console.log('🧹 Limpando canal de Realtime');
+        supabase.removeChannel(channel);
+      }
     };
   }, [impersonatedUserId]);
 

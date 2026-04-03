@@ -31,29 +31,48 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabaseUrl = Deno.env.get("SB_URL") || Deno.env.get("SUPABASE_URL");
+    const serviceKey = Deno.env.get("SB_SERVICE_ROLE") || Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+
+    if (!supabaseUrl || !serviceKey) {
+      console.error("ERRO: Variáveis SB_URL ou SB_SERVICE_ROLE não encontradas.");
+      return new Response(JSON.stringify({ 
+        success: false, 
+        error: "Servidor mal configurado: Faltam segredos (secrets) no Supabase (SB_URL / SB_SERVICE_ROLE)." 
+      }), { 
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } 
+      });
+    }
+
     const supabase = createClient(supabaseUrl, serviceKey);
 
-    // 0. Autenticação Manual (Pular Gateway 401)
+    // 0. Autenticação Manual
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("Cabeçalho de autorização ausente");
+    if (!authHeader) {
+      console.error("Erro: Cabeçalho de autorização ausente");
+      throw new Error("Cabeçalho de autorização ausente");
+    }
 
     const token = authHeader.replace("Bearer ", "");
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    if (authError || !user) throw new Error("Não autorizado");
-
-    const { user_id, plan } = await req.json();
-    if (!user_id || !plan) throw new Error("user_id and plan are required");
-
-    // Garantir que o usuário só gera Pix para si mesmo (exceto se for super admin, mas aqui focamos no próprio usuário)
-    if (user.id !== user_id) {
-      // Opcional: verificar se é super admin se quiser permitir que admin gere para outros
-      throw new Error("Acesso negado: ID de usuário incompatível");
+    if (authError || !user) {
+      console.error("Erro de Autenticação:", authError);
+      throw new Error("Não autorizado");
     }
 
+    const body = await req.json().catch(() => ({}));
+    const { user_id, plan } = body;
+    
+    if (!user_id || !plan) {
+      console.error("Erro: user_id e plan são mandatórios", body);
+      throw new Error("user_id and plan are required");
+    }
+
+    console.log(`Gerando Pix para usuário: ${user_id}, Plano: ${plan}`);
+
     // 1. Obter Preço Base conforme o plano
-    let baseAmount = 24.90; // Mensal (default)
+    let baseAmount = 1.00; // Valor de teste
+    if (plan === 'month') baseAmount = 1.00;
     if (plan === 'basic') baseAmount = 97.00; // Semestral
     if (plan === 'pro') baseAmount = 169.00; // Anual
 

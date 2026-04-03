@@ -123,12 +123,23 @@ export default function Dashboard() {
         body: { user_id: targetUserId, plan: planType }
       });
       
-      if (error) throw new Error(error.message || `Erro ao gerar Pix`);
+      if (error) {
+        console.error('Erro detalhado da Edge Function:', error);
+        throw new Error(error.message || `Erro ao gerar Pix (Edge Function falhou)`);
+      }
+
+      if (!data?.success) {
+        console.error('Resposta da Edge Function sem sucesso:', data);
+        throw new Error(data?.error || 'Erro desconhecido na geração do Pix');
+      }
 
       toast.success('Pix gerado! Veja o QR Code abaixo.');
       // Removido reload: o PlanBanner irá detectar a nova intenção e o Dashboard irá esconder os cards via hasPendingPix
     } catch (err: any) {
-      toast.error(err.message || 'Erro ao gerar Pix');
+      console.error('Falha ao gerar Pix:', err);
+      toast.error('Não foi possível gerar o Pix', {
+        description: err.message || 'Verifique se as configurações de Pix no Admin estão corretas.'
+      });
     } finally {
       setPixLoading(false);
     }
@@ -180,8 +191,8 @@ export default function Dashboard() {
               <h3 className="text-xl font-bold">Plano Mensal</h3>
               <p className="text-xs text-muted-foreground font-medium">Pagamento Mês a Mês</p>
               <div className="mt-4">
-                <p className="text-3xl font-black text-foreground">R$ 24,90</p>
-                <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">por mês</p>
+                <p className="text-3xl font-black text-foreground">R$ 1,00</p>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">para teste</p>
               </div>
             </div>
             

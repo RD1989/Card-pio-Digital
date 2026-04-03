@@ -152,52 +152,100 @@ Retorne APENAS um JSON válido:
     }
 
     setImporting(true);
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { setImporting(false); return; }
-
-    // Get or create categories
-    const categoryNames = [...new Set(selected.map(p => p.category))];
-    const { data: existingCats } = await supabase
-      .from('categories')
-      .select('id, name')
-      .eq('user_id', user.id);
-
-    const categoryMap: Record<string, string> = {};
-    for (const cat of existingCats || []) {
-      categoryMap[cat.name.toLowerCase()] = cat.id;
-    }
-
-    for (const catName of categoryNames) {
-      if (!categoryMap[catName.toLowerCase()]) {
-        const { data: newCat } = await supabase
-          .from('categories')
-          .insert({ name: catName, user_id: user.id, sort_order: Object.keys(categoryMap).length })
-          .select('id')
-          .single();
-        if (newCat) categoryMap[catName.toLowerCase()] = newCat.id;
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error('Sessão expirada. Faça login novamente.');
+        setImporting(false); 
+        return; 
       }
-    }
 
-    // Insert products
-    const inserts = selected.map((p, i) => ({
-      name: p.name,
-      description: p.description || null,
-      price: p.price,
-      category_id: categoryMap[p.category.toLowerCase()] || null,
-      user_id: user.id,
-      sort_order: i,
-    }));
+      console.log(`Iniciando importação de ${selected.length} produtos para o usuário ${user.id}`);
 
-    const { error } = await supabase.from('products').insert(inserts);
-    if (error) {
-      toast.error('Erro ao importar produtos');
-    } else {
-      toast.success(`${selected.length} produtos importados com sucesso!`);
+      // 1. Get or create categories
+      const categoryNames = [...new Set(selected.map(p => p.category))];
+      console.log('Categorias a processar:', categoryNames);
+
+      const { data: existingCats, error: fetchCatsError } = await supabase
+        .from('categories')
+        .select('id, name')
+        .eq('user_id', user.id);
+
+      if (fetchCatsError) {
+        console.error('Erro ao buscar categorias existentes:', fetchCatsError);
+        throw new Error(`Erro ao buscar categorias: ${fetchCatsError.message}`);
+      }
+
+      const categoryMap: Record<string, string> = {};
+      for (const cat of existingCats || []) {
+        categoryMap[cat.name.trim().toLowerCase()] = cat.id;
+      }
+
+      // Create missing categories
+      for (const catName of categoryNames) {
+        const normalizedName = catName.trim().toLowerCase();
+        if (!categoryMap[normalizedName]) {
+          console.log(`Criando nova categoria: ${catName}`);
+          const { data: newCat, error: createCatError } = await supabase
+            .from('categories')
+            .insert({ 
+              name: catName.trim(), 
+              user_id: user.id, 
+              sort_order: Object.keys(categoryMap).length 
+            })
+            .select('id')
+            .single();
+          
+          if (createCatError) {
+            console.error(`Erro ao criar categoria ${catName}:`, createCatError);
+            // Continuamos mesmo se falhar uma categoria, o produto ficará sem categoria
+          } else if (newCat) {
+            categoryMap[normalizedName] = newCat.id;
+            console.log(`Categoria ${catName} criada com ID: ${newCat.id}`);
+          }
+        }
+      }
+
+      // 2. Prepare and Insert products
+      const inserts = selected.map((p, i) => {
+        const catId = categoryMap[p.category.trim().toLowerCase()] || null;
+        return {
+          name: p.name.substring(0, 100), // Limite de tamanho comum
+          description: p.description ? p.description.substring(0, 500) : null,
+          price: Number(p.price) || 0,
+          category_id: catId,
+          user_id: user.id,
+          sort_order: i,
+          is_active: true,
+          is_available: true
+        };
+      });
+
+      console.log('Inserindo produtos:', inserts);
+
+      const { error: insertError } = await supabase.from('products').insert(inserts);
+      
+      if (insertError) {
+        console.error('Erro detalhado na inserção de produtos:', insertError);
+        throw new Error(`Erro ao salvar produtos: ${insertError.message}`);
+      }
+
+      toast.success(`${selected.length} produtos importados com sucesso!`, {
+        description: 'Seu cardápio foi atualizado.',
+        duration: 5000
+      });
+      
       setProducts([]);
       setFile(null);
       setPreview(null);
+    } catch (err: any) {
+      console.error('Falha crítica na importação:', err);
+      toast.error('Erro na importação', {
+        description: err.message || 'Verifique o console para mais detalhes.'
+      });
+    } finally {
+      setImporting(false);
     }
-    setImporting(false);
   }
 
   function toggleProduct(index: number) {
