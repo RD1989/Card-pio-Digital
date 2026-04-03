@@ -1,0 +1,202 @@
+import { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
+import { Save, Loader2, Eye, Layout, CreditCard, MessageSquare, HelpCircle, Megaphone, FileText } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+import { Button } from '@/shared/components/ui/button';
+import { Input } from '@/shared/components/ui/input';
+import { Textarea } from '@/shared/components/ui/textarea';
+import { Label } from '@/shared/components/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/components/ui/tabs';
+
+const LANDING_KEYS = [
+  'landing_hero_title', 'landing_hero_subtitle', 'landing_hero_badge',
+  'landing_plan_basic_name', 'landing_plan_basic_price', 'landing_plan_basic_features',
+  'landing_plan_pro_name', 'landing_plan_pro_price', 'landing_plan_pro_features',
+  'landing_cta_title', 'landing_cta_subtitle', 'landing_footer_text',
+];
+
+export default function SuperAdminLanding() {
+  const [values, setValues] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    async function fetch() {
+      const { data } = await supabase
+        .from('global_settings' as any)
+        .select('key, value')
+        .in('key', LANDING_KEYS);
+      const map: Record<string, string> = {};
+      (data as any[])?.forEach((r: any) => { map[r.key] = r.value || ''; });
+      setValues(map);
+      setLoading(false);
+    }
+    fetch();
+  }, []);
+
+  const val = (key: string) => values[`landing_${key}`] || '';
+  const set = (key: string, v: string) => setValues(prev => ({ ...prev, [`landing_${key}`]: v }));
+
+  async function handleSave() {
+    try {
+      for (const fullKey of LANDING_KEYS) {
+        const v = values[fullKey] ?? '';
+        const { error } = await supabase
+          .from('global_settings' as any)
+          .upsert({ key: fullKey, value: v } as any, { onConflict: 'key' });
+        if (error) throw error;
+      }
+      toast.success('Landing page atualizada!');
+      window.dispatchEvent(new CustomEvent('theme-updated'));
+    } catch (error: any) {
+      toast.error('Erro ao salvar: ' + error.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6 max-w-3xl">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">Customizar Landing Page</h1>
+          <p className="text-muted-foreground text-sm mt-1">Edite textos, preços dos planos e conteúdo da página inicial</p>
+        </div>
+        <a href="/" target="_blank" className="text-sm text-primary hover:underline flex items-center gap-1">
+          <Eye className="w-4 h-4" /> Visualizar
+        </a>
+      </div>
+
+      <Tabs defaultValue="hero">
+        <TabsList className="grid grid-cols-3 w-full">
+          <TabsTrigger value="hero">Hero & CTA</TabsTrigger>
+          <TabsTrigger value="plans">Planos</TabsTrigger>
+          <TabsTrigger value="footer">Rodapé</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="hero" className="space-y-4 mt-4">
+          <Card className="glass-sm border-border">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Layout className="w-5 h-5 text-primary" /> Seção Hero
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label>Badge (texto pequeno no topo)</Label>
+                <Input value={val('hero_badge')} onChange={e => set('hero_badge', e.target.value)} placeholder="⚡ A nova era do delivery digital" />
+              </div>
+              <div>
+                <Label>Título Principal</Label>
+                <Textarea value={val('hero_title')} onChange={e => set('hero_title', e.target.value)} placeholder="Seu Cardápio Digital..." rows={2} />
+              </div>
+              <div>
+                <Label>Subtítulo</Label>
+                <Textarea value={val('hero_subtitle')} onChange={e => set('hero_subtitle', e.target.value)} placeholder="Experimente grátis..." rows={3} />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="glass-sm border-border">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Megaphone className="w-5 h-5 text-primary" /> Seção CTA Final
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label>Título CTA</Label>
+                <Input value={val('cta_title')} onChange={e => set('cta_title', e.target.value)} placeholder="TRANSFORME SEU DELIVERY AGORA" />
+              </div>
+              <div>
+                <Label>Subtítulo CTA</Label>
+                <Textarea value={val('cta_subtitle')} onChange={e => set('cta_subtitle', e.target.value)} rows={2} />
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="plans" className="space-y-4 mt-4">
+          <Card className="glass-sm border-border">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <CreditCard className="w-5 h-5 text-primary" /> Plano Básico
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Nome do Plano</Label>
+                  <Input value={val('plan_basic_name')} onChange={e => set('plan_basic_name', e.target.value)} />
+                </div>
+                <div>
+                  <Label>Preço (R$)</Label>
+                  <Input value={val('plan_basic_price')} onChange={e => set('plan_basic_price', e.target.value)} placeholder="24,90" />
+                </div>
+              </div>
+              <div>
+                <Label>Recursos (separe por |)</Label>
+                <Textarea value={val('plan_basic_features')} onChange={e => set('plan_basic_features', e.target.value)} placeholder="Até 100 Produtos|Menu Digital|..." rows={3} />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="glass-sm border-border">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <CreditCard className="w-5 h-5 text-primary" /> Plano Pro
+              </CardTitle>
+              <CardDescription>Este é o plano destacado com badge "Popular"</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Nome do Plano</Label>
+                  <Input value={val('plan_pro_name')} onChange={e => set('plan_pro_name', e.target.value)} />
+                </div>
+                <div>
+                  <Label>Preço (R$)</Label>
+                  <Input value={val('plan_pro_price')} onChange={e => set('plan_pro_price', e.target.value)} placeholder="39,90" />
+                </div>
+              </div>
+              <div>
+                <Label>Recursos (separe por |)</Label>
+                <Textarea value={val('plan_pro_features')} onChange={e => set('plan_pro_features', e.target.value)} placeholder="Pedidos ilimitados|Métricas|..." rows={3} />
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="footer" className="space-y-4 mt-4">
+          <Card className="glass-sm border-border">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <FileText className="w-5 h-5 text-primary" /> Rodapé
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Label>Texto do Rodapé</Label>
+              <Input value={val('footer_text')} onChange={e => set('footer_text', e.target.value)} placeholder="© 2026 Menu Pro..." />
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+
+      <Button onClick={handleSave} disabled={saving} className="gap-2 w-full sm:w-auto">
+        {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+        Salvar Alterações
+      </Button>
+    </div>
+  );
+}
+
