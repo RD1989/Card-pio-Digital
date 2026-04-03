@@ -50,19 +50,28 @@ export function useLandingSettings() {
         .in('key', prefixedKeys);
 
       if (data) {
+        console.log('Landing settings fetched:', data.length);
         const merged = { ...DEFAULTS };
         (data as any[]).forEach((row: any) => {
-          const key = row.key.replace('landing_', '') as keyof LandingSettings;
-          if (row.value && (key as string) in DEFAULTS) {
-            merged[key] = row.value;
+          const rawKey = row.key.replace('landing_', '');
+          if (rawKey in DEFAULTS) {
+            const key = rawKey as keyof LandingSettings;
+            if (row.value !== null && row.value !== undefined) {
+              merged[key] = String(row.value);
+            }
           }
         });
         setSettings(merged);
+      } else {
+        console.warn('No landing settings found in database, using DEFAULTS');
       }
       setLoading(false);
     }
     
-    fetch();
+    fetch().catch(err => {
+      console.error('Failed to fetch landing settings:', err);
+      setLoading(false);
+    });
 
     const handleUpdate = () => fetch();
     window.addEventListener('theme-updated', handleUpdate);

@@ -53,19 +53,21 @@ export default function Landing() {
   const testimonials = defaultTestimonials;
   const faqs = defaultFaqs;
 
-  // Parse dynamic values with fallbacks
-  const heroTitle = settings.hero_title || 'Seu Cardápio Digital Profissional, Simples e Poderoso';
-  const heroSubtitle = settings.hero_subtitle || 'Teste grátis por 30 dias. Receba pedidos no WhatsApp, gere etiquetas com QR Code e aumente suas vendas com um cardápio que impressiona.';
-  const heroBadge = settings.hero_badge || '⚡ A nova era do delivery digital';
-  const basicName = settings.plan_basic_name || 'Plano Básico';
-  const basicPrice = settings.plan_basic_price || '24,90';
-  const basicFeatures = (settings.plan_basic_features || 'Até 100 pedidos por mês|Cardápio digital completo|Pedidos via WhatsApp|QR Code personalizado|Link na Bio otimizado|Horário de funcionamento|Complementos e adicionais|Cupons de desconto|30 dias grátis para testar').split('|');
-  const proName = settings.plan_pro_name || 'Plano Pro';
-  const proPrice = settings.plan_pro_price || '39,90';
-  const proFeatures = (settings.plan_pro_features || 'Pedidos ilimitados|Tudo do plano Básico|Importação de cardápio com IA|Geração de descrições com IA|Métricas e analytics avançados|Notificações sonoras de pedidos|Múltiplas categorias e produtos|Acompanhamento de pedido em tempo real|Suporte prioritário VIP|30 dias grátis para testar').split('|');
-  const ctaTitle = settings.cta_title || 'TRANSFORME SEU DELIVERY AGORA';
-  const ctaSubtitle = settings.cta_subtitle || 'Junte-se a centenas de lojistas que estão automatizando seus pedidos e fidelizando seus clientes como nunca.';
-  const footerText = settings.footer_text || '© 2026 Menu Pro. Todos os direitos reservados.';
+  // Parse dynamic values with fallbacks and safe checks
+  const getSafeString = (val: any, fallback: string) => typeof val === 'string' ? val : fallback;
+
+  const heroTitle = getSafeString(settings.hero_title, 'Seu Cardápio Digital Profissional, Simples e Poderoso');
+  const heroSubtitle = getSafeString(settings.hero_subtitle, 'Teste grátis por 30 dias. Receba pedidos no WhatsApp, gere etiquetas com QR Code e aumente suas vendas com um cardápio que impressiona.');
+  const heroBadge = getSafeString(settings.hero_badge, '⚡ A nova era do delivery digital');
+  const basicName = getSafeString(settings.plan_basic_name, 'Plano Básico');
+  const basicPrice = getSafeString(settings.plan_basic_price, '24,90');
+  const basicFeatures = getSafeString(settings.plan_basic_features, 'Até 100 pedidos por mês|Cardápio digital completo|Pedidos via WhatsApp|QR Code personalizado|Link na Bio otimizado|Horário de funcionamento|Complementos e adicionais|Cupons de desconto|30 dias grátis para testar').split('|');
+  const proName = getSafeString(settings.plan_pro_name, 'Plano Pro');
+  const proPrice = getSafeString(settings.plan_pro_price, '39,90');
+  const proFeatures = getSafeString(settings.plan_pro_features, 'Pedidos ilimitados|Tudo do plano Básico|Importação de cardápio com IA|Geração de descrições com IA|Métricas e analytics avançados|Notificações sonoras de pedidos|Múltiplas categorias e produtos|Acompanhamento de pedido em tempo real|Suporte prioritário VIP|30 dias grátis para testar').split('|');
+  const ctaTitle = getSafeString(settings.cta_title, 'TRANSFORME SEU DELIVERY AGORA');
+  const ctaSubtitle = getSafeString(settings.cta_subtitle, 'Junte-se a centenas de lojistas que estão automatizando seus pedidos e fidelizando seus clientes como nunca.');
+  const footerText = getSafeString(settings.footer_text, '© 2026 Menu Pro. Todos os direitos reservados.');
 
   return (
     <div className="min-h-screen bg-background overflow-hidden">
