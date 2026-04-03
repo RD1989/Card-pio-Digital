@@ -26,10 +26,11 @@ export function AdminLayout() {
   }
 
   const isSuspended = planStatus && !planStatus.isActive;
-  // O Super Admin ignora o bloqueio para poder prestar suporte, 
-  // EXCETO se ele estiver testando a própria suspensão (casos raros) ou se quisermos ser estritos.
-  // Aqui, permitimos o bypass para o Super Admin.
-  const showSuspension = isSuspended && !isSuperAdmin;
+  // O bloqueio é mostrado se a conta estiver suspensa, 
+  // EXCETO para o Super Admin em sua própria sessão.
+  // Se o Super Admin estiver "Acessando" (impersonating) um lojista suspenso, 
+  // ele verá o bloqueio para confirmar que a lógica funciona.
+  const showSuspension = isSuspended && (!isSuperAdmin || !!impersonatedUserId);
 
   return (
     <SidebarProvider>

@@ -55,6 +55,15 @@ export function usePlanStatus() {
         (profile.plan_status === 'active' && (!premiumUntil || premiumUntil > now)) || 
         (profile.plan_status === 'trial' && !isTrialExpired)
       );
+
+      console.group('🛡️ Verificação de Plano (usePlanStatus)');
+      console.log('User ID:', userId);
+      console.log('Status no Perfil:', profile.plan_status);
+      console.log('Ativo (is_active):', !isDeactivated);
+      console.log('Expirado:', isExpired);
+      console.log('Premium Até:', premiumUntil?.toLocaleString('pt-BR'));
+      console.log('Resulta em Ativo:', isActive);
+      console.groupEnd();
       
       const orderLimit = 0; // Pedidos ilimitados para todos os planos por padrão
 

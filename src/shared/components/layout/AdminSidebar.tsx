@@ -6,6 +6,7 @@ import { useThemeStore } from '@/shared/stores/global/useThemeStore';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { useSuperAdmin } from '@/features/super-admin/hooks/useSuperAdmin';
 import { usePlanStatus } from '@/features/billing/hooks/usePlanStatus';
+import { useImpersonateStore } from '@/shared/stores/global/useImpersonateStore';
 
 import {
   Sidebar,
@@ -44,13 +45,16 @@ export function AdminSidebar() {
   const { mode, toggle } = useThemeStore();
   const { signOut } = useAuth();
   const { isSuperAdmin } = useSuperAdmin();
+  const { impersonatedUserId } = useImpersonateStore();
   
   const { status: planStatus } = usePlanStatus();
   const isSuspended = planStatus && !planStatus.isActive;
 
   const renderLinks = (links: typeof mainLinks) =>
     links.map((item) => {
-      const isDisabled = isSuspended && item.url !== '/admin' && !isSuperAdmin;
+      // Se estiver suspenso, bloqueia tudo exceto o dashboard principal 
+      // e permite que o Super Admin bypass apenas em sua própria sessão (sem impersonation)
+      const isDisabled = isSuspended && item.url !== '/admin' && (!isSuperAdmin || !!impersonatedUserId);
       
       return (
         <SidebarMenuItem key={item.url}>
