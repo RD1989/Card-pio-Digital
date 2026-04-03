@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Users, Store, Eye, Search, UserCheck, UserX, Download, Filter, Calendar, Trash2, Plus, Loader2 } from 'lucide-react';
+import { Users, Store, Eye, Search, UserCheck, UserX, Download, Filter, Calendar, Trash2, Plus, Loader2, TrendingUp, AlertCircle, Clock, CreditCard, ShieldCheck, Mail, MessageSquare, ArrowRight, History, Settings, ExternalLink } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { useImpersonateStore } from '@/shared/stores/global/useImpersonateStore';
@@ -53,6 +53,11 @@ export default function SuperAdminTenants() {
   const [newSlug, setNewSlug] = useState('');
   const [newWhatsapp, setNewWhatsapp] = useState('');
   const [newPlan, setNewPlan] = useState('basic');
+  
+  // Management Modal
+  const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
+  const [showManageModal, setShowManageModal] = useState(false);
+  const [changingStatus, setChangingStatus] = useState(false);
 
   async function fetch() {
     setLoading(true);
@@ -266,9 +271,43 @@ export default function SuperAdminTenants() {
     );
   }
 
+  const stats = {
+    total: tenants.length,
+    active: tenants.filter(t => t.is_active && getLicenseInfo(t).status !== 'expired').length,
+    expiring: tenants.filter(t => getLicenseInfo(t).status === 'warning').length,
+    expired: tenants.filter(t => !t.is_active || getLicenseInfo(t).status === 'expired').length,
+  };
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between flex-wrap gap-3">
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {[
+          { label: 'Total Lojistas', value: stats.total, icon: Users, color: 'text-blue-500', bg: 'bg-blue-500/10' },
+          { label: 'Ativos / Premium', value: stats.active, icon: ShieldCheck, color: 'text-green-500', bg: 'bg-green-500/10' },
+          { label: 'Vencendo (5 dias)', value: stats.expiring, icon: Clock, color: 'text-amber-500', bg: 'bg-amber-500/10' },
+          { label: 'Expirados / Suspensos', value: stats.expired, icon: AlertCircle, color: 'text-red-500', bg: 'bg-red-500/10' },
+        ].map((stat, i) => (
+          <motion.div
+            key={i}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.1 }}
+            className="glass-sm p-4 flex items-center gap-4 border-l-4 border-l-transparent hover:border-l-current transition-all"
+            style={{ borderLeftColor: stat.color.replace('text-', '') }}
+          >
+            <div className={`w-12 h-12 rounded-xl ${stat.bg} flex items-center justify-center shrink-0`}>
+              <stat.icon className={`w-6 h-6 ${stat.color}`} />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">{stat.label}</p>
+              <p className="text-2xl font-black">{stat.value}</p>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+
+      <div className="flex items-center justify-between flex-wrap gap-3 pt-4">
         <div className="flex items-center gap-3">
           <Users className="w-5 h-5 text-primary" />
           <div>
@@ -428,17 +467,17 @@ export default function SuperAdminTenants() {
                   </td>
                    <td className="p-3 text-right">
                     <div className="flex items-center justify-end gap-2">
-                      <Button variant="outline" size="sm" className="gap-1.5 h-7 text-xs" onClick={() => handleImpersonate(t)}>
-                        <Eye className="w-3 h-3" />
-                        Acessar
-                      </Button>
-                      <Button
-                        variant="ghost" 
-                        size="icon" 
-                        className="w-7 h-7 text-destructive hover:text-destructive hover:bg-destructive/10"
-                        onClick={() => handleDeleteUser(t.user_id, t.restaurant_name)}
+                      <Button 
+                        variant="default" 
+                        size="sm" 
+                        className="gap-1.5 h-8 text-xs font-bold shadow-sm" 
+                        onClick={() => { setSelectedTenant(t); setShowManageModal(true); }}
                       >
-                        <Trash2 className="w-3 h-3" />
+                        <Settings className="w-3.5 h-3.5" />
+                        Gerenciar
+                      </Button>
+                      <Button variant="outline" size="icon" title="Acessar Dashboard" className="w-8 h-8" onClick={() => handleImpersonate(t)}>
+                        <Eye className="w-3.5 h-3.5" />
                       </Button>
                     </div>
                   </td>
@@ -452,56 +491,157 @@ export default function SuperAdminTenants() {
         )}
       </div>
 
-      {/* Modal: Novo Lojista */}
-      <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Novo Lojista</DialogTitle>
-            <DialogDescription className="sr-only">
-              Crie uma nova conta de lojista manualmente no sistema.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Nome do Restaurante</label>
-              <Input placeholder="Ex: Burguer House" value={newName} onChange={e => setNewName(e.target.value)} />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Slug (URL)</label>
-              <Input placeholder="ex: burguer-house" value={newSlug} onChange={e => setNewSlug(e.target.value)} />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">E-mail de Acesso</label>
-              <Input type="email" placeholder="cliente@email.com" value={newEmail} onChange={e => setNewEmail(e.target.value)} />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Senha</label>
-              <Input type="password" placeholder="••••••••" value={newPass} onChange={e => setNewPass(e.target.value)} />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">WhatsApp</label>
-              <Input placeholder="Ex: 11999998888" value={newWhatsapp} onChange={e => setNewWhatsapp(e.target.value)} />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Plano Inicial</label>
-              <Select value={newPlan} onValueChange={setNewPlan}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="basic">Básico</SelectItem>
-                  <SelectItem value="pro">Pro</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreateModal(false)}>Cancelar</Button>
-            <Button onClick={handleCreateTenant} disabled={creating} className="gap-2">
-              {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-              Criar Lojista
-            </Button>
-          </DialogFooter>
+      {/* Modal: Gestão Detalhada (CRM) */}
+      <Dialog open={showManageModal} onOpenChange={setShowManageModal}>
+        <DialogContent className="sm:max-w-[700px] gap-0 p-0 overflow-hidden glass-sm border-border">
+          <DialogDescription className="sr-only">
+            Painel de gestão detalhada do lojista para controle de planos, licenças e status de acesso.
+          </DialogDescription>
+          {selectedTenant && (
+            <>
+              <div className="p-6 bg-muted/30 border-b border-border">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0 border border-primary/20">
+                      <Store className="w-7 h-7 text-primary" />
+                    </div>
+                    <div>
+                      <DialogTitle className="text-xl font-bold">{selectedTenant.restaurant_name}</DialogTitle>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-xs text-muted-foreground">slug: {selectedTenant.slug}</span>
+                        <div className={`w-2 h-2 rounded-full ${selectedTenant.is_active ? 'bg-green-500' : 'bg-red-500'} animate-pulse`} />
+                        <span className="text-[10px] font-bold uppercase tracking-wider">
+                          {selectedTenant.is_active ? 'Conta Ativa' : 'Conta Suspensa'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[10px] text-muted-foreground uppercase font-bold">Cadastrado em</p>
+                    <p className="font-medium">{new Date(selectedTenant.created_at).toLocaleDateString('pt-BR')}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2">
+                {/* Coluna Esquerda: Informações e Contato */}
+                <div className="p-6 border-r border-border space-y-6">
+                  <div className="space-y-4">
+                    <h3 className="text-xs font-black uppercase text-muted-foreground flex items-center gap-2">
+                      <Users className="w-3 h-3" /> Contato do Lojista
+                    </h3>
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/30 border border-border/50 group hover:border-primary/30 transition-colors">
+                        <Mail className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                        <div className="min-w-0">
+                          <p className="text-[10px] text-muted-foreground uppercase font-bold">E-mail</p>
+                          <p className="text-sm font-medium truncate">{selectedTenant.email || '-'}</p>
+                        </div>
+                      </div>
+                      <a 
+                        href={`https://wa.me/${selectedTenant.whatsapp?.replace(/\D/g, '')}`} 
+                        target="_blank" 
+                        rel="noreferrer"
+                        className="flex items-center gap-3 p-3 rounded-xl bg-muted/30 border border-border/50 group hover:border-green-500/30 transition-colors cursor-pointer"
+                      >
+                        <MessageSquare className="w-4 h-4 text-muted-foreground group-hover:text-green-500 transition-colors" />
+                        <div className="min-w-0 flex-1">
+                          <p className="text-[10px] text-muted-foreground uppercase font-bold">WhatsApp</p>
+                          <p className="text-sm font-medium">{selectedTenant.whatsapp || '-'}</p>
+                        </div>
+                        <ExternalLink className="w-3 h-3 text-muted-foreground group-hover:text-green-500" />
+                      </a>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4 pt-4">
+                    <h3 className="text-xs font-black uppercase text-muted-foreground flex items-center gap-2">
+                      <TrendingUp className="w-3 h-3" /> Métricas de Uso
+                    </h3>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="p-3 rounded-xl bg-muted/30 border border-border/50">
+                        <p className="text-[10px] text-muted-foreground uppercase font-bold">Pedidos/Mês</p>
+                        <p className="text-lg font-black text-primary">{selectedTenant.order_limit === 0 ? 'Ilimitado' : selectedTenant.order_limit}</p>
+                      </div>
+                      <div className="p-3 rounded-xl bg-muted/30 border border-border/50">
+                        <p className="text-[10px] text-muted-foreground uppercase font-bold">Último Login</p>
+                        <p className="text-sm font-medium">
+                          {selectedTenant.last_login_at ? new Date(selectedTenant.last_login_at).toLocaleDateString('pt-BR') : 'Nunca'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Coluna Direita: Gestão de Licença e Plano */}
+                <div className="p-6 space-y-6 bg-muted/10">
+                  <div className="space-y-4">
+                    <h3 className="text-xs font-black uppercase text-muted-foreground flex items-center gap-2">
+                      <CreditCard className="w-3 h-3" /> Controle de Assinatura
+                    </h3>
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Plano Atual</label>
+                        <Select value={selectedTenant.plan} onValueChange={(v) => handlePlanChange(selectedTenant.user_id, v)}>
+                          <SelectTrigger className="glass-sm">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="basic">Básico (Essencial)</SelectItem>
+                            <SelectItem value="pro">Pro (Com IA e Adicionais)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-3 pt-2">
+                        <label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Adicionar Tempo de Licença</label>
+                        <div className="grid grid-cols-3 gap-2">
+                          <Button variant="outline" size="sm" className="text-[10px] font-bold py-4 h-auto" onClick={() => handleExtendLicense(selectedTenant.user_id, 30)}>+30 DIAS</Button>
+                          <Button variant="outline" size="sm" className="text-[10px] font-bold py-4 h-auto" onClick={() => handleExtendLicense(selectedTenant.user_id, 90)}>+90 DIAS</Button>
+                          <Button variant="outline" size="sm" className="text-[10px] font-bold py-4 h-auto" onClick={() => handleExtendLicense(selectedTenant.user_id, 365)}>+1 ANO</Button>
+                        </div>
+                        <p className="text-[10px] text-center text-muted-foreground italic">
+                          Ao adicionar tempo, a conta é ativada automaticamente.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4 pt-4">
+                    <h3 className="text-xs font-black uppercase text-muted-foreground flex items-center gap-2 text-red-500/80">
+                      <ShieldCheck className="w-3 h-3" /> Segurança e Acesso
+                    </h3>
+                    <div className="flex flex-col gap-2">
+                      <Button 
+                        variant={selectedTenant.is_active ? "destructive" : "default"} 
+                        className="w-full gap-2 font-bold uppercase text-xs h-10"
+                        onClick={() => handleToggleActive(selectedTenant.user_id, selectedTenant.is_active)}
+                        disabled={changingStatus}
+                      >
+                        {selectedTenant.is_active ? <UserX className="w-4 h-4" /> : <UserCheck className="w-4 h-4" />}
+                        {selectedTenant.is_active ? 'Suspender Acesso Agora' : 'Reativar Lojista Agora'}
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        className="w-full gap-2 font-bold uppercase text-[10px] h-8 text-destructive/60 hover:text-destructive hover:bg-destructive/10"
+                        onClick={() => { setShowManageModal(false); handleDeleteUser(selectedTenant.user_id, selectedTenant.restaurant_name); }}
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        Excluir Conta Permanentemente
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <DialogFooter className="px-6 py-4 bg-muted/30 border-t border-border mt-0">
+                <Button variant="outline" onClick={() => setShowManageModal(false)} className="font-bold border-border/50">FECHAR PAINEL</Button>
+                <Button className="gap-2 font-bold" onClick={() => handleImpersonate(selectedTenant)}>
+                  <Eye className="w-4 h-4" /> ACESSAR DASHBOARD DO LOJISTA
+                </Button>
+              </DialogFooter>
+            </>
+          )}
         </DialogContent>
       </Dialog>
     </div>
