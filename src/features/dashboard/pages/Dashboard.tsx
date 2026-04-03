@@ -110,49 +110,16 @@ export default function Dashboard() {
     setup().then(ch => { channelRef = ch; });
     return () => { if (channelRef) supabase.removeChannel(channelRef); };
   }, [fetchStats, impersonatedUserId, playNotification]);
-  const handleGeneratePix = async (planType: 'monthly' | 'basic' | 'pro') => {
-    setPixLoading(true);
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Usuário não autenticado");
-
-      // Use o ID do lojista se estiver impersonando, senão use o próprio ID
-      const targetUserId = impersonatedUserId || user.id;
-
-      const { data, error } = await supabase.functions.invoke('generate-own-pix', {
-        body: { user_id: targetUserId, plan: planType }
-      });
-      
-      if (error) {
-        console.error('Erro detalhado da Edge Function:', error);
-        throw new Error(error.message || `Erro ao gerar Pix (Edge Function falhou)`);
-      }
-
-      if (!data?.success) {
-        console.error('Resposta da Edge Function sem sucesso:', data);
-        throw new Error(data?.error || 'Erro desconhecido na geração do Pix');
-      }
-
-      toast.success('Pix gerado! Veja o QR Code abaixo.');
-      setHasPendingPix(true);
-      
-      // Armazena os dados do Pix para passar diretamente ao PlanBanner (instantâneo)
-      if (data.brCode) {
-        setGeneratedPixData({
-          id: data.intent_id,
-          qrcode: `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(data.brCode)}&size=300x300`,
-          copyPaste: data.brCode,
-          amount: data.amount,
-        });
-      }
-    } catch (err: any) {
-      console.error('Falha ao gerar Pix:', err);
-      toast.error('Não foi possível gerar o Pix', {
-        description: err.message || 'Verifique se as configurações de Pix no Admin estão corretas.'
-      });
-    } finally {
-      setPixLoading(false);
-    }
+  const handleActivatePlan = (planType: 'monthly' | 'basic' | 'pro') => {
+    const messages = {
+      monthly: "Olá! Quero renovar meu Plano Mensal.",
+      basic: "Olá! Quero renovar meu Plano Semestral.",
+      pro: "Olá! Quero renovar meu Plano Anual.",
+    };
+    
+    const whatsapp = "22996051620";
+    const text = encodeURIComponent(messages[planType]);
+    window.open(`https://wa.me/${whatsapp}?text=${text}`, '_blank');
   };
 
   const cards = [
@@ -164,16 +131,6 @@ export default function Dashboard() {
 
   const { status: planStatus, loading: planLoading } = usePlanStatus();
   const { isSuperAdmin } = useSuperAdmin();
-  const [hasPendingPix, setHasPendingPix] = useState(false);
-  const [generatedPixData, setGeneratedPixData] = useState<{ qrcode: string; copyPaste: string; amount: string; id?: string } | null>(null);
-
-  const handlePixStatusChange = useCallback((pending: boolean) => {
-    setHasPendingPix(pending);
-    // Se o status mudar para false, limpamos o dado gerado
-    if (!pending) {
-      setGeneratedPixData(null);
-    }
-  }, []);
 
   if (loading || planLoading) return <DashboardSkeleton />;
 
@@ -183,11 +140,7 @@ export default function Dashboard() {
     <div className="space-y-8">
       {/* Plan Banner — hidden for super admins unless impersonating */}
       {planStatus && (!isSuperAdmin || impersonatedUserId) && (
-        <PlanBanner 
-          status={planStatus} 
-          onPixStatusChange={handlePixStatusChange}
-          initialPixData={generatedPixData}
-        />
+        <PlanBanner status={planStatus} />
       )}
 
       <div>
@@ -200,7 +153,7 @@ export default function Dashboard() {
       </div>
 
       {isSuspended ? (
-        !hasPendingPix && (
+        (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4 max-w-7xl mx-auto">
             {/* Monthly Plan Card */}
             <motion.div 
@@ -235,11 +188,10 @@ export default function Dashboard() {
               <Button 
                 className="w-full h-11 gap-2 font-bold text-sm" 
                 variant="outline"
-                disabled={pixLoading}
-                onClick={() => handleGeneratePix('monthly')}
+                onClick={() => handleActivatePlan('monthly')}
               >
-                {pixLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ExternalLink className="w-4 h-4" />}
-                Assinar Mensal
+                <ExternalLink className="w-4 h-4" />
+                Renovar Mensal
               </Button>
             </motion.div>
 
@@ -279,11 +231,10 @@ export default function Dashboard() {
 
               <Button 
                 className="w-full h-11 gap-2 font-bold text-sm bg-primary hover:bg-primary/90 text-white" 
-                disabled={pixLoading}
-                onClick={() => handleGeneratePix('basic')}
+                onClick={() => handleActivatePlan('basic')}
               >
-                {pixLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-                Assinar Semestral
+                <Sparkles className="w-4 h-4" />
+                Renovar Semestral
               </Button>
             </motion.div>
 
@@ -326,11 +277,10 @@ export default function Dashboard() {
 
               <Button 
                 className="w-full h-11 gap-2 font-bold text-sm bg-foreground hover:bg-foreground/90 text-background"
-                disabled={pixLoading}
-                onClick={() => handleGeneratePix('pro')}
+                onClick={() => handleActivatePlan('pro')}
               >
-                {pixLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ExternalLink className="w-4 h-4" />}
-                Assinar Anual
+                <ExternalLink className="w-4 h-4" />
+                Renovar Anual
               </Button>
             </motion.div>
 

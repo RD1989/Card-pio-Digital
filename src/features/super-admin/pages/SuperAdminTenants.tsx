@@ -22,6 +22,7 @@ interface Tenant {
   plan: string;
   plan_status: string;
   trial_ends_at: string | null;
+  premium_until: string | null;
   last_login_at: string | null;
   order_limit: number;
 }
@@ -50,7 +51,7 @@ export default function SuperAdminTenants() {
     setLoading(true);
     const { data } = await (supabase as any)
       .from('profiles')
-      .select('id, user_id, restaurant_name, slug, whatsapp, email, created_at, is_active, plan, plan_status, trial_ends_at, last_login_at, order_limit')
+      .select('id, user_id, restaurant_name, slug, whatsapp, email, created_at, is_active, plan, plan_status, trial_ends_at, premium_until, last_login_at, order_limit')
       .order('created_at', { ascending: false });
     setTenants((data as any[]) || []);
     setLoading(false);
@@ -76,6 +77,27 @@ export default function SuperAdminTenants() {
     await (supabase as any).from('profiles').update({ plan_status: newStatus }).eq('user_id', tenantUserId);
     setTenants(prev => prev.map(t => t.user_id === tenantUserId ? { ...t, plan_status: newStatus } : t));
     toast.success(`Status atualizado para ${newStatus}`);
+  }
+
+  async function handleExtendLicense(tenantUserId: string, days: number) {
+    const newPremiumUntil = new Date();
+    newPremiumUntil.setDate(newPremiumUntil.getDate() + days);
+    
+    const { error } = await (supabase as any)
+      .from('profiles')
+      .update({ 
+        premium_until: newPremiumUntil.toISOString(),
+        plan_status: 'active',
+        is_active: true
+      })
+      .eq('user_id', tenantUserId);
+
+    if (error) {
+      toast.error('Erro ao ativar licença');
+    } else {
+      toast.success(`Licença ativada por ${days} dias`);
+      fetch();
+    }
   }
 
   async function handleLimitChange(tenantUserId: string, newLimit: number) {
@@ -289,7 +311,8 @@ export default function SuperAdminTenants() {
                 <th className="p-3 font-medium hidden sm:table-cell">Contato</th>
                 <th className="p-3 font-medium hidden lg:table-cell">Plano/Limite</th>
                 <th className="p-3 font-medium">Status</th>
-                <th className="p-3 font-medium hidden xl:table-cell">Cadastro</th>
+                <th className="p-3 font-medium hidden lg:table-cell">Ativação Rápida</th>
+                <th className="p-3 font-medium hidden xl:table-cell">Vencimento</th>
                 <th className="p-3 font-medium text-right">Ações</th>
               </tr>
             </thead>
@@ -363,11 +386,22 @@ export default function SuperAdminTenants() {
                       </Select>
                     </div>
                   </td>
+                  <td className="p-3 hidden lg:table-cell text-center">
+                    <div className="flex items-center gap-1">
+                      <Button size="sm" variant="outline" className="h-7 px-2 text-[10px] font-bold" onClick={() => handleExtendLicense(t.user_id, 30)}>+30d</Button>
+                      <Button size="sm" variant="outline" className="h-7 px-2 text-[10px] font-bold" onClick={() => handleExtendLicense(t.user_id, 180)}>+180d</Button>
+                      <Button size="sm" variant="outline" className="h-7 px-2 text-[10px] font-bold" onClick={() => handleExtendLicense(t.user_id, 365)}>+365d</Button>
+                    </div>
+                  </td>
                   <td className="p-3 text-muted-foreground text-xs hidden xl:table-cell">
-                    {new Date(t.created_at).toLocaleDateString('pt-BR')}
-                    {t.trial_ends_at && t.plan_status === 'trial' && (
-                      <p className="text-[10px]">Trial: {new Date(t.trial_ends_at).toLocaleDateString('pt-BR')}</p>
-                    )}
+                    <div className="flex flex-col">
+                      {t.plan_status === 'trial' ? (
+                        <span className="text-amber-500 font-bold">Trial: {t.trial_ends_at ? new Date(t.trial_ends_at).toLocaleDateString('pt-BR') : '-'}</span>
+                      ) : (
+                        <span className="text-primary font-bold">Expira: {t.premium_until ? new Date(t.premium_until).toLocaleDateString('pt-BR') : 'Manual'}</span>
+                      )}
+                      <span className="text-[10px] opacity-50 font-medium">Criado em: {new Date(t.created_at).toLocaleDateString('pt-BR')}</span>
+                    </div>
                   </td>
                    <td className="p-3 text-right">
                     <div className="flex items-center justify-end gap-2">
