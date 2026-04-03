@@ -3,16 +3,20 @@ import { AdminSidebar } from '@/shared/components/layout/AdminSidebar';
 import { SidebarProvider, SidebarTrigger } from '@/shared/components/ui/sidebar';
 import { useImpersonateStore } from '@/shared/stores/global/useImpersonateStore';
 import { useSuperAdmin } from '@/features/super-admin/hooks/useSuperAdmin';
-import { X, Eye } from 'lucide-react';
+import { X, Eye, Loader2 } from 'lucide-react';
+import { usePlanStatus } from '@/features/billing/hooks/usePlanStatus';
+import { SuspensionOverlay } from '@/features/billing/components/SuspensionOverlay';
+import { PlanBanner } from '@/features/billing/components/PlanBanner';
 
 export function AdminLayout() {
   const { impersonatedUserId, impersonatedName, clearImpersonation } = useImpersonateStore();
-  const { isSuperAdmin, loading } = useSuperAdmin();
+  const { isSuperAdmin, loading: adminLoading } = useSuperAdmin();
+  const { status: planStatus, loading: planLoading } = usePlanStatus();
 
-  if (loading) {
+  if (adminLoading || planLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+        <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -20,6 +24,12 @@ export function AdminLayout() {
   if (isSuperAdmin && !impersonatedUserId) {
     return <Navigate to="/super-admin" replace />;
   }
+
+  const isSuspended = planStatus && !planStatus.isActive;
+  // O Super Admin ignora o bloqueio para poder prestar suporte, 
+  // EXCETO se ele estiver testando a própria suspensão (casos raros) ou se quisermos ser estritos.
+  // Aqui, permitimos o bypass para o Super Admin.
+  const showSuspension = isSuspended && !isSuperAdmin;
 
   return (
     <SidebarProvider>
@@ -46,9 +56,16 @@ export function AdminLayout() {
           <header className="h-14 flex items-center px-4 border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-30">
             <SidebarTrigger className="mr-3" />
             <span className="text-gradient font-bold text-lg md:hidden">Menu Pro</span>
+            <div className="flex-1" />
+            {planStatus && <PlanBanner status={planStatus} />}
           </header>
-          <main className="flex-1 p-4 md:p-8">
-            <Outlet />
+          
+          <main className="flex-1 p-4 md:p-8 overflow-y-auto">
+            {showSuspension ? (
+              <SuspensionOverlay />
+            ) : (
+              <Outlet />
+            )}
           </main>
         </div>
       </div>

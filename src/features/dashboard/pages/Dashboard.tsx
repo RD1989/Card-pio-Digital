@@ -146,154 +146,11 @@ export default function Dashboard() {
       <div>
         <h1 className="text-2xl font-bold">Meu Painel</h1>
         <p className="text-muted-foreground text-sm mt-1">
-          {isSuspended 
-            ? 'Sua conta está suspensa. Escolha um plano para reativar seu acesso.' 
-            : 'Visão geral do seu restaurante • Atualização em tempo real'}
+          Visão geral do seu restaurante • Atualização em tempo real
         </p>
       </div>
 
-      {isSuspended && !isSuperAdmin ? (
-        (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4 max-w-7xl mx-auto">
-            {/* Monthly Plan Card */}
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="glass-sm p-6 flex flex-col border-2 border-border relative overflow-hidden hover:border-primary/30 transition-colors"
-            >
-              <div className="mb-6">
-                <h3 className="text-xl font-bold">Plano Mensal</h3>
-                <p className="text-xs text-muted-foreground font-medium">Pagamento Mês a Mês</p>
-                <div className="mt-4">
-                  <p className="text-3xl font-black text-foreground">R$ 1,00</p>
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">para teste</p>
-                </div>
-              </div>
-              
-              <ul className="space-y-3 mb-8 flex-1">
-                <li className="text-[13px] flex items-center gap-3 font-bold text-primary italic">
-                  <Check className="w-4 h-4 shrink-0" />
-                  <span>Pedidos ILIMITADOS</span>
-                </li>
-                <li className="text-[13px] flex items-center gap-3 font-medium opacity-80">
-                  <Check className="w-4 h-4 shrink-0" />
-                  <span>Gestão Completa</span>
-                </li>
-                <li className="text-[13px] flex items-center gap-3 font-medium opacity-80">
-                  <Check className="w-4 h-4 shrink-0" />
-                  <span>Suporte via Chat</span>
-                </li>
-              </ul>
-
-              <Button 
-                className="w-full h-11 gap-2 font-bold text-sm" 
-                variant="outline"
-                onClick={() => handleActivatePlan('monthly')}
-              >
-                <ExternalLink className="w-4 h-4" />
-                Renovar Mensal
-              </Button>
-            </motion.div>
-
-            {/* Basic Plan Card (Semestral) */}
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="glass-sm p-6 flex flex-col border-2 border-primary/40 relative overflow-hidden bg-primary/5 shadow-xl"
-            >
-              <div className="absolute top-0 right-0 bg-primary/10 text-primary text-[9px] font-black px-3 py-1 uppercase tracking-wider">
-                Melhor Custo-Benefício
-              </div>
-              <div className="mb-6">
-                <h3 className="text-xl font-bold">Plano Semestral</h3>
-                <p className="text-xs text-muted-foreground font-medium">6 Meses de Acesso</p>
-                <div className="mt-4">
-                  <p className="text-3xl font-black text-primary">R$ 97,00</p>
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">economize 35%</p>
-                </div>
-              </div>
-              
-              <ul className="space-y-3 mb-8 flex-1">
-                <li className="text-[13px] flex items-center gap-3 font-bold text-primary italic">
-                  <Check className="w-4 h-4 shrink-0" />
-                  <span>Pedidos ILIMITADOS</span>
-                </li>
-                <li className="text-[13px] flex items-center gap-3 font-bold text-primary">
-                  <Check className="w-4 h-4 shrink-0" />
-                  <span>Produtos ILIMITADOS</span>
-                </li>
-                <li className="text-[13px] flex items-center gap-3 font-medium">
-                  <Check className="w-4 h-4 shrink-0" />
-                  <span>IA (Importação Ilimitada)</span>
-                </li>
-              </ul>
-
-              <Button 
-                className="w-full h-11 gap-2 font-bold text-sm bg-primary hover:bg-primary/90 text-white" 
-                onClick={() => handleActivatePlan('basic')}
-              >
-                <Sparkles className="w-4 h-4" />
-                Renovar Semestral
-              </Button>
-            </motion.div>
-
-            {/* Pro Plan Card (Anual) */}
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="glass-sm p-6 flex flex-col border-2 border-foreground relative overflow-hidden bg-foreground/[0.02]"
-            >
-              <div className="absolute top-0 right-0 bg-foreground text-background text-[9px] font-black px-3 py-1 uppercase tracking-wider">
-                Plano Full (1 Ano)
-              </div>
-              <div className="mb-6">
-                <div className="flex items-center gap-2">
-                  <h3 className="text-xl font-bold">Plano Anual</h3>
-                  <Sparkles className="w-4 h-4 text-amber-500 fill-amber-500" />
-                </div>
-                <p className="text-xs text-muted-foreground font-medium">Acesso Total ILIMITADO</p>
-                <div className="mt-4">
-                  <p className="text-3xl font-black text-foreground">R$ 169,00</p>
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">economize 45%</p>
-                </div>
-              </div>
-              
-              <ul className="space-y-3 mb-8 flex-1">
-                <li className="text-[13px] flex items-center gap-3 font-bold text-foreground">
-                  <Check className="w-4 h-4 shrink-0" />
-                  <span>Pedidos ILIMITADOS</span>
-                </li>
-                <li className="text-[13px] flex items-center gap-3 font-bold text-foreground">
-                  <Check className="w-4 h-4 shrink-0" />
-                  <span>IA ILIMITADA</span>
-                </li>
-                <li className="text-[13px] flex items-center gap-3 font-bold text-foreground">
-                  <Check className="w-4 h-4 shrink-0" />
-                  <span>VIP Support</span>
-                </li>
-              </ul>
-
-              <Button 
-                className="w-full h-11 gap-2 font-bold text-sm bg-foreground hover:bg-foreground/90 text-background"
-                onClick={() => handleActivatePlan('pro')}
-              >
-                <ExternalLink className="w-4 h-4" />
-                Renovar Anual
-              </Button>
-            </motion.div>
-
-            <div className="md:col-span-3 text-center space-y-2 mt-4">
-              <p className="text-xs font-semibold text-muted-foreground opacity-80">
-                Liberação instantânea via Pix Próprio • Sem taxas de transação
-              </p>
-            </div>
-          </div>
-        )
-      ) : (
-        <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {cards.map((stat, i) => (
               <motion.div
                 key={stat.label}
@@ -342,8 +199,6 @@ export default function Dashboard() {
               )}
             </div>
           </motion.div>
-        </>
-      )}
     </div>
   );
 }
