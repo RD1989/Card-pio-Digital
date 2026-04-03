@@ -134,7 +134,9 @@ export default function Dashboard() {
       }
 
       toast.success('Pix gerado! Veja o QR Code abaixo.');
-      // Removido reload: o PlanBanner irá detectar a nova intenção e o Dashboard irá esconder os cards via hasPendingPix
+      setHasPendingPix(true);
+      // O PlanBanner irá detectar a nova intenção via Realtime ou Auto-fetch para mostrar o QR Code
+
     } catch (err: any) {
       console.error('Falha ao gerar Pix:', err);
       toast.error('Não foi possível gerar o Pix', {

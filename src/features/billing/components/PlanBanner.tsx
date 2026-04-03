@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Clock, AlertTriangle, Crown, Zap, Copy, Check, X, QrCode as QrIcon } from 'lucide-react';
 import { PlanStatus } from '@/features/billing/hooks/usePlanStatus';
@@ -17,38 +17,55 @@ export function PlanBanner({ status, onPixStatusChange }: Props) {
   const [copied, setCopied] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
+  const fetchedRef = useRef(false);
 
   // Auto-fetch pending charges on mount
   useEffect(() => {
-    async function fetchPending() {
-      if (!status.user_id || isCancelling) return;
-      
-      const { data: intent } = await (supabase as any)
-        .from('pix_intents')
-        .select('*')
-        .eq('user_id', status.user_id)
-        .eq('status', 'pending')
-        .gt('expires_at', new Date().toISOString())
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
+    // Só buscamos se o user_id estiver presente e ainda não buscamos nesta montagem
+    if (!status.user_id || fetchedRef.current) return;
 
-      if (intent && intent.pix_code && !isCancelling) {
-        setPixData({
-          id: intent.id,
-          qrcode: `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(intent.pix_code)}&size=300x300`,
-          copyPaste: intent.pix_code,
-          amount: intent.amount?.toString() || '0.00',
-        });
-        if (onPixStatusChange) onPixStatusChange(true);
+    async function fetchPending() {
+      try {
+        console.log('🔍 Buscando cobranças Pix pendentes...');
+        const { data: intent, error } = await (supabase as any)
+          .from('pix_intents')
+          .select('*')
+          .eq('user_id', status.user_id)
+          .eq('status', 'pending')
+          .gt('expires_at', new Date().toISOString())
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (error) throw error;
+
+        // Se houver intenção válida e NÃO estivermos cancelando uma agora
+        if (intent?.pix_code && !isCancelling) {
+          console.log('✅ Cobrança pendente encontrada:', intent.id);
+          setPixData({
+            id: intent.id,
+            qrcode: `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(intent.pix_code)}&size=300x300`,
+            copyPaste: intent.pix_code,
+            amount: intent.amount?.toString() || '0.00',
+          });
+          if (onPixStatusChange) onPixStatusChange(true);
+        }
+        
+        fetchedRef.current = true;
+      } catch (err) {
+        console.error('Erro ao buscar Pix pendente:', err);
       }
     }
+    
     fetchPending();
-  }, [status.user_id, onPixStatusChange, isCancelling]);
+    
+    // Resetar o ref se o user_id mudar drasticamente (raro no Dashboard)
+    return () => { fetchedRef.current = false; };
+  }, [status.user_id, onPixStatusChange]); // REMOVIDO isCancelling daqui
 
   // Listener Realtime
   useEffect(() => {
-    if (!status.user_id || isCancelling) return;
+    if (!status.user_id) return;
 
     const channel = supabase
       .channel(`pix_updates_${status.user_id}`)
@@ -81,7 +98,16 @@ export function PlanBanner({ status, onPixStatusChange }: Props) {
           filter: pixData?.id ? `id=eq.${pixData.id}` : `user_id=eq.${status.user_id}`,
         },
         (payload) => {
+          // Se for cancelado (por este componente ou outro lugar), limpamos
+          if (payload.new.status === 'cancelled') {
+            console.log('🚫 Cobrança cancelada detectada via Realtime');
+            setPixData(null);
+            if (onPixStatusChange) onPixStatusChange(false);
+            return;
+          }
+
           if (isCancelling) return;
+
           if (payload.new.status === 'completed') {
             triggerSuccess();
           }
@@ -130,26 +156,30 @@ export function PlanBanner({ status, onPixStatusChange }: Props) {
   const handleCancel = async () => {
     if (isCancelling) return;
     
+    // Armazena o ID para o update antes de limpar o estado
+    const intentId = pixData?.id;
+
+    // Atualização Otimista: Fecha a UI IMEDIATAMENTE
+    setPixData(null);
+    if (onPixStatusChange) onPixStatusChange(false);
+    toast.info('Cobrança cancelada. Você pode escolher outro plano.');
+    
     try {
       setIsCancelling(true);
-      if (pixData?.id) {
+      console.log('⏳ Sincronizando cancelamento com o banco de dados...');
+      
+      if (intentId) {
         await (supabase as any)
           .from('pix_intents')
           .update({ status: 'cancelled' } as any)
-          .eq('id', pixData.id);
+          .eq('id', intentId);
       }
-      
-      setPixData(null);
-      if (onPixStatusChange) onPixStatusChange(false);
-      toast.info('Cobrança cancelada. Você pode escolher outro plano.');
     } catch (err) {
-      console.error('Erro ao cancelar Pix:', err);
-      // Mesmo se falhar no banco, limpamos localmente para não travar a UI
-      setPixData(null);
-      if (onPixStatusChange) onPixStatusChange(false);
+      console.error('Erro ao cancelar Pix no banco (processado em background):', err);
     } finally {
-      // Pequeno delay para garantir que o banco processou antes de liberar novos fetches
-      setTimeout(() => setIsCancelling(false), 1000);
+      setTimeout(() => {
+        setIsCancelling(false);
+      }, 1000);
     }
   };
 
@@ -239,10 +269,11 @@ export function PlanBanner({ status, onPixStatusChange }: Props) {
                 {/* Botão de Fechar/Cancelar */}
                 <button
                   onClick={handleCancel}
-                  className="absolute top-4 right-4 z-20 p-2 rounded-full bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                  disabled={isCancelling}
+                  className="absolute top-4 right-4 z-20 p-2 rounded-full bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
                   title="Cancelar e escolher outro plano"
                 >
-                  <X className="w-4 h-4" />
+                  <X className={isCancelling ? "w-4 h-4 animate-spin" : "w-4 h-4"} />
                 </button>
 
                 <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
