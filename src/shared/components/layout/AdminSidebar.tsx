@@ -50,7 +50,7 @@ export function AdminSidebar() {
 
   const renderLinks = (links: typeof mainLinks) =>
     links.map((item) => {
-      const isDisabled = isSuspended && item.url !== '/admin';
+      const isDisabled = isSuspended && item.url !== '/admin' && !isSuperAdmin;
       
       return (
         <SidebarMenuItem key={item.url}>

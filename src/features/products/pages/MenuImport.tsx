@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Upload, FileText, Loader2, Sparkles, Check, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useImpersonateStore } from '@/shared/stores/global/useImpersonateStore';
 import { Button } from '@/shared/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card';
 
@@ -15,6 +16,7 @@ interface ExtractedProduct {
 }
 
 export default function MenuImport() {
+  const { impersonatedUserId } = useImpersonateStore();
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [extracting, setExtracting] = useState(false);
@@ -153,14 +155,18 @@ Retorne APENAS um JSON válido:
 
     setImporting(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        toast.error('Sessão expirada. Faça login novamente.');
-        setImporting(false); 
-        return; 
+      let userId = impersonatedUserId;
+      if (!userId) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          toast.error('Sessão expirada. Faça login novamente.');
+          setImporting(false); 
+          return; 
+        }
+        userId = user.id;
       }
 
-      console.log(`Iniciando importação de ${selected.length} produtos para o usuário ${user.id}`);
+      console.log(`Iniciando importação de ${selected.length} produtos para o usuário ${userId}`);
 
       // 1. Get or create categories
       const categoryNames = [...new Set(selected.map(p => p.category))];
@@ -169,7 +175,7 @@ Retorne APENAS um JSON válido:
       const { data: existingCats, error: fetchCatsError } = await supabase
         .from('categories')
         .select('id, name')
-        .eq('user_id', user.id);
+        .eq('user_id', userId);
 
       if (fetchCatsError) {
         console.error('Erro ao buscar categorias existentes:', fetchCatsError);
@@ -190,7 +196,7 @@ Retorne APENAS um JSON válido:
             .from('categories')
             .insert({ 
               name: catName.trim(), 
-              user_id: user.id, 
+              user_id: userId, 
               sort_order: Object.keys(categoryMap).length 
             })
             .select('id')
@@ -214,7 +220,7 @@ Retorne APENAS um JSON válido:
           description: p.description ? p.description.substring(0, 500) : null,
           price: Number(p.price) || 0,
           category_id: catId,
-          user_id: user.id,
+          user_id: userId,
           sort_order: i,
           is_active: true,
           is_available: true

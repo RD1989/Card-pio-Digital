@@ -66,9 +66,9 @@ export default function BusinessHours() {
     let userId = impersonatedUserId;
     if (!userId) {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { setSaving(false); return; }
-      userId = user.id;
+      if (!userId && user) userId = user.id;
     }
+    if (!userId) { setSaving(false); return; }
 
     // Delete existing and re-insert
     await (supabase as any).from('business_hours').delete().eq('user_id', userId);

@@ -4,6 +4,7 @@ import { Bell, BellOff, Printer, Clock, CheckCircle2, ChefHat, Truck, XCircle, P
 import { supabase } from '@/integrations/supabase/client';
 import { Tables } from '@/integrations/supabase/types';
 import { toast } from 'sonner';
+import { useImpersonateStore } from '@/shared/stores/global/useImpersonateStore';
 import { Button } from '@/shared/components/ui/button';
 import { Badge } from '@/shared/components/ui/badge';
 
@@ -24,6 +25,7 @@ const STATUS_CONFIG: Record<string, { label: string; icon: React.ElementType; co
 };
 
 export default function Delivery() {
+  const { impersonatedUserId } = useImpersonateStore();
   const [orders, setOrders] = useState<OrderWithItems[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<OrderWithItems | null>(null);
   const [loading, setLoading] = useState(true);
@@ -45,14 +47,18 @@ export default function Delivery() {
     let channel: ReturnType<typeof supabase.channel> | null = null;
 
     async function subscribe() {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      let userId = impersonatedUserId;
+      if (!userId) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!userId && user) userId = user.id;
+      }
+      if (!userId) return;
 
       channel = supabase
         .channel('live-orders')
         .on(
           'postgres_changes',
-          { event: 'INSERT', schema: 'public', table: 'orders', filter: `restaurant_user_id=eq.${user.id}` },
+          { event: 'INSERT', schema: 'public', table: 'orders', filter: `restaurant_user_id=eq.${userId}` },
           async (payload) => {
             const newOrder = payload.new as Order;
             // Fetch items for this order
@@ -81,13 +87,17 @@ export default function Delivery() {
 
   async function fetchOrders() {
     setLoading(true);
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { setLoading(false); return; }
+    let userId = impersonatedUserId;
+    if (!userId) {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { setLoading(false); return; }
+      userId = user.id;
+    }
 
     const { data: ordersData } = await supabase
       .from('orders')
       .select('*')
-      .eq('restaurant_user_id', user.id)
+      .eq('restaurant_user_id', userId)
       .order('created_at', { ascending: false })
       .limit(50);
 

@@ -27,6 +27,13 @@ interface Tenant {
   order_limit: number;
 }
 
+const LICENSE_STATUS = {
+  active: { label: 'Ativa', color: 'bg-green-500/10 text-green-500 border-green-500/30' },
+  warning: { label: 'Vencendo', color: 'bg-amber-500/10 text-amber-500 border-amber-500/30' },
+  expired: { label: 'Expirada', color: 'bg-red-500/10 text-red-500 border-red-500/30' },
+  trial: { label: 'Trial', color: 'bg-blue-500/10 text-blue-500 border-blue-500/30' },
+};
+
 export default function SuperAdminTenants() {
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [loading, setLoading] = useState(true);
@@ -226,6 +233,31 @@ export default function SuperAdminTenants() {
     toast.success(`${filtered.length} lojistas exportados`);
   }
 
+  function getLicenseInfo(t: Tenant) {
+    const now = new Date();
+    
+    if (t.plan_status === 'trial') {
+      const trialEnd = t.trial_ends_at ? new Date(t.trial_ends_at) : null;
+      const days = trialEnd ? Math.ceil((trialEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)) : 0;
+      return { 
+        status: 'trial' as const, 
+        days, 
+        label: `Trial: ${days}d rest.`,
+        date: trialEnd?.toLocaleDateString('pt-BR') || '-'
+      };
+    }
+
+    const premiumUntil = t.premium_until ? new Date(t.premium_until) : null;
+    if (!premiumUntil) return { status: 'expired' as const, days: 0, label: 'Sem Licença', date: 'Manual' };
+
+    const days = Math.ceil((premiumUntil.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (days < 0) return { status: 'expired' as const, days, label: 'Expirada', date: premiumUntil.toLocaleDateString('pt-BR') };
+    if (days <= 5) return { status: 'warning' as const, days, label: `${days} dias rest.`, date: premiumUntil.toLocaleDateString('pt-BR') };
+    
+    return { status: 'active' as const, days, label: 'Ativa', date: premiumUntil.toLocaleDateString('pt-BR') };
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -310,9 +342,8 @@ export default function SuperAdminTenants() {
                 <th className="p-3 font-medium">Lojista</th>
                 <th className="p-3 font-medium hidden sm:table-cell">Contato</th>
                 <th className="p-3 font-medium hidden lg:table-cell">Plano/Limite</th>
-                <th className="p-3 font-medium">Status</th>
+                <th className="p-3 font-medium">Status da Licença</th>
                 <th className="p-3 font-medium hidden lg:table-cell">Ativação Rápida</th>
-                <th className="p-3 font-medium hidden xl:table-cell">Vencimento</th>
                 <th className="p-3 font-medium text-right">Ações</th>
               </tr>
             </thead>
@@ -361,46 +392,38 @@ export default function SuperAdminTenants() {
                           type="number"
                           value={t.order_limit}
                           onChange={(e) => handleLimitChange(t.user_id, parseInt(e.target.value) || 0)}
-                          className="w-12 h-5 text-[10px] bg-muted border border-border rounded px-1 focus:outline-none focus:ring-1 focus:ring-primary"
+                          className="w-20 h-5 text-[10px] bg-muted border border-border rounded px-1 focus:outline-none focus:ring-1 focus:ring-primary"
                           title="0 = Ilimitado"
                         />
                       </div>
                     </div>
                   </td>
                   <td className="p-3">
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => handleToggleActive(t.user_id, t.is_active)}
-                        className={`w-2 h-2 rounded-full shrink-0 ${t.is_active ? 'bg-green-500' : 'bg-red-500'}`}
-                        title={t.is_active ? 'Ativo - clique para desativar' : 'Inativo - clique para ativar'}
-                      />
-                      <Select value={t.plan_status} onValueChange={(v) => handleStatusChange(t.user_id, v)}>
-                        <SelectTrigger className="w-24 h-7 text-xs">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="trial">Trial</SelectItem>
-                          <SelectItem value="active">Ativo</SelectItem>
-                          <SelectItem value="expired">Expirado</SelectItem>
-                        </SelectContent>
-                      </Select>
+                    <div className="flex flex-col gap-1">
+                      {(() => {
+                        const info = getLicenseInfo(t);
+                        const config = LICENSE_STATUS[info.status];
+                        return (
+                          <>
+                            <div className="flex items-center gap-2">
+                              <div className={`px-2 py-0.5 rounded-full text-[10px] font-black border uppercase tracking-wider ${config.color}`}>
+                                {config.label}
+                              </div>
+                              {info.status !== 'expired' && info.days > 0 && (
+                                <span className="text-[10px] font-bold text-muted-foreground">{info.days}d</span>
+                              )}
+                            </div>
+                            <span className="text-[10px] text-muted-foreground opacity-70">Venc: {info.date}</span>
+                          </>
+                        );
+                      })()}
                     </div>
                   </td>
-                  <td className="p-3 hidden lg:table-cell text-center">
+                  <td className="p-3 hidden lg:table-cell">
                     <div className="flex items-center gap-1">
-                      <Button size="sm" variant="outline" className="h-7 px-2 text-[10px] font-bold" onClick={() => handleExtendLicense(t.user_id, 30)}>+30d</Button>
-                      <Button size="sm" variant="outline" className="h-7 px-2 text-[10px] font-bold" onClick={() => handleExtendLicense(t.user_id, 180)}>+180d</Button>
-                      <Button size="sm" variant="outline" className="h-7 px-2 text-[10px] font-bold" onClick={() => handleExtendLicense(t.user_id, 365)}>+365d</Button>
-                    </div>
-                  </td>
-                  <td className="p-3 text-muted-foreground text-xs hidden xl:table-cell">
-                    <div className="flex flex-col">
-                      {t.plan_status === 'trial' ? (
-                        <span className="text-amber-500 font-bold">Trial: {t.trial_ends_at ? new Date(t.trial_ends_at).toLocaleDateString('pt-BR') : '-'}</span>
-                      ) : (
-                        <span className="text-primary font-bold">Expira: {t.premium_until ? new Date(t.premium_until).toLocaleDateString('pt-BR') : 'Manual'}</span>
-                      )}
-                      <span className="text-[10px] opacity-50 font-medium">Criado em: {new Date(t.created_at).toLocaleDateString('pt-BR')}</span>
+                      <Button size="sm" variant="outline" className="h-7 px-2 text-[10px] font-bold hover:bg-primary hover:text-white transition-colors" onClick={() => handleExtendLicense(t.user_id, 30)}>+30d</Button>
+                      <Button size="sm" variant="outline" className="h-7 px-2 text-[10px] font-bold hover:bg-primary hover:text-white transition-colors" onClick={() => handleExtendLicense(t.user_id, 180)}>+180d</Button>
+                      <Button size="sm" variant="outline" className="h-7 px-2 text-[10px] font-bold hover:bg-primary hover:text-white transition-colors" onClick={() => handleExtendLicense(t.user_id, 365)}>+365d</Button>
                     </div>
                   </td>
                    <td className="p-3 text-right">

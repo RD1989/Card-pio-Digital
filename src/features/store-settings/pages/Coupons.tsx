@@ -87,6 +87,8 @@ export default function Coupons() {
   }
 
   async function handleDelete(id: string) {
+    const userId = await getUserId();
+    if (!userId) return;
     const { error } = await (supabase as any).from('coupons').delete().eq('id', id);
     if (error) { toast.error('Erro ao excluir'); return; }
     toast.success('Cupom excluído');
@@ -94,6 +96,8 @@ export default function Coupons() {
   }
 
   async function toggleActive(id: string, active: boolean) {
+    const userId = await getUserId();
+    if (!userId) return;
     await (supabase as any).from('coupons').update({ is_active: active }).eq('id', id);
     fetchCoupons();
   }

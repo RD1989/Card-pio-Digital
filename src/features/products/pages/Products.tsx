@@ -70,12 +70,16 @@ export default function Products() {
 
   async function handleSaveCategory() {
     if (!categoryName.trim()) return;
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    let userId = impersonatedUserId;
+    if (!userId) {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      userId = user.id;
+    }
 
     const { error } = await supabase.from('categories').insert({
       name: categoryName.trim(),
-      user_id: user.id,
+      user_id: userId,
       sort_order: categories.length,
     });
 
@@ -125,11 +129,15 @@ export default function Products() {
 
   async function handleUploadImage(): Promise<string | null> {
     if (!productImage) return productImageUrl || null;
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return null;
+    let userId = impersonatedUserId;
+    if (!userId) {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
+      userId = user.id;
+    }
 
     const ext = productImage.name.split('.').pop();
-    const path = `${user.id}/${Date.now()}.${ext}`;
+    const path = `${userId}/${Date.now()}.${ext}`;
     const { error } = await supabase.storage.from('product-images').upload(path, productImage);
     if (error) { toast.error('Erro no upload'); return null; }
 
@@ -141,8 +149,12 @@ export default function Products() {
     if (!productName.trim() || !productPrice) { toast.error('Preencha nome e preço'); return; }
     setSaving(true);
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { setSaving(false); return; }
+    let userId = impersonatedUserId;
+    if (!userId) {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { setSaving(false); return; }
+      userId = user.id;
+    }
 
     const imageUrl = await handleUploadImage();
 
@@ -153,7 +165,7 @@ export default function Products() {
       category_id: productCategoryId || null,
       is_upsell: productIsUpsell,
       image_url: imageUrl,
-      user_id: user.id,
+      user_id: userId,
     };
 
     if (editingProduct) {
