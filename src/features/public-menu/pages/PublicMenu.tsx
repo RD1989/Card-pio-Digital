@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { useParams } from 'react-router-dom';
-import { Star, Clock, MapPin, Plus, Loader2, Home, List, ShoppingCart, Search, Menu as MenuIcon, X, Pizza, Utensils as Burger, Coffee, Utensils, Drumstick, Salad, IceCream, Cake, Grape, ChefHat } from 'lucide-react';
+import { Star, Clock, MapPin, Plus, Loader2, Home, List, ShoppingCart, Search, Menu as MenuIcon, X, Pizza, Utensils as Burger, Coffee, Utensils, Drumstick, Salad, IceCream, Cake, Grape, ChefHat, Truck } from 'lucide-react';
 import { useCartStore } from '@/features/public-menu/stores/useCartStore';
 import { CartDrawer } from '@/features/public-menu/components/CartDrawer';
 import { BottomNav } from '@/features/public-menu/components/BottomNav';
@@ -43,6 +43,8 @@ interface Profile {
   menu_layout?: 'classic' | 'premium';
   is_active: boolean;
   plan_status: string;
+  show_delivery_info?: boolean;
+  custom_delivery_label?: string;
 }
 
 function hexToHsl(hex: string) {
@@ -410,13 +412,12 @@ export default function PublicMenu() {
         <div className="absolute top-[-5%] left-[-5%] w-[40%] h-[40%] bg-primary/5 rounded-full blur-[120px]" />
         <div className="absolute bottom-[-5%] right-[-5%] w-[40%] h-[40%] bg-primary/5 rounded-full blur-[120px]" />
       </div>
-
       <motion.header 
         initial={{ opacity: 0 }} 
         animate={{ opacity: 1 }} 
         className="relative z-10 w-full"
       >
-        {/* Banner Section - Now truly Full-Width */}
+        {/* Banner Section - Isolated for Overflow clipping */}
         <div className="h-64 sm:h-80 md:h-96 w-full relative group overflow-hidden">
           {profile.banner_url ? (
             <img 
@@ -432,7 +433,7 @@ export default function PublicMenu() {
           <div className="absolute inset-0 bg-gradient-to-t from-[#f8fafc] dark:from-background via-black/40 to-transparent" />
           <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-transparent" />
           
-          {/* Header Top Items - Aligned to Content Container */}
+          {/* Header Top Items - Stays fixed on top of banner */}
           <div className="absolute top-6 left-0 right-0 z-20">
             <div className="max-w-[1600px] w-full mx-auto px-6 sm:px-12 flex items-center justify-between">
               <div className="glass-sm px-4 py-2 flex items-center gap-2.5 text-white border-white/10 shadow-xl">
@@ -457,48 +458,68 @@ export default function PublicMenu() {
               )}
             </div>
           </div>
+        </div>
 
-          {/* Logo and Restaurant Info - Aligned to Content */}
-          <div className="absolute -bottom-8 left-0 right-0 z-30">
-            <div className="max-w-[1600px] w-full mx-auto px-6 sm:px-12 flex items-end gap-6">
-              <motion.div 
-                whileHover={{ scale: 1.05, rotate: -1 }}
-                transition={{ type: "spring", stiffness: 300 }}
-                className="w-28 h-28 sm:w-36 sm:h-36 rounded-[32px] border-[6px] border-[#f8fafc] dark:border-background bg-white shadow-2xl overflow-hidden shrink-0 relative"
-              >
-                {profile.logo_url ? (
-                  <img src={profile.logo_url} alt={profile.restaurant_name} className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-primary/10 text-primary font-black text-5xl">
-                    {profile.restaurant_name[0]?.toUpperCase()}
+        {/* Identity Section - Moved OUTSIDE overflow-hidden banner container */}
+        <div className="relative z-30 -mt-14 sm:-mt-18 md:-mt-22">
+          <div className="max-w-[1600px] w-full mx-auto px-6 sm:px-12 flex items-end gap-6">
+            <motion.div 
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              className="w-28 h-28 sm:w-36 sm:h-36 lg:w-44 lg:h-44 rounded-[32px] sm:rounded-[48px] bg-white dark:bg-card p-1.5 sm:p-2.5 shadow-[0_20px_50px_rgba(0,0,0,0.15)] overflow-hidden shrink-0 relative"
+            >
+              {profile.logo_url ? (
+                <img src={profile.logo_url} alt={profile.restaurant_name} className="w-full h-full object-cover rounded-[24px] sm:rounded-[40px]" />
+              ) : (
+                <div className="w-full h-full bg-primary/5 flex items-center justify-center text-primary font-black text-3xl">
+                  {profile.restaurant_name[0]}
+                </div>
+              )}
+            </motion.div>
+
+            <div className="flex-1 pb-2 sm:pb-6 space-y-4 sm:space-y-6">
+              <div className="space-y-1">
+                <motion.h1 
+                  initial={{ x: -20, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  className="text-2xl sm:text-4xl lg:text-5xl font-[900] tracking-tighter text-white drop-shadow-lg"
+                >
+                  {profile.restaurant_name}
+                </motion.h1>
+                <div className="flex items-center gap-2 text-white/80 text-[10px] sm:text-xs font-bold uppercase tracking-widest">
+                   <div className="flex items-center gap-1 bg-white/10 backdrop-blur-md px-2 py-0.5 rounded-md">
+                     <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" /> 4.9
+                   </div>
+                   <span className="opacity-40">•</span>
+                   <span>250+ Avaliações</span>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2 sm:gap-4">
+                <div className="glass-white px-3 py-1.5 sm:px-5 sm:py-2.5 flex items-center gap-2 sm:gap-3 shadow-xl">
+                  <div className="w-6 h-6 sm:w-9 sm:h-9 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Clock className="w-3 h-3 sm:w-4 sm:h-4 text-primary" />
+                  </div>
+                  <div className="text-[9px] sm:text-[11px] leading-tight font-black uppercase tracking-tighter">
+                    <p className="opacity-40 text-[7px] sm:text-[8px]">Preparo</p>
+                    <p className="text-foreground">30-45 min</p>
+                  </div>
+                </div>
+
+                {/* Delivery Info - Now Optional and Customizable */}
+                {(profile.show_delivery_info ?? true) && (
+                  <div className="glass-white px-3 py-1.5 sm:px-5 sm:py-2.5 flex items-center gap-2 sm:gap-3 shadow-xl">
+                    <div className="w-6 h-6 sm:w-9 sm:h-9 rounded-full bg-primary/10 flex items-center justify-center">
+                      <Truck className="w-3 h-3 sm:w-4 sm:h-4 text-primary" />
+                    </div>
+                    <div className="text-[9px] sm:text-[11px] leading-tight font-black uppercase tracking-tighter">
+                      <p className="opacity-40 text-[7px] sm:text-[8px]">Entrega</p>
+                      <p className="text-foreground">
+                        {profile.custom_delivery_label || (profile.delivery_fee === 0 ? 'Frete Grátis' : formatCurrency(profile.delivery_fee))}
+                      </p>
+                    </div>
                   </div>
                 )}
-              </motion.div>
-              
-              <div className="pb-4 hidden lg:block flex-1">
-                <motion.div
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  className="space-y-4"
-                >
-                  <h1 className="font-display italic text-5xl xl:text-6xl font-black tracking-tight text-foreground drop-shadow-lg leading-[0.9]">
-                    {profile.restaurant_name}
-                  </h1>
-                  <div className="flex items-center gap-4 text-[11px] font-bold text-muted-foreground/80">
-                    <div className="flex items-center gap-1.5 px-3 py-1 bg-white dark:bg-card rounded-xl shadow-sm border border-border/5">
-                      <Star className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400" />
-                      <span className="text-foreground">4.9</span>
-                      <span className="opacity-40 font-medium">(250+)</span>
-                    </div>
-                    <div className="flex items-center gap-1.5 px-3 py-1 bg-white dark:bg-card rounded-xl shadow-sm border border-border/5">
-                      <Clock className="w-3.5 h-3.5 text-primary" />
-                      <span className="text-foreground">30-45 min</span>
-                    </div>
-                    <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-500/10 text-emerald-600 rounded-xl shadow-sm border border-emerald-500/10">
-                      <span className="uppercase text-[9px] tracking-widest font-black">Frete Grátis</span>
-                    </div>
-                  </div>
-                </motion.div>
               </div>
             </div>
           </div>
@@ -506,22 +527,6 @@ export default function PublicMenu() {
       </motion.header>
 
       <div className="max-w-[1600px] w-full mx-auto px-6 mt-12 sm:mt-16 space-y-12">
-        <div className="lg:hidden text-center space-y-4">
-            <h1 className="font-display italic text-3xl font-black tracking-tight leading-none text-foreground">{profile.restaurant_name}</h1>
-            <div className="flex items-center justify-center gap-2.5">
-              <div className="flex items-center gap-1 px-2.5 py-1.5 bg-white dark:bg-card rounded-lg shadow-sm border border-border/5 text-[9px] font-black uppercase tracking-tight">
-                <Star className="w-2.5 h-2.5 text-yellow-400 fill-yellow-400" />
-                <span>4.9</span>
-              </div>
-              <div className="flex items-center gap-1 px-2.5 py-1.5 bg-white dark:bg-card rounded-lg shadow-sm border border-border/5 text-[9px] font-black uppercase tracking-tight">
-                <Clock className="w-2.5 h-2.5 text-primary" />
-                <span>30-45 min</span>
-              </div>
-              <div className="flex items-center gap-1 px-2.5 py-1.5 bg-emerald-500/10 text-emerald-600 rounded-lg shadow-sm border border-emerald-500/10 text-[9px] font-black uppercase tracking-tight">
-                <span>Frete Grátis</span>
-              </div>
-            </div>
-        </div>
 
         {/* Search Bar - Robust for Desktop */}
         <div className="relative group max-w-3xl mx-auto z-10 transition-all duration-500 hover:max-w-4xl">
