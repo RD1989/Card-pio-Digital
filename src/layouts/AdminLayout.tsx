@@ -83,11 +83,13 @@ export function AdminLayout() {
             </header>
             
             <main className="flex-1 p-4 md:p-8 overflow-y-auto">
-              {showSuspension ? (
-                <SuspensionOverlay />
-              ) : (
-                <Outlet />
-              )}
+              <div className="max-w-[1600px] mx-auto w-full">
+                {showSuspension ? (
+                  <SuspensionOverlay />
+                ) : (
+                  <Outlet />
+                )}
+              </div>
             </main>
           </div>
         </div>
