@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Check, ExternalLink, Sparkles, Rocket } from 'lucide-react';
+import { Check, ExternalLink, Sparkles, Rocket, Clock } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 
 interface Plan {
@@ -15,11 +15,10 @@ interface Plan {
 }
 
 export function SuspensionOverlay() {
-  const handleActivatePlan = (planType: 'monthly' | 'basic' | 'pro') => {
+  const handleActivatePlan = (planType: 'semestral' | 'anual') => {
     const messages = {
-      monthly: "Olá! Quero ativar minha Licença Essencial (Vitalícia).",
-      basic: "Olá! Quero ativar minha Licença Premium (Vitalícia).",
-      pro: "Olá! Quero falar com um especialista sobre a Licença Enterprise.",
+      semestral: "Olá! Quero ativar minha Licença Semestral (6 meses).",
+      anual: "Olá! Quero ativar minha Licença Anual (12 meses).",
     };
     
     const whatsapp = "22996051620";
@@ -27,35 +26,26 @@ export function SuspensionOverlay() {
     window.open(`https://wa.me/${whatsapp}?text=${text}`, '_blank');
   };
 
-  const plans: Plan[] = [
+  const plans: any[] = [
     {
-      id: 'monthly',
-      name: 'Licença Essencial',
-      subtitle: 'Acesso Vitalício',
-      price: 'R$ 147,00',
+      id: 'semestral',
+      name: 'Licença Semestral',
+      subtitle: '6 Meses de Acesso',
+      price: 'R$ 139,00',
       savings: 'Pagamento Único',
-      features: ['Pedidos ILIMITADOS', 'Gestão Completa', 'QR Code de Mesa', 'Sem Mensalidades'],
-      buttonText: 'Ativar Essencial',
+      features: ['Pedidos ILIMITADOS', 'Gestão Completa', 'QR Code de Mesa', 'Suporte Especializado'],
+      buttonText: 'Ativar Semestral',
+      icon: Clock
     },
     {
-      id: 'basic',
-      name: 'Licença Premium',
-      subtitle: 'Tudo Liberado + IA',
-      price: 'R$ 297,00',
-      savings: 'O mais vendido',
-      features: ['Tudo do Essencial', 'Importação com IA', 'Etiquetas Térmicas', 'Suporte Prioritário'],
-      buttonText: 'Ativar Premium',
+      id: 'anual',
+      name: 'Licença Anual',
+      subtitle: '12 Meses de Acesso',
+      price: 'R$ 197,00',
+      savings: 'Melhor Custo-Benefício',
+      features: ['Tudo do Semestral', 'Importação com IA', 'Etiquetas Térmicas', 'Suporte Prioritário VIP'],
+      buttonText: 'Ativar Anual',
       highlight: true,
-      icon: Sparkles
-    },
-    {
-      id: 'pro',
-      name: 'Licença Enterprise',
-      subtitle: 'Personalização Total',
-      price: 'R$ 497,00',
-      savings: 'Domínio Próprio',
-      features: ['Tudo do Premium', 'Domínio Customizado', 'App Android/iOS PWA', 'Consultoria VIP'],
-      buttonText: 'Falar com Suporte',
       icon: Sparkles
     }
   ];
@@ -67,10 +57,10 @@ export function SuspensionOverlay() {
           <Sparkles className="w-10 h-10 text-primary" />
         </div>
         <h2 className="text-4xl font-black tracking-tighter text-foreground">Seu teste de 7 dias terminou</h2>
-        <p className="text-muted-foreground font-medium text-sm">Escolha sua licença vitalícia e continue vendendo sem pagar taxas ou mensalidades.</p>
+        <p className="text-muted-foreground font-medium text-sm">Escolha sua licença e continue vendendo sem pagar taxas mensais ou por pedido.</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-6xl">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-4xl">
         {plans.map((plan, i) => (
           <motion.div
             key={plan.id}

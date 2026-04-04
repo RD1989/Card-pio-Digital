@@ -405,9 +405,8 @@ export default function SuperAdminTenants() {
                     </td>
                     <td className="p-3">
                       <div className="flex items-center gap-1">
-                        <Button size="sm" variant="outline" className="h-7 px-2 text-[10px] font-bold hover:bg-primary hover:text-white" onClick={() => handleExtendLicense(t.user_id, 30)}>+30d</Button>
                         <Button size="sm" variant="outline" className="h-7 px-2 text-[10px] font-bold hover:bg-primary hover:text-white" onClick={() => handleExtendLicense(t.user_id, 180)}>+180d</Button>
-                        <Button size="sm" variant="outline" className="h-7 px-2 text-[10px] font-bold hover:bg-primary hover:text-white" onClick={() => handleExtendLicense(t.user_id, 365)}>+365d</Button>
+                        <Button size="sm" variant="outline" className="h-7 px-2 text-[10px] font-bold hover:bg-primary hover:text-white" onClick={() => handleExtendLicense(t.user_id, 365)}>+1 ano</Button>
                       </div>
                     </td>
                     <td className="p-3 text-right">
@@ -488,7 +487,6 @@ export default function SuperAdminTenants() {
 
               {/* Ativação rápida mobile */}
               <div className="px-4 pb-2 flex gap-1.5">
-                <Button size="sm" variant="outline" className="flex-1 h-8 text-[11px] font-bold hover:bg-primary hover:text-white transition-colors" onClick={() => handleExtendLicense(t.user_id, 30)}>+30 dias</Button>
                 <Button size="sm" variant="outline" className="flex-1 h-8 text-[11px] font-bold hover:bg-primary hover:text-white transition-colors" onClick={() => handleExtendLicense(t.user_id, 180)}>+180 dias</Button>
                 <Button size="sm" variant="outline" className="flex-1 h-8 text-[11px] font-bold hover:bg-primary hover:text-white transition-colors" onClick={() => handleExtendLicense(t.user_id, 365)}>+1 ano</Button>
               </div>
@@ -612,10 +610,9 @@ export default function SuperAdminTenants() {
 
                       <div className="space-y-2">
                         <label className="text-[10px] font-bold uppercase text-muted-foreground">Adicionar Tempo de Licença</label>
-                        <div className="grid grid-cols-3 gap-2">
-                          <Button variant="outline" size="sm" className="text-[10px] font-bold py-4 h-auto" onClick={() => handleExtendLicense(selectedTenant.user_id, 30)}>+30 DIAS</Button>
-                          <Button variant="outline" size="sm" className="text-[10px] font-bold py-4 h-auto" onClick={() => handleExtendLicense(selectedTenant.user_id, 90)}>+90 DIAS</Button>
-                          <Button variant="outline" size="sm" className="text-[10px] font-bold py-4 h-auto" onClick={() => handleExtendLicense(selectedTenant.user_id, 365)}>+1 ANO</Button>
+                        <div className="grid grid-cols-2 gap-2">
+                          <Button variant="outline" size="sm" className="text-[10px] font-bold py-4 h-auto" onClick={() => handleExtendLicense(selectedTenant.user_id, 180)}>+180 DIAS (6 MESES)</Button>
+                          <Button variant="outline" size="sm" className="text-[10px] font-bold py-4 h-auto" onClick={() => handleExtendLicense(selectedTenant.user_id, 365)}>+1 ANO (12 MESES)</Button>
                         </div>
                         <p className="text-[10px] text-center text-muted-foreground italic">
                           Ao adicionar tempo a conta é ativada automaticamente.
