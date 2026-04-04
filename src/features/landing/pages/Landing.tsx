@@ -402,7 +402,7 @@ export default function Landing() {
               </a>
             </motion.div>
           </div>
-          <p className="text-center text-[11px] text-muted-foreground mt-5">💳 Pagamento via Pix · Sem compromisso · Cancele quando quiser</p>
+          <p className="text-center text-[11px] text-muted-foreground mt-5">🎉 Conheça o nosso sistema sem compromisso, usufrua de todos os recursos gratuitamente por 10 dias.</p>
         </div>
       </section>
 
