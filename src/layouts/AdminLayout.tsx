@@ -15,12 +15,27 @@ export function AdminLayout() {
 
   if (adminLoading || planLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-          <span className="text-xs font-bold tracking-widest text-muted-foreground uppercase opacity-50 animate-pulse">
-            Iniciando Sessão...
-          </span>
+      <div className="min-h-screen flex items-center justify-center bg-background text-foreground">
+        <div className="flex flex-col items-center gap-6 max-w-sm text-center px-6">
+          <div className="relative">
+            <Loader2 className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+            <div className="absolute inset-0 blur-xl bg-primary/20 rounded-full animate-pulse" />
+          </div>
+          <div className="space-y-2">
+            <span className="text-sm font-black tracking-widest uppercase opacity-70 animate-pulse">
+              Iniciando Sessão Segura
+            </span>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Estamos preparando seu ambiente de trabalho. Isso leva apenas alguns instantes.
+            </p>
+          </div>
+          
+          <button 
+            onClick={() => window.location.reload()}
+            className="mt-4 text-[10px] font-bold uppercase tracking-widest text-primary hover:underline"
+          >
+            Demorando muito? Clique para recarregar
+          </button>
         </div>
       </div>
     );

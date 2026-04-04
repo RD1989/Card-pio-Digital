@@ -20,7 +20,16 @@ export function usePlanStatus() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let isMounted = true;
+    const failsafeTimeout = setTimeout(() => {
+      if (isMounted && loading) {
+        console.error("🚨 FAILSAFE: O carregamento do plano demorou mais de 5s. Forçando renderização.");
+        setLoading(false);
+      }
+    }, 5000);
+
     async function fetch() {
+      if (!isMounted) return;
       setLoading(true);
       try {
         let userId = impersonatedUserId;
@@ -30,11 +39,13 @@ export function usePlanStatus() {
           userId = user.id;
         }
 
+        console.log(`🔍 Iniciando busca de plano para: ${userId} (Simulado: ${!!impersonatedUserId})`);
+
         const [profileRes, ordersRes] = await Promise.all([
           (supabase as any).from('profiles').select('plan, plan_status, trial_ends_at, is_active, order_limit, premium_until').eq('user_id', userId).single(),
           (supabase as any).rpc('count_monthly_orders', { _user_id: userId }),
         ]).catch(err => {
-          console.error("Erro crítico nas queries do usePlanStatus:", err);
+          console.error("❌ Erro crítico nas queries do usePlanStatus:", err);
           return [ { data: null, error: err }, { data: 0, error: err } ];
         });
 
@@ -42,8 +53,8 @@ export function usePlanStatus() {
         const monthlyOrders = ordersRes.data || 0;
 
         if (!profile) { 
-          console.warn(`Perfil não encontrado para o usuário ${userId}`);
-          setLoading(false); 
+          console.warn(`⚠️ Perfil não encontrado para o usuário ${userId}`);
+          if (isMounted) setLoading(false); 
           return; 
         }
 
@@ -71,26 +82,32 @@ export function usePlanStatus() {
         console.log('Ativo (is_active):', !isDeactivated);
         console.log('Expirado:', isExpired);
         console.log('Premium Até:', premiumUntil?.toLocaleString('pt-BR'));
+        console.log('Duração Trial:', trialEnd?.toLocaleString('pt-BR'));
         console.log('Resulta em Ativo:', isActive);
         console.groupEnd();
         
         const orderLimit = profile.order_limit || 0;
 
-        setStatus({
-          user_id: userId,
-          plan: profile.plan || 'basic',
-          planStatus: profile.plan_status || 'trial',
-          trialEndsAt: profile.trial_ends_at,
-          daysRemaining,
-          isTrialExpired: isTrialExpired || isExpired || isDeactivated, 
-          isActive,
-          monthlyOrders,
-          orderLimit,
-        });
+        if (isMounted) {
+          setStatus({
+            user_id: userId,
+            plan: profile.plan || 'basic',
+            planStatus: profile.plan_status || 'trial',
+            trialEndsAt: profile.trial_ends_at,
+            daysRemaining,
+            isTrialExpired: isTrialExpired || isExpired || isDeactivated, 
+            isActive,
+            monthlyOrders,
+            orderLimit,
+          });
+        }
       } catch (err) {
-        console.error("Falha ao processar status do plano:", err);
+        console.error("❌ Falha ao processar status do plano:", err);
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+          clearTimeout(failsafeTimeout);
+        }
       }
     }
     
@@ -124,22 +141,24 @@ export function usePlanStatus() {
               table: 'profiles',
               filter: `user_id=eq.${currentId}`,
             },
-            (payload) => {
+            (payload: any) => {
               console.log('🔄 Mudança de perfil detectada no Realtime!', payload);
               fetch(); // Forçar nova busca de dados quando o perfil mudar
             }
           )
-          .subscribe((status) => {
+          .subscribe((status: string) => {
             console.log(`🔌 Conexão Realtime (Status): ${status}`);
           });
       } catch (err) {
-        console.error("Erro ao configurar Realtime no usePlanStatus:", err);
+        console.error("❌ Erro ao configurar Realtime no usePlanStatus:", err);
       }
     };
 
     setupRealtime();
 
     return () => {
+      isMounted = false;
+      clearTimeout(failsafeTimeout);
       if (channel) {
         console.log('🧹 Limpando canal de Realtime');
         supabase.removeChannel(channel);

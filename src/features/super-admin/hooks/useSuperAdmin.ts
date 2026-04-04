@@ -19,6 +19,13 @@ export function useSuperAdmin() {
     let isMounted = true;
     setLoading(true);
 
+    const failsafeTimeout = setTimeout(() => {
+      if (isMounted && loading) {
+        console.error("🚨 FAILSAFE: A verificação de Super Admin demorou mais de 5s. Prosseguindo como não-admin.");
+        setLoading(false);
+      }
+    }, 5000);
+
     async function check() {
       try {
         const { data, error } = await supabase.rpc('is_super_admin', {
@@ -28,16 +35,19 @@ export function useSuperAdmin() {
         if (!isMounted) return;
 
         if (error) {
-          console.error("Erro ao verificar status de super admin:", error);
+          console.error("❌ Erro ao verificar status de super admin:", error);
           setIsSuperAdmin(false);
         } else {
           setIsSuperAdmin(!!data);
         }
       } catch (err) {
-        console.error("Falha fatal na verificação de super admin:", err);
+        console.error("❌ Falha fatal na verificação de super admin:", err);
         setIsSuperAdmin(false);
       } finally {
-        if (isMounted) setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+          clearTimeout(failsafeTimeout);
+        }
       }
     }
 
@@ -45,6 +55,7 @@ export function useSuperAdmin() {
 
     return () => {
       isMounted = false;
+      clearTimeout(failsafeTimeout);
     };
   }, [user?.id, isReady]);
 
