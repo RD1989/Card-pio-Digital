@@ -108,42 +108,57 @@ serve(async (req) => {
     if (action === "delete") {
       const { user_id } = payload;
       console.log("Iniciando exclusão profunda para o usuário:", user_id);
+      let currentTable = "";
 
-      // 1. Modifier Options (via join indirecto)
-      const { data: modifiers } = await supabase.from("product_modifiers").select("id").eq("user_id", user_id);
-      if (modifiers && modifiers.length > 0) {
-        const modIds = modifiers.map(m => m.id);
-        await supabase.from("modifier_options").delete().in("modifier_id", modIds);
-        await supabase.from("product_modifiers").delete().in("id", modIds);
+      try {
+        // 1. Modifier Options (via join indirecto)
+        currentTable = "product_modifiers / modifier_options";
+        const { data: modifiers } = await supabase.from("product_modifiers").select("id").eq("user_id", user_id);
+        if (modifiers && modifiers.length > 0) {
+          const modIds = modifiers.map(m => m.id);
+          await supabase.from("modifier_options").delete().in("modifier_id", modIds);
+          await supabase.from("product_modifiers").delete().in("id", modIds);
+        }
+
+        // 2. Order Items (via join indirecto)
+        currentTable = "orders / order_items";
+        const { data: orders } = await supabase.from("orders").select("id").eq("restaurant_user_id", user_id);
+        if (orders && orders.length > 0) {
+          const orderIds = orders.map(o => o.id);
+          await supabase.from("order_items").delete().in("order_id", orderIds);
+          await supabase.from("orders").delete().in("id", orderIds);
+        }
+
+        // 3. Simple Table Deletion (by user_id)
+        const simpleTables = [
+          "products", "categories", "coupons", "invoices", 
+          "menu_views", "business_hours"
+        ];
+
+        for (const table of simpleTables) {
+          currentTable = table;
+          const col = table === "menu_views" ? "restaurant_user_id" : "user_id";
+          const { error } = await supabase.from(table).delete().eq(col, user_id);
+          if (error) throw error;
+        }
+
+        // 4. Finally, Profiles and Auth User
+        currentTable = "profiles";
+        const { error: profErr } = await supabase.from("profiles").delete().eq("user_id", user_id);
+        if (profErr) throw profErr;
+
+        currentTable = "auth.users";
+        const { error: deleteError } = await supabase.auth.admin.deleteUser(user_id);
+        if (deleteError) throw deleteError;
+
+        return new Response(JSON.stringify({ success: true }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+
+      } catch (tableError: any) {
+        console.error(`Erro na tabela ${currentTable}:`, tableError);
+        throw new Error(`Erro ao excluir dados da tabela [${currentTable}]: ${tableError.message || 'Erro desconhecido'}`);
       }
-
-      // 2. Order Items (via join indirecto)
-      const { data: orders } = await supabase.from("orders").select("id").eq("restaurant_user_id", user_id);
-      if (orders && orders.length > 0) {
-        const orderIds = orders.map(o => o.id);
-        await supabase.from("order_items").delete().in("order_id", orderIds);
-        await supabase.from("orders").delete().in("id", orderIds);
-      }
-
-      // 3. Simple Table Deletion (by user_id)
-      await Promise.all([
-        supabase.from("products").delete().eq("user_id", user_id),
-        supabase.from("categories").delete().eq("user_id", user_id),
-        supabase.from("coupons").delete().eq("user_id", user_id),
-        supabase.from("invoices").delete().eq("user_id", user_id),
-        supabase.from("menu_views").delete().eq("restaurant_user_id", user_id),
-        supabase.from("business_hours").delete().eq("user_id", user_id),
-      ]);
-
-      // 4. Finally, Profiles and Auth User
-      await supabase.from("profiles").delete().eq("user_id", user_id);
-      const { error: deleteError } = await supabase.auth.admin.deleteUser(user_id);
-      
-      if (deleteError) throw deleteError;
-
-      return new Response(JSON.stringify({ success: true }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
     }
 
     throw new Error("Ação inválida");
