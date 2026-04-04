@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Save, Loader2, Eye, Layout, CreditCard, MessageSquare, HelpCircle, Megaphone, FileText } from 'lucide-react';
+import { Save, Loader2, Eye, Layout, CreditCard, MessageSquare, HelpCircle, Megaphone, FileText, Video } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Button } from '@/shared/components/ui/button';
@@ -9,12 +9,14 @@ import { Textarea } from '@/shared/components/ui/textarea';
 import { Label } from '@/shared/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/components/ui/tabs';
+import { Switch } from '@/shared/components/ui/switch';
 
 const LANDING_KEYS = [
   'landing_hero_title', 'landing_hero_subtitle', 'landing_hero_badge',
   'landing_plan_basic_name', 'landing_plan_basic_price', 'landing_plan_basic_features',
   'landing_plan_pro_name', 'landing_plan_pro_price', 'landing_plan_pro_features',
   'landing_cta_title', 'landing_cta_subtitle', 'landing_footer_text',
+  'landing_video_url', 'landing_video_enabled',
 ];
 
 export default function SuperAdminLanding() {
@@ -81,6 +83,7 @@ export default function SuperAdminLanding() {
         <div className="w-full overflow-x-auto pb-1">
           <TabsList className="flex w-max min-w-full sm:grid sm:grid-cols-3">
             <TabsTrigger value="hero" className="flex-1 whitespace-nowrap">Hero & CTA</TabsTrigger>
+            <TabsTrigger value="video" className="flex-1 whitespace-nowrap">Vídeo</TabsTrigger>
             <TabsTrigger value="plans" className="flex-1 whitespace-nowrap">Planos</TabsTrigger>
             <TabsTrigger value="footer" className="flex-1 whitespace-nowrap">Rodapé</TabsTrigger>
           </TabsList>
@@ -124,6 +127,58 @@ export default function SuperAdminLanding() {
                 <Label>Subtítulo CTA</Label>
                 <Textarea value={val('cta_subtitle')} onChange={e => set('cta_subtitle', e.target.value)} rows={2} />
               </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="video" className="space-y-4 mt-4">
+          <Card className="glass-sm border-border">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Video className="w-5 h-5 text-primary" /> Seção de Vídeo Decorativo
+              </CardTitle>
+              <CardDescription>
+                Configure um vídeo para ser exibido logo após o Hero. Recomendado: 1920x1080 (HD).
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="flex items-center justify-between p-4 bg-muted/30 rounded-xl border border-border">
+                <div className="space-y-0.5">
+                  <Label className="text-sm font-bold uppercase tracking-wider opacity-70">Ativar Seção de Vídeo</Label>
+                  <p className="text-xs text-muted-foreground">Exibir ou ocultar o player de vídeo na página inicial</p>
+                </div>
+                <Switch 
+                  checked={val('video_enabled') === 'true'} 
+                  onCheckedChange={checked => set('video_enabled', checked ? 'true' : 'false')} 
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>URL do Vídeo (Youtube Embed)</Label>
+                <Input 
+                  value={val('video_url')} 
+                  onChange={e => set('video_url', e.target.value)} 
+                  placeholder="https://www.youtube.com/embed/dQw4w9WgXcQ" 
+                />
+                <p className="text-[10px] text-muted-foreground mt-1">
+                  Dica: No YouTube, clique em "Compartilhar" &gt; "Incorporar" e copie apenas o link do *src*.
+                </p>
+              </div>
+
+              {val('video_url') && (
+                <div className="aspect-video relative rounded-xl overflow-hidden border-4 border-border/50 bg-black/5 flex items-center justify-center group">
+                  <iframe 
+                    src={val('video_url')} 
+                    className="absolute inset-0 w-full h-full"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    title="Preview do Vídeo"
+                  />
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+                    <span className="text-white text-xs font-bold uppercase tracking-widest px-4 py-2 border-2 border-white rounded-full bg-black/20 backdrop-blur-sm">Prévia Ativa</span>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

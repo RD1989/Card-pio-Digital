@@ -16,6 +16,8 @@ export interface LandingSettings {
   cta_title: string;
   cta_subtitle: string;
   footer_text: string;
+  video_url: string;
+  video_enabled: string;
 }
 
 const DEFAULTS: LandingSettings = {
@@ -33,6 +35,8 @@ const DEFAULTS: LandingSettings = {
   cta_title: 'TRANSFORME SEU DELIVERY AGORA',
   cta_subtitle: 'Junte-se a centenas de lojistas que estão automatizando seus pedidos e fidelizando seus clientes como nunca.',
   footer_text: '© 2026 Menu Pro. Todos os direitos reservados.',
+  video_url: 'https://www.youtube.com/embed/dQw4w9WgXcQ', // Placeholder
+  video_enabled: 'true',
 };
 
 const KEYS = Object.keys(DEFAULTS) as (keyof LandingSettings)[];
