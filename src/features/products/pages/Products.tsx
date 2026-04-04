@@ -54,19 +54,10 @@ export default function Products() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { setLoading(false); return; }
 
-    let userId = user.id;
+    const { data: isSuperAdmin } = await supabase.rpc('is_super_admin', { _user_id: user.id });
+    const userId = (isSuperAdmin && impersonatedUserId) ? impersonatedUserId : user.id;
 
-    // Apenas Super Admins podem usar IDs de terceiros
-    if (impersonatedUserId && impersonatedUserId !== user.id) {
-      const { data: isSuperAdmin } = await supabase.rpc('is_super_admin', { _user_id: user.id });
-      if (isSuperAdmin) {
-        userId = impersonatedUserId;
-      } else {
-        console.warn(`[Products Debug] Ignorando ID personificado ${impersonatedUserId}. Você não é Super Admin.`);
-      }
-    }
-
-    console.log(`[Fetch Debug] Carregando para: ${userId} | Usuário logado: ${user.id}`);
+    console.log(`[Fetch Debug] Carregando para: ${userId} | Sessão: ${user.id}`);
 
     const [catRes, prodRes] = await Promise.all([
       supabase.from('categories').select('*').eq('user_id', userId!).order('sort_order'),
@@ -83,11 +74,8 @@ export default function Products() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    let userId = user.id;
-    if (impersonatedUserId && impersonatedUserId !== user.id) {
-      const { data: isSuperAdmin } = await supabase.rpc('is_super_admin', { _user_id: user.id });
-      if (isSuperAdmin) userId = impersonatedUserId;
-    }
+    const { data: isSuperAdmin } = await supabase.rpc('is_super_admin', { _user_id: user.id });
+    const userId = (isSuperAdmin && impersonatedUserId) ? impersonatedUserId : user.id;
 
     const { error } = await supabase.from('categories').insert({
       name: categoryName.trim(),
@@ -164,15 +152,8 @@ export default function Products() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { setSaving(false); return; }
 
-    let userId = user.id;
-    if (impersonatedUserId && impersonatedUserId !== user.id) {
-      const { data: isSuperAdmin } = await supabase.rpc('is_super_admin', { _user_id: user.id });
-      if (isSuperAdmin) {
-        userId = impersonatedUserId;
-      } else {
-        console.warn(`[Save Debug] Redirecionando para gravar no próprio ID (${user.id}) para evitar RLS.`);
-      }
-    }
+    const { data: isSuperAdmin } = await supabase.rpc('is_super_admin', { _user_id: user.id });
+    const userId = (isSuperAdmin && impersonatedUserId) ? impersonatedUserId : user.id;
 
     const imageUrl = await handleUploadImage();
 
