@@ -446,6 +446,8 @@ export type Database = {
           banner_url: string | null
           order_limit: number
           premium_until: string | null
+          show_delivery_info: boolean
+          custom_delivery_label: string | null
         }
         Insert: {
           banner_url?: string | null
@@ -467,6 +469,8 @@ export type Database = {
           whatsapp?: string | null
           order_limit?: number
           premium_until?: string | null
+          show_delivery_info?: boolean
+          custom_delivery_label?: string | null
         }
         Update: {
           banner_url?: string | null
@@ -488,6 +492,8 @@ export type Database = {
           whatsapp?: string | null
           order_limit?: number
           premium_until?: string | null
+          show_delivery_info?: boolean
+          custom_delivery_label?: string | null
         }
         Relationships: []
       }

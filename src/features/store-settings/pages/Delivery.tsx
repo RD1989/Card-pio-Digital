@@ -69,7 +69,8 @@ export default function Delivery() {
       .eq('user_id', userId);
 
     if (error) {
-      toast.error('Erro ao salvar configurações');
+      console.error('Erro ao salvar:', error);
+      toast.error(`Erro ao salvar: ${error.message}`);
     } else {
       toast.success('Configurações de entrega atualizadas!');
     }
