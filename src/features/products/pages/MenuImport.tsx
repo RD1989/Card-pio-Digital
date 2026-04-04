@@ -155,18 +155,23 @@ Retorne APENAS um JSON válido:
 
     setImporting(true);
     try {
-      let userId = impersonatedUserId;
-      if (!userId) {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-          toast.error('Sessão expirada. Faça login novamente.');
-          setImporting(false); 
-          return; 
-        }
-        userId = user.id;
+      // Pegamos o usuário real da sessão
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error('Sessão expirada. Faça login novamente.');
+        setImporting(false); 
+        return; 
       }
 
-      console.log(`Iniciando importação de ${selected.length} produtos para o usuário ${userId}`);
+      // Se houver personificação e o usuário for admin, usamos o personificado.
+      // Caso contrário, usamos o user.id real para evitar erro de RLS 403.
+      let userId = user.id;
+      if (impersonatedUserId && impersonatedUserId !== user.id) {
+        console.warn(`Personificação detectada: Usando ${impersonatedUserId} em vez de ${user.id}`);
+        userId = impersonatedUserId;
+      }
+
+      console.log(`[Import] Iniciando para Usuário: ${userId} (Sessão: ${user.id})`);
 
       // 1. Get or create categories
       const categoryNames = [...new Set(selected.map(p => p.category))];

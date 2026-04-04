@@ -51,12 +51,11 @@ export default function Products() {
 
   async function fetchData() {
     setLoading(true);
-    let userId = impersonatedUserId;
-    if (!userId) {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { setLoading(false); return; }
-      userId = user.id;
-    }
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { setLoading(false); return; }
+
+    const userId = impersonatedUserId || user.id;
+    console.log(`[Fetch] Buscando dados para: ${userId} (Sessão: ${user.id})`);
 
     const [catRes, prodRes] = await Promise.all([
       supabase.from('categories').select('*').eq('user_id', userId!).order('sort_order'),
@@ -70,12 +69,10 @@ export default function Products() {
 
   async function handleSaveCategory() {
     if (!categoryName.trim()) return;
-    let userId = impersonatedUserId;
-    if (!userId) {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      userId = user.id;
-    }
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const userId = impersonatedUserId || user.id;
 
     const { error } = await supabase.from('categories').insert({
       name: categoryName.trim(),
@@ -149,12 +146,10 @@ export default function Products() {
     if (!productName.trim() || !productPrice) { toast.error('Preencha nome e preço'); return; }
     setSaving(true);
 
-    let userId = impersonatedUserId;
-    if (!userId) {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { setSaving(false); return; }
-      userId = user.id;
-    }
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { setSaving(false); return; }
+
+    const userId = impersonatedUserId || user.id;
 
     const imageUrl = await handleUploadImage();
 
