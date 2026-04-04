@@ -381,35 +381,35 @@ export default function PublicMenu() {
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
           
-          <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-10 flex flex-col sm:flex-row items-center sm:items-end justify-between gap-6 max-w-7xl mx-auto w-full">
-            <div className="flex flex-col sm:flex-row items-center gap-6">
+          <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-12 flex flex-col sm:flex-row items-center sm:items-end justify-between gap-8 max-w-[1600px] mx-auto w-full">
+            <div className="flex flex-col sm:flex-row items-center gap-8">
               <motion.div 
                 whileHover={{ scale: 1.05 }}
-                className="w-28 h-28 sm:w-36 sm:h-36 rounded-full border-[4px] border-background bg-card shadow-2xl overflow-hidden ring-1 ring-black/5 shrink-0"
+                className="w-32 h-32 sm:w-44 sm:h-44 rounded-full border-[6px] border-background bg-card shadow-2xl overflow-hidden ring-1 ring-black/5 shrink-0"
               >
                 {profile.logo_url ? (
                   <img src={profile.logo_url} alt={profile.restaurant_name} className="w-full h-full object-cover" />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-primary/10 text-primary font-black text-3xl">
+                  <div className="w-full h-full flex items-center justify-center bg-primary/10 text-primary font-black text-4xl">
                     {profile.restaurant_name[0]?.toUpperCase()}
                   </div>
                 )}
               </motion.div>
-              <div className="text-center sm:text-left space-y-2">
-                <h1 className="font-display italic text-4xl sm:text-6xl font-extrabold tracking-tight text-foreground drop-shadow-sm">
+              <div className="text-center sm:text-left space-y-3">
+                <h1 className="font-display italic text-5xl sm:text-7xl font-extrabold tracking-tight text-foreground drop-shadow-sm leading-tight">
                   {profile.restaurant_name}
                 </h1>
-                <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4">
-                  <div className="flex items-center gap-1.5 px-3 py-1 bg-primary/20 backdrop-blur-md text-primary rounded-full text-xs font-bold ring-1 ring-primary/20">
+                <div className="flex flex-wrap items-center justify-center sm:justify-start gap-5">
+                  <div className="flex items-center gap-2 px-4 py-1.5 bg-primary/20 backdrop-blur-md text-primary rounded-full text-xs font-bold ring-1 ring-primary/20 whitespace-nowrap">
                     <Star className="w-3.5 h-3.5 fill-primary" />
-                    <span>4.9 • Premium</span>
+                    <span>4.9 • Delivery Premium</span>
                   </div>
                   {isOpen !== null && (
-                    <div className={`flex items-center gap-1.5 px-3 py-1 backdrop-blur-md rounded-full text-xs font-bold ring-1 ${
+                    <div className={`flex items-center gap-2 px-4 py-1.5 backdrop-blur-md rounded-full text-xs font-bold ring-1 whitespace-nowrap ${
                       isOpen ? 'bg-emerald-500/20 text-emerald-500 ring-emerald-500/20' : 'bg-rose-500/20 text-rose-500 ring-rose-500/20'
                     }`}>
-                      <div className={`w-1.5 h-1.5 rounded-full ${isOpen ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
-                      <span>{isOpen ? 'Aberto' : 'Fechado'}</span>
+                      <div className={`w-2 h-2 rounded-full ${isOpen ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
+                      <span>{isOpen ? 'Aberto Agora' : 'Fechado'}</span>
                     </div>
                   )}
                 </div>
@@ -419,8 +419,8 @@ export default function PublicMenu() {
         </div>
       </motion.header>
 
-      <div className="sticky top-0 z-40 w-full bg-background/80 backdrop-blur-xl border-b border-border/50 py-4">
-        <div className="max-w-7xl mx-auto px-6 overflow-x-auto no-scrollbar flex items-center gap-3">
+      <div className="sticky top-0 z-40 w-full bg-background/80 backdrop-blur-xl border-b border-border/50 py-5">
+        <div className="max-w-[1600px] mx-auto px-6 overflow-x-auto no-scrollbar flex items-center gap-4">
           <Button 
             variant="ghost" 
             size="sm"
@@ -428,7 +428,7 @@ export default function PublicMenu() {
               setActiveCategory(null);
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
-            className={`rounded-full px-4 text-xs font-bold uppercase tracking-widest ${!activeCategory ? 'bg-primary text-primary-foreground' : 'text-muted-foreground'}`}
+            className={`rounded-full px-6 text-xs font-black uppercase tracking-widest h-10 ${!activeCategory ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20' : 'text-muted-foreground'}`}
           >
             Tudo
           </Button>
@@ -442,7 +442,7 @@ export default function PublicMenu() {
                 const el = document.getElementById(`category-${cat.name}`);
                 el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
               }}
-              className={`rounded-full px-4 text-xs font-bold uppercase tracking-widest transition-all ${activeCategory === cat.name ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-primary/10'}`}
+              className={`rounded-full px-6 text-xs font-black uppercase tracking-widest h-10 transition-all ${activeCategory === cat.name ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20' : 'text-muted-foreground hover:bg-primary/10'}`}
             >
               {cat.name}
             </Button>
@@ -450,30 +450,31 @@ export default function PublicMenu() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 pt-8 pb-32">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-          <div className="lg:col-span-3 space-y-8">
-            <div className="glass-sm p-6 space-y-6">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-                  <MapPin className="w-5 h-5" />
+      <div className="max-w-[1600px] mx-auto px-6 pt-10 pb-36">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+          <div className="lg:col-span-3 space-y-10">
+            {/* Info Cards Grid - Now more flexible */}
+            <div className="flex flex-col sm:flex-row lg:flex-col gap-4">
+              <div className="glass-sm p-6 flex items-center gap-4 flex-1 min-w-[200px]">
+                <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shrink-0 border border-primary/10">
+                  <MapPin className="w-6 h-6" />
                 </div>
-                <div className="text-sm">
-                  <p className="font-bold">Localização</p>
-                  <p className="text-muted-foreground">Pinhais, PR</p>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] uppercase tracking-widest font-black opacity-50">Localização</p>
+                  <p className="font-bold text-sm truncate">Pinhais, PR</p>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-                  <Clock className="w-5 h-5" />
+              <div className="glass-sm p-6 flex items-center gap-4 flex-1 min-w-[200px]">
+                <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shrink-0 border border-primary/10">
+                  <Clock className="w-6 h-6" />
                 </div>
-                <div className="text-sm">
-                  <p className="font-bold">Tempo médio</p>
-                  <p className="text-muted-foreground">30-45 min</p>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] uppercase tracking-widest font-black opacity-50">Tempo Médio</p>
+                  <p className="font-bold text-sm truncate">30-45 min</p>
                 </div>
               </div>
             </div>
-            <div className="hidden lg:block">
+            <div className="hidden lg:block pt-4">
               <ProductSearch value={searchQuery} onChange={setSearchQuery} />
             </div>
           </div>
