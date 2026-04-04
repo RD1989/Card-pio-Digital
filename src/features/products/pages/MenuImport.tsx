@@ -76,15 +76,22 @@ export default function MenuImport() {
       );
 
       // 3. Prompt logic
-      const systemPrompt = `Você é um assistente especializado em extrair informações de cardápios de restaurantes (imagens e PDFs).
-Retorne APENAS um JSON válido:
+      const systemPrompt = `Você é um assistente especializado em extrair informações de cardápios de restaurantes de forma estruturada e inteligente.
+Seu objetivo é organizar o cardápio em categorias lógicas mesmo que elas não estejam explícitas.
+
+Regras de categorização:
+1. Analise o contexto: Se o cardápio não tiver títulos, use nomes padrão como "Entradas", "Pratos Principais", "Acompanhamentos", "Sobremesas", "Bebidas", "Cervejas", "Vinhos", "Combos".
+2. Seja específico: Organize de forma que o cardápio fique fácil de ler. 
+3. Agrupar logicamente: Itens similares (ex: todos os sucos) devem ter a MESMA categoria exata (ex: "Bebidas").
+
+Retorne APENAS um JSON válido seguindo este esquema:
 {
   "products": [
     {
-      "name": "Nome",
-      "description": "Descrição",
+      "name": "Nome curto do produto (ex: Coca-Cola 350ml)",
+      "description": "Descrição detalhada (ex: Lata gelada)",
       "price": 12.90,
-      "category": "Categoria"
+      "category": "Nome da Categoria (ex: Bebidas)"
     }
   ]
 }`;
@@ -178,46 +185,39 @@ Retorne APENAS um JSON válido:
       console.log(`[Import Debug] Gravando para: ${userId} | Sessão: ${user.id}`);
 
       // 1. Get or create categories
-      const categoryNames = [...new Set(selected.map(p => p.category))];
+      const categoryNames = [...new Set(selected.map(p => p.category.trim()))];
       console.log('Categorias a processar:', categoryNames);
 
-      const { data: existingCats, error: fetchCatsError } = await supabase
+      const { data: existingCats } = await supabase
         .from('categories')
         .select('id, name')
         .eq('user_id', userId);
 
-      if (fetchCatsError) {
-        console.error('Erro ao buscar categorias existentes:', fetchCatsError);
-        throw new Error(`Erro ao buscar categorias: ${fetchCatsError.message}`);
-      }
-
       const categoryMap: Record<string, string> = {};
-      for (const cat of existingCats || []) {
-        categoryMap[cat.name.trim().toLowerCase()] = cat.id;
-      }
+      (existingCats || []).forEach(cat => {
+        categoryMap[cat.name.toLowerCase()] = cat.id;
+      });
 
-      // Create missing categories
-      for (const catName of categoryNames) {
-        const normalizedName = catName.trim().toLowerCase();
-        if (!categoryMap[normalizedName]) {
-          console.log(`Criando nova categoria: ${catName}`);
-          const { data: newCat, error: createCatError } = await supabase
-            .from('categories')
-            .insert({ 
-              name: catName.trim(), 
-              user_id: userId, 
-              sort_order: Object.keys(categoryMap).length 
-            })
-            .select('id')
-            .single();
-          
-          if (createCatError) {
-            console.error(`Erro ao criar categoria ${catName}:`, createCatError);
-            // Continuamos mesmo se falhar uma categoria, o produto ficará sem categoria
-          } else if (newCat) {
-            categoryMap[normalizedName] = newCat.id;
-            console.log(`Categoria ${catName} criada com ID: ${newCat.id}`);
-          }
+      // Batch create missing categories
+      const newCategoryNames = categoryNames.filter(name => !categoryMap[name.toLowerCase()]);
+      
+      if (newCategoryNames.length > 0) {
+        console.log('Criando novas categorias em lote:', newCategoryNames);
+        const { data: createdCats, error: batchError } = await supabase
+          .from('categories')
+          .insert(newCategoryNames.map((name, i) => ({
+            name,
+            user_id: userId,
+            sort_order: (existingCats?.length || 0) + i
+          })))
+          .select('id, name');
+
+        if (batchError) {
+          console.error('Erro ao criar categorias em lote:', batchError);
+        } else if (createdCats) {
+          createdCats.forEach(cat => {
+            categoryMap[cat.name.toLowerCase()] = cat.id;
+          });
         }
       }
 
@@ -344,41 +344,56 @@ Retorne APENAS um JSON válido:
               <CardDescription>Selecione os produtos que deseja importar</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              {products.map((product, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.05 }}
-                  onClick={() => toggleProduct(i)}
-                  className={`p-4 rounded-xl border cursor-pointer transition-all ${
-                    product.selected
-                      ? 'border-primary/50 bg-primary/5'
-                      : 'border-border bg-muted/20 opacity-60'
-                  }`}
-                >
-                  <div className="flex items-start gap-3">
-                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 ${
-                      product.selected ? 'border-primary bg-primary' : 'border-muted-foreground'
-                    }`}>
-                      {product.selected && <Check className="w-3 h-3 text-primary-foreground" />}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-2">
-                        <h4 className="font-medium text-sm">{product.name}</h4>
-                        <span className="text-primary font-bold text-sm whitespace-nowrap">
-                          R$ {product.price.toFixed(2)}
-                        </span>
-                      </div>
-                      {product.description && (
-                        <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{product.description}</p>
-                      )}
-                      <span className="inline-block text-[10px] bg-muted px-2 py-0.5 rounded-full mt-2">
-                        {product.category}
-                      </span>
-                    </div>
+              {Object.entries(
+                products.reduce((acc: Record<string, typeof products>, p) => {
+                  if (!acc[p.category]) acc[p.category] = [];
+                  acc[p.category].push(p);
+                  return acc;
+                }, {})
+              ).map(([category, items], catIndex) => (
+                <div key={category} className="space-y-2">
+                  <h3 className="text-sm font-semibold text-muted-foreground px-2 py-1 bg-muted/30 rounded-lg">
+                    {category}
+                  </h3>
+                  <div className="space-y-2">
+                    {items.map((product) => {
+                      const realIndex = products.findIndex(p => p === product);
+                      return (
+                        <motion.div
+                          key={realIndex}
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: realIndex * 0.05 }}
+                          onClick={() => toggleProduct(realIndex)}
+                          className={`p-4 rounded-xl border cursor-pointer transition-all ${
+                            product.selected
+                              ? 'border-primary/50 bg-primary/5'
+                              : 'border-border bg-muted/20 opacity-60'
+                          }`}
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 ${
+                              product.selected ? 'border-primary bg-primary' : 'border-muted-foreground'
+                            }`}>
+                              {product.selected && <Check className="w-3 h-3 text-primary-foreground" />}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-start justify-between gap-2">
+                                <h4 className="font-medium text-sm">{product.name}</h4>
+                                <span className="text-primary font-bold text-sm whitespace-nowrap">
+                                  R$ {product.price.toFixed(2)}
+                                </span>
+                              </div>
+                              {product.description && (
+                                <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{product.description}</p>
+                              )}
+                            </div>
+                          </div>
+                        </motion.div>
+                      );
+                    })}
                   </div>
-                </motion.div>
+                </div>
               ))}
 
               <Button
