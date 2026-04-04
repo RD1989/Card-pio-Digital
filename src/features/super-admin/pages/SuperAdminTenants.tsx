@@ -4,7 +4,7 @@ import {
   Users, Store, Eye, Search, UserCheck, UserX, Download, Filter,
   Trash2, Plus, Loader2, AlertCircle, Clock, CreditCard,
   ShieldCheck, Mail, MessageSquare, ExternalLink, TrendingUp, Settings,
-  ChevronDown, ChevronUp,
+  ChevronDown, ChevronUp, PackagePlus,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
@@ -65,6 +65,7 @@ export default function SuperAdminTenants() {
   const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
   const [showManageModal, setShowManageModal] = useState(false);
   const [changingStatus, setChangingStatus] = useState(false);
+  const [seeding, setSeeding] = useState(false);
 
   async function fetchTenants() {
     setLoading(true);
@@ -156,6 +157,54 @@ export default function SuperAdminTenants() {
 
   function resetForm() {
     setNewEmail(''); setNewPass(''); setNewName(''); setNewSlug(''); setNewWhatsapp(''); setNewPlan('basic');
+  }
+
+  async function handleSeedDemoProducts(tenantUserId: string) {
+    if (!confirm('Deseja gerar 10 produtos incriveis para este lojista? Isso recriará categorias base.')) return;
+    setSeeding(true);
+    try {
+      const categories = [
+        { name: 'Hambúrgueres', sort_order: 1 },
+        { name: 'Pizzas', sort_order: 2 },
+        { name: 'Bebidas', sort_order: 3 },
+        { name: 'Sobremesas', sort_order: 4 }
+      ];
+      const { data: catData, error: catError } = await (supabase as any)
+        .from('categories')
+        .insert(categories.map(c => ({ ...c, user_id: tenantUserId })))
+        .select();
+
+      if (catError || !catData) throw new Error('Erro ao criar categorias');
+
+      const burgers = catData.find((c: any) => c.name === 'Hambúrgueres').id;
+      const pizzas = catData.find((c: any) => c.name === 'Pizzas').id;
+      const bebidas = catData.find((c: any) => c.name === 'Bebidas').id;
+      const doces = catData.find((c: any) => c.name === 'Sobremesas').id;
+
+      const products = [
+        { category_id: burgers, name: 'Smash Duplo Cheddar', description: 'Dois blends de 90g ultra smash, muito cheddar derretido, cebola caramelizada e molho da casa no pão brioche.', price: 34.90, image_url: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&q=80&w=800' },
+        { category_id: burgers, name: 'Bacon Gourmet', description: 'Blend 160g de costela, fatias crocantes de bacon artesanal, queijo prato, picles e maionese defumada.', price: 38.50, image_url: 'https://images.unsplash.com/photo-1594212686153-2775f0f3dc10?auto=format&fit=crop&q=80&w=800' },
+        { category_id: burgers, name: 'Frango Empanado Crispy', description: 'Sobrecoxa empanada super crocante, alface americana, tomate verde e maionese verde.', price: 29.90, image_url: 'https://images.unsplash.com/photo-1615719413546-198b25453f85?auto=format&fit=crop&q=80&w=800' },
+        { category_id: pizzas, name: 'Pizza Margherita', description: 'Massa de fermentação natural, molho de tomate pelati, muçarela de búfala e manjericão fresco.', price: 54.00, image_url: 'https://images.unsplash.com/photo-1604068549290-dea0e4a305ca?auto=format&fit=crop&q=80&w=800' },
+        { category_id: pizzas, name: 'Pizza Calabresa Artesanal', description: 'Calabresa fatiada fininha com cebola roxa, azeitonas pretas chilenas e toque de orégano.', price: 49.90, image_url: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&q=80&w=800' },
+        { category_id: pizzas, name: 'Pizza Quatro Queijos', description: 'Gorgonzola, catupiry original, provolone e muçarela sobre molho artesanal.', price: 62.00, image_url: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&q=80&w=800' },
+        { category_id: bebidas, name: 'Refrigerante Cola Lata', description: 'Geladíssima 350ml.', price: 6.50, image_url: 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&q=80&w=800' },
+        { category_id: bebidas, name: 'Suco Natural de Laranja', description: 'Copo 500ml de suco fresco espremido na hora, sem açúcar.', price: 12.00, image_url: 'https://images.unsplash.com/photo-1621506289937-a8e4df240d0b?auto=format&fit=crop&q=80&w=800' },
+        { category_id: doces, name: 'Pudim de Leite', description: 'Pudim liso de leite condensado com calda de caramelo escura. Receita da vovó.', price: 14.50, image_url: 'https://images.unsplash.com/photo-1541783245831-57d6fb0926d3?auto=format&fit=crop&q=80&w=800' },
+        { category_id: doces, name: 'Brownie com Sorvete', description: 'Brownie quente recheado com nozes, acompanhado de bola de sorvete de baunilha.', price: 21.00, image_url: 'https://images.unsplash.com/photo-1606313564200-e75d5e30476c?auto=format&fit=crop&q=80&w=800' }
+      ];
+
+      const { error: prodError } = await (supabase as any)
+        .from('products')
+        .insert(products.map((p, i) => ({ ...p, user_id: tenantUserId, sort_order: i, is_active: true })));
+
+      if (prodError) throw new Error('Erro ao criar produtos');
+      toast.success('10 produtos inseridos com sucesso!');
+    } catch (e: any) {
+      toast.error(e.message || 'Erro ao gerar produtos demo');
+    } finally {
+      setSeeding(false);
+    }
   }
 
   const filtered = tenants.filter(t => {
@@ -642,6 +691,17 @@ export default function SuperAdminTenants() {
                     >
                       <Trash2 className="w-3.5 h-3.5" /> Excluir Conta Permanentemente
                     </Button>
+                    <div className="pt-2 border-t border-border/50">
+                      <Button
+                        variant="outline"
+                        className="w-full gap-2 font-bold uppercase text-[10px] h-9 text-blue-600 border-blue-500/20 hover:bg-blue-500/10 hover:border-blue-500/40"
+                        onClick={() => handleSeedDemoProducts(selectedTenant.user_id)}
+                        disabled={seeding}
+                      >
+                        {seeding ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <PackagePlus className="w-3.5 h-3.5" />}
+                        {seeding ? 'Injetando...' : 'INJETAR 10 PRODUTOS (DEMO)'}
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </div>

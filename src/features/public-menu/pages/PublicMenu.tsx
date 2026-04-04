@@ -546,14 +546,14 @@ export default function PublicMenu() {
         </motion.header>
 
         {/* ══════════════════════════════════════════
-            MAIN CONTENT — white rounded card
+            MAIN CONTENT — expanded desktop container
         ══════════════════════════════════════════ */}
         <div className="relative z-10 -mt-5 bg-[#f4f4f4] dark:bg-[#111111] rounded-t-[28px] min-h-screen">
-          <div className="max-w-3xl mx-auto">
+          <div className="w-full max-w-[1400px] mx-auto">
 
             {/* ── SEARCH BAR ── */}
-            <div className="px-5 pt-6 pb-2">
-              <div className="relative pm-search-bar bg-white dark:bg-[#1e1e1e] rounded-2xl shadow-sm border border-black/[0.06] dark:border-white/[0.06]">
+            <div className="px-5 pt-6 pb-2 flex justify-center">
+              <div className="relative pm-search-bar bg-white dark:bg-[#1e1e1e] rounded-2xl shadow-sm border border-black/[0.06] dark:border-white/[0.06] w-full max-w-xl">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-gray-400" />
                 <input
                   ref={searchRef}
@@ -573,7 +573,7 @@ export default function PublicMenu() {
 
             {/* ── CATEGORY PILLS ── */}
             <div className="sticky top-0 z-40 bg-[#f4f4f4]/90 dark:bg-[#111111]/90 backdrop-blur-xl pt-3 pb-3 px-5 border-b border-black/[0.05] dark:border-white/[0.05]">
-              <div className="flex items-center gap-2.5 overflow-x-auto no-scrollbar">
+              <div className="flex items-center gap-2.5 overflow-x-auto no-scrollbar max-w-[1400px] mx-auto">
                 {filteredCategories.map(cat => {
                   const cfg = getCategoryConfig(cat.name);
                   return (
@@ -622,7 +622,7 @@ export default function PublicMenu() {
 
                   {/* Items */}
                   {isPremium ? (
-                    <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 md:gap-5">
                       {cat.items.map((item, i) => {
                         const rating = itemRatings[item.id] || { star: '4.8', count: 80 };
                         return (
@@ -670,7 +670,7 @@ export default function PublicMenu() {
                       })}
                     </div>
                   ) : (
-                    <div className="space-y-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-5">
                       {cat.items.map((item, i) => {
                         const rating = itemRatings[item.id] || { star: '4.8', count: 80 };
                         return (
