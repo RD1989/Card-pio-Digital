@@ -555,12 +555,30 @@ export default function Landing() {
       </section>
 
       {/* ─── FOOTER ─── */}
-      <footer className="border-t border-border py-6 px-6">
+      <footer className="border-t border-border py-6 px-6 relative z-10">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted-foreground">
           <span className="text-primary font-bold text-sm">Menu Pro</span>
           <span>{footerText}</span>
         </div>
       </footer>
+
+      {/* ─── WHATSAPP FLOATING BUTTON ─── */}
+      <motion.a
+        href="https://wa.me/22996051620?text=Ol%C3%A1%21%20Gostaria%20de%20tirar%20d%C3%BAvidas%20sobre%20o%20sistema."
+        target="_blank"
+        rel="noopener noreferrer"
+        initial={{ opacity: 0, scale: 0.5 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 1, type: 'spring', stiffness: 200 }}
+        className="fixed bottom-6 right-6 z-[100] flex items-center justify-center w-14 h-14 bg-[#25D366] text-white rounded-full shadow-2xl shadow-[#25D366]/20 hover:scale-110 hover:shadow-[#25D366]/40 transition-all duration-300 group"
+        aria-label="Falar no WhatsApp"
+      >
+        <MessageCircle className="w-7 h-7" />
+        {/* Tooltip on hover */}
+        <span className="absolute right-[110%] top-1/2 -translate-y-1/2 bg-foreground text-background text-xs font-bold px-3 py-1.5 rounded-lg opacity-0 translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300 pointer-events-none whitespace-nowrap shadow-xl">
+          Tirar dúvidas
+        </span>
+      </motion.a>
     </div>
   );
 }
