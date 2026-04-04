@@ -150,6 +150,21 @@ export default function PublicMenu() {
     return ratings;
   }, [menuCategories]);
 
+  const filteredCategories = useMemo(() => {
+    if (!searchQuery) return menuCategories;
+    
+    const query = searchQuery.toLowerCase();
+    return menuCategories
+      .map(cat => ({
+        ...cat,
+        items: cat.items.filter(item => 
+          item.name.toLowerCase().includes(query) || 
+          (item.description?.toLowerCase() || '').includes(query)
+        )
+      }))
+      .filter(cat => cat.items.length > 0);
+  }, [menuCategories, searchQuery]);
+
   useEffect(() => {
     if (!slug) return;
 
@@ -466,21 +481,21 @@ export default function PublicMenu() {
                   animate={{ opacity: 1, x: 0 }}
                   className="space-y-4"
                 >
-                  <h1 className="font-display italic text-6xl xl:text-7xl font-black tracking-tight text-foreground drop-shadow-lg leading-[0.9]">
+                  <h1 className="font-display italic text-5xl xl:text-6xl font-black tracking-tight text-foreground drop-shadow-lg leading-[0.9]">
                     {profile.restaurant_name}
                   </h1>
-                  <div className="flex items-center gap-6 text-sm font-bold text-muted-foreground/80">
-                    <div className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-card rounded-2xl shadow-sm border border-border/5">
-                      <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+                  <div className="flex items-center gap-4 text-[11px] font-bold text-muted-foreground/80">
+                    <div className="flex items-center gap-1.5 px-3 py-1 bg-white dark:bg-card rounded-xl shadow-sm border border-border/5">
+                      <Star className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400" />
                       <span className="text-foreground">4.9</span>
-                      <span className="opacity-40 font-medium">(250+ Avaliações)</span>
+                      <span className="opacity-40 font-medium">(250+)</span>
                     </div>
-                    <div className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-card rounded-2xl shadow-sm border border-border/5">
-                      <Clock className="w-4 h-4 text-primary" />
+                    <div className="flex items-center gap-1.5 px-3 py-1 bg-white dark:bg-card rounded-xl shadow-sm border border-border/5">
+                      <Clock className="w-3.5 h-3.5 text-primary" />
                       <span className="text-foreground">30-45 min</span>
                     </div>
-                    <div className="flex items-center gap-2 px-4 py-2 bg-emerald-500/10 text-emerald-600 rounded-2xl shadow-sm border border-emerald-500/10">
-                      <span className="uppercase text-[10px] tracking-widest font-black">Frete Grátis</span>
+                    <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-500/10 text-emerald-600 rounded-xl shadow-sm border border-emerald-500/10">
+                      <span className="uppercase text-[9px] tracking-widest font-black">Frete Grátis</span>
                     </div>
                   </div>
                 </motion.div>
@@ -490,19 +505,19 @@ export default function PublicMenu() {
         </div>
       </motion.header>
 
-      <div className="max-w-[1600px] w-full mx-auto px-6 mt-16 sm:mt-20 space-y-12">
+      <div className="max-w-[1600px] w-full mx-auto px-6 mt-12 sm:mt-16 space-y-12">
         <div className="lg:hidden text-center space-y-4">
-            <h1 className="font-display italic text-4xl font-black tracking-tight leading-none text-foreground">{profile.restaurant_name}</h1>
-            <div className="flex items-center justify-center gap-3">
-              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white dark:bg-card rounded-xl shadow-sm border border-border/5 text-[10px] font-black uppercase tracking-tight">
-                <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
+            <h1 className="font-display italic text-3xl font-black tracking-tight leading-none text-foreground">{profile.restaurant_name}</h1>
+            <div className="flex items-center justify-center gap-2.5">
+              <div className="flex items-center gap-1 px-2.5 py-1.5 bg-white dark:bg-card rounded-lg shadow-sm border border-border/5 text-[9px] font-black uppercase tracking-tight">
+                <Star className="w-2.5 h-2.5 text-yellow-400 fill-yellow-400" />
                 <span>4.9</span>
               </div>
-              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white dark:bg-card rounded-xl shadow-sm border border-border/5 text-[10px] font-black uppercase tracking-tight">
-                <Clock className="w-3 h-3 text-primary" />
+              <div className="flex items-center gap-1 px-2.5 py-1.5 bg-white dark:bg-card rounded-lg shadow-sm border border-border/5 text-[9px] font-black uppercase tracking-tight">
+                <Clock className="w-2.5 h-2.5 text-primary" />
                 <span>30-45 min</span>
               </div>
-              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 text-emerald-600 rounded-xl shadow-sm border border-emerald-500/10 text-[10px] font-black uppercase tracking-tight">
+              <div className="flex items-center gap-1 px-2.5 py-1.5 bg-emerald-500/10 text-emerald-600 rounded-lg shadow-sm border border-emerald-500/10 text-[9px] font-black uppercase tracking-tight">
                 <span>Frete Grátis</span>
               </div>
             </div>
@@ -531,7 +546,7 @@ export default function PublicMenu() {
               onClick={() => { setActiveCategory(null); window.scrollTo({ top: 300, behavior: 'smooth' }); }} 
               color="#f59e0b"
             />
-            {menuCategories.map((cat) => {
+            {filteredCategories.map((cat) => {
                const { icon, color } = getCategoryIcon(cat.name);
                return (
                  <CategoryButton 
@@ -551,7 +566,12 @@ export default function PublicMenu() {
         </div>
 
         <div className="pb-40">
-          {menuCategories.map((cat, catIdx) => (
+          {filteredCategories.length === 0 && searchQuery && (
+            <div className="text-center py-20">
+              <p className="text-muted-foreground font-medium italic">Nenhum prato encontrado para "{searchQuery}"</p>
+            </div>
+          )}
+          {filteredCategories.map((cat, catIdx) => (
             <motion.section
               id={`category-${cat.name}`}
               key={cat.name}
@@ -567,10 +587,52 @@ export default function PublicMenu() {
                 <span className="text-xs font-black text-muted-foreground opacity-40 tracking-widest uppercase">{cat.items.length} itens</span>
               </div>
               
-              {/* Responsive Grid with Ultra-Wide support */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-8">
+              {/* Layout Switcher: Premium Grid vs Classic List */}
+              <div className={isPremium 
+                ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-8"
+                : "flex flex-col gap-4 max-w-4xl mx-auto"
+              }>
                 {cat.items.map((item, i) => {
                   const rating = itemRatings[item.id] || { star: '4.8', count: 120 };
+                  
+                  if (!isPremium) {
+                    return (
+                      <motion.div
+                        key={item.id}
+                        initial={{ opacity: 0, x: -10 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        viewport={{ once: true }}
+                        onClick={() => handleProductClick(item)}
+                        className="bg-white dark:bg-card p-4 rounded-2xl flex gap-4 cursor-pointer hover:shadow-lg transition-all border border-border/5 group"
+                      >
+                        <div className="w-24 h-24 sm:w-32 sm:h-32 shrink-0 rounded-xl overflow-hidden bg-muted/20">
+                          {item.image_url ? (
+                            <img src={item.image_url} alt={item.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center opacity-10">
+                              <Utensils className="w-8 h-8" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1 flex flex-col justify-between py-1">
+                          <div className="space-y-1">
+                            <h3 className="font-bold text-lg leading-tight group-hover:text-primary transition-colors">{item.name}</h3>
+                            {item.description && <p className="text-[11px] text-muted-foreground line-clamp-2 leading-tight italic font-medium">{item.description}</p>}
+                          </div>
+                          <div className="flex items-center justify-between mt-2">
+                             <span className="text-primary font-black text-lg">{formatCurrency(item.price)}</span>
+                             <button
+                               onClick={(e) => { e.stopPropagation(); handleAdd({ id: item.id, name: item.name, price: item.price }); }}
+                               className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center active:scale-90 transition-transform"
+                             >
+                               <Plus className="w-5 h-5 stroke-[3px]" />
+                             </button>
+                          </div>
+                        </div>
+                      </motion.div>
+                    );
+                  }
+
                   return (
                     <motion.div
                       key={item.id}
@@ -611,11 +673,8 @@ export default function PublicMenu() {
                               <span className="text-[10px] uppercase font-black tracking-widest text-muted-foreground mb-1 opacity-50">Preço</span>
                               <span className="text-primary font-black text-2xl tracking-tighter">{formatCurrency(item.price)}</span>
                             </div>
-                            <div className="flex flex-col items-end">
-                              <span className="text-[10px] uppercase font-black tracking-widest text-muted-foreground mb-1 opacity-50">Tempo</span>
-                              <span className="text-foreground/80 text-[11px] flex items-center gap-1.5 font-black uppercase">
-                                <Clock className="w-3.5 h-3.5 text-primary" /> 30m - 45m
-                              </span>
+                            <div className="flex items-center gap-2 px-3 py-1 bg-white/50 dark:bg-card/50 rounded-lg text-[10px] font-black uppercase text-foreground/70">
+                               <Clock className="w-3 h-3 text-primary" /> 30m
                             </div>
                           </div>
                           
@@ -670,12 +729,12 @@ function CategoryButton({ label, icon: Icon, active, onClick, color }: { label: 
   return (
     <button
       onClick={onClick}
-      className={`flex flex-col items-center gap-2 group min-w-[70px] shrink-0 transition-all ${active ? 'scale-110' : 'hover:scale-105'}`}
+      className={`flex flex-col items-center gap-2 group min-w-[64px] shrink-0 transition-all ${active ? 'scale-110' : 'hover:scale-105'}`}
     >
-      <div className={`w-14 h-14 rounded-[20px] flex items-center justify-center transition-all bg-white dark:bg-card shadow-sm border-2 ${active ? 'border-primary ring-4 ring-primary/10' : 'border-transparent'}`}>
-        <Icon className="w-6 h-6" style={{ color: active ? 'var(--accent-color)' : color }} />
+      <div className={`w-12 h-12 rounded-[16px] flex items-center justify-center transition-all bg-white dark:bg-card shadow-sm border-2 ${active ? 'border-primary ring-4 ring-primary/10' : 'border-transparent'}`}>
+        <Icon className="w-5 h-5" style={{ color: active ? 'var(--accent-color)' : color }} />
       </div>
-      <span className={`text-[10px] font-black uppercase tracking-widest text-center ${active ? 'text-primary' : 'text-muted-foreground opacity-60'}`}>{label}</span>
+      <span className={`text-[9px] font-black uppercase tracking-widest text-center ${active ? 'text-primary' : 'text-muted-foreground opacity-60'}`}>{label}</span>
     </button>
   );
 }
