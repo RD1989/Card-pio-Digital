@@ -74,17 +74,17 @@ export default function Landing() {
   // Parse dynamic values with fallbacks and safe checks
   const getSafeString = (val: any, fallback: string) => (typeof val === 'string' && val.trim().length > 0) ? val : fallback;
 
-  const heroTitle = getSafeString(settings.hero_title, 'Seu Cardápio Digital Profissional, Simples e Poderoso');
-  const heroSubtitle = getSafeString(settings.hero_subtitle, 'Teste grátis por 30 dias. Receba pedidos no WhatsApp, gere etiquetas com QR Code e aumente suas vendas com um cardápio que impressiona.');
-  const heroBadge = getSafeString(settings.hero_badge, '⚡ A nova era do delivery digital');
-  const basicName = getSafeString(settings.plan_basic_name, 'Plano Básico');
-  const basicPrice = getSafeString(settings.plan_basic_price, '24,90');
-  const basicFeatures = getSafeString(settings.plan_basic_features, 'Até 100 pedidos por mês|Cardápio digital completo|Pedidos via WhatsApp|QR Code personalizado|Link na Bio otimizado|Horário de funcionamento|Complementos e adicionais|Cupons de desconto|30 dias grátis para testar').split('|');
-  const proName = getSafeString(settings.plan_pro_name, 'Plano Pro');
-  const proPrice = getSafeString(settings.plan_pro_price, '39,90');
-  const proFeatures = getSafeString(settings.plan_pro_features, 'Pedidos ilimitados|Tudo do plano Básico|Importação de cardápio com IA|Geração de descrições com IA|Métricas e analytics avançados|Notificações sonoras de pedidos|Múltiplas categorias e produtos|Acompanhamento de pedido em tempo real|Suporte prioritário VIP|30 dias grátis para testar').split('|');
-  const ctaTitle = getSafeString(settings.cta_title, 'TRANSFORME SEU DELIVERY AGORA');
-  const ctaSubtitle = getSafeString(settings.cta_subtitle, 'Junte-se a centenas de lojistas que estão automatizando seus pedidos e fidelizando seus clientes como nunca.');
+  const heroTitle = getSafeString(settings.hero_title, 'Tenha seu Próprio Cardápio Digital: Pague Uma Vez, Use para Sempre');
+  const heroSubtitle = getSafeString(settings.hero_subtitle, 'Sem mensalidades e sem taxas por pedido. Experimente grátis por 7 dias e automatize seu delivery com um sistema que é realmente seu.');
+  const heroBadge = getSafeString(settings.hero_badge, '🚀 Licença Vitalícia: Sem Mensalidades');
+  const basicName = getSafeString(settings.plan_basic_name, 'Plano Essencial');
+  const basicPrice = getSafeString(settings.plan_basic_price, 'Vitalício');
+  const basicFeatures = getSafeString(settings.plan_basic_features, 'Pedidos ILIMITADOS|Produtos ILIMITADOS|Menu Digital Premium|Integrado com WhatsApp|QR Code Exclusivo|Horário de Funcionamento|Gestão de Entregas|Cobre o custo em 1 dia').split('|');
+  const proName = getSafeString(settings.plan_pro_name, 'Plano Premium');
+  const proPrice = getSafeString(settings.plan_pro_price, 'Vitalício');
+  const proFeatures = getSafeString(settings.plan_pro_features, 'Tudo do Plano Essencial|Importação de Cardápio com IA|Gerador de Descrições Premium|Suporte Prioritário VIP|Acompanhamento em Tempo Real|Sem Taxas Ocultas|Acesso Vitalício Garantido').split('|');
+  const ctaTitle = getSafeString(settings.cta_title, 'SISTEMA PRÓPRIO SEM MENSALIDADES');
+  const ctaSubtitle = getSafeString(settings.cta_subtitle, 'Chega de pagar taxas para plataformas que não entendem o seu negócio. Junte-se a centenas de lojistas que já têm sua autonomia digital.');
   const footerText = getSafeString(settings.footer_text, '© 2026 Menu Pro. Todos os direitos reservados.');
   const videoUrl = settings.video_url;
   const videoEnabled = settings.video_enabled === 'true';
@@ -140,7 +140,7 @@ export default function Landing() {
                 VER RECURSOS
               </Button>
             </div>
-            <p className="mt-3 text-[11px] text-muted-foreground">💳 Sem cartão de crédito · ⚙️ Setup em 2 min</p>
+            <p className="mt-3 text-[11px] text-muted-foreground">💳 Sem mensalidades · ⚙️ Setup em 2 min · 🎁 7 dias grátis</p>
           </motion.div>
 
           <motion.div
@@ -330,10 +330,10 @@ export default function Landing() {
             className="text-center mb-14"
           >
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight leading-tight">
-              Planos pensados para{' '}
-              <span className="font-display italic text-gradient underline decoration-primary/30 underline-offset-4">o seu bolso</span>
+              Pague uma vez,{' '}
+              <span className="font-display italic text-gradient underline decoration-primary/30 underline-offset-4">use para sempre</span>
             </h2>
-            <p className="mt-3 text-sm text-muted-foreground">Aproveite todos os recursos grátis por 30 dias</p>
+            <p className="mt-3 text-sm text-muted-foreground">Tenha autonomia total sem pagar taxas mensais ou renovações abusivas. Aproveite 7 dias grátis.</p>
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-3xl mx-auto">
@@ -344,17 +344,15 @@ export default function Landing() {
               viewport={{ once: true }}
               className="bg-card border border-border rounded-2xl p-8 relative overflow-hidden"
             >
-              <div className="absolute top-0 right-0 bg-green-500 text-white text-[10px] font-bold px-4 py-1 rounded-bl-xl">
-                30 dias grátis
+              <div className="absolute top-0 right-0 bg-primary/10 text-primary text-[10px] font-bold px-4 py-1 rounded-bl-xl">
+                7 dias de teste grátis
               </div>
               <h3 className="font-bold text-lg">{basicName}</h3>
               <p className="text-xs text-muted-foreground mt-1">Ideal para quem está começando no delivery digital</p>
               <div className="mt-5 flex items-baseline gap-1">
-                <span className="text-xs text-muted-foreground">R$</span>
-                <span className="text-4xl font-extrabold">{basicPrice}</span>
-                <span className="text-xs text-muted-foreground">/mês</span>
+                <span className="text-4xl font-extrabold uppercase tracking-tighter text-primary">INVESTIMENTO ÚNICO</span>
               </div>
-              <p className="text-[11px] text-muted-foreground mt-1">Após o período de teste gratuito</p>
+              <p className="text-[11px] text-muted-foreground mt-1">Livre-se das mensalidades para sempre</p>
               <div className="mt-6 space-y-2.5">
                 {basicFeatures.map((f) => (
                   <div key={f} className="flex items-center gap-2.5 text-sm">
@@ -377,17 +375,15 @@ export default function Landing() {
               className="bg-card border-2 border-primary rounded-2xl p-8 relative overflow-hidden"
             >
               <div className="absolute top-0 right-0 flex">
-                <span className="bg-green-500 text-white text-[10px] font-bold px-3 py-1">30 dias grátis</span>
-                <span className="bg-primary text-primary-foreground text-[10px] font-bold px-3 py-1 rounded-bl-xl">Popular</span>
+                <span className="bg-primary/20 text-primary text-[10px] font-bold px-3 py-1">Acesso Vitalício</span>
+                <span className="bg-primary text-primary-foreground text-[10px] font-bold px-3 py-1 rounded-bl-xl uppercase tracking-widest font-black">Recomendado</span>
               </div>
               <h3 className="font-bold text-lg">{proName}</h3>
               <p className="text-xs text-muted-foreground mt-1">Para o delivery que não para de crescer — sem limites</p>
               <div className="mt-5 flex items-baseline gap-1">
-                <span className="text-xs text-muted-foreground">R$</span>
-                <span className="text-4xl font-extrabold">{proPrice}</span>
-                <span className="text-xs text-muted-foreground">/mês</span>
+                <span className="text-4xl font-extrabold uppercase tracking-tighter">PAGAMENTO ÚNICO</span>
               </div>
-              <p className="text-[11px] text-muted-foreground mt-1">Após o período de teste gratuito</p>
+              <p className="text-[11px] text-muted-foreground mt-1">A solução definitiva para o seu delivery</p>
               <div className="mt-6 space-y-2.5">
                 {proFeatures.map((f) => (
                   <div key={f} className="flex items-center gap-2.5 text-sm">

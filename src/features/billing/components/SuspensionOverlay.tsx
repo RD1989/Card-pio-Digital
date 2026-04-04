@@ -17,9 +17,9 @@ interface Plan {
 export function SuspensionOverlay() {
   const handleActivatePlan = (planType: 'monthly' | 'basic' | 'pro') => {
     const messages = {
-      monthly: "Olá! Quero renovar meu Plano Mensal.",
-      basic: "Olá! Quero renovar meu Plano Semestral.",
-      pro: "Olá! Quero renovar meu Plano Anual.",
+      monthly: "Olá! Quero ativar minha Licença Essencial (Vitalícia).",
+      basic: "Olá! Quero ativar minha Licença Premium (Vitalícia).",
+      pro: "Olá! Quero falar com um especialista sobre a Licença Enterprise.",
     };
     
     const whatsapp = "22996051620";
@@ -30,32 +30,32 @@ export function SuspensionOverlay() {
   const plans: Plan[] = [
     {
       id: 'monthly',
-      name: 'Plano Mensal',
-      subtitle: 'Pagamento Mês a Mês',
-      price: 'R$ 1,00',
-      savings: 'para teste',
-      features: ['Pedidos ILIMITADOS', 'Gestão Completa', 'Suporte via Chat'],
-      buttonText: 'Renovar Mensal',
+      name: 'Licença Essencial',
+      subtitle: 'Acesso Vitalício',
+      price: 'R$ 147,00',
+      savings: 'Pagamento Único',
+      features: ['Pedidos ILIMITADOS', 'Gestão Completa', 'QR Code de Mesa', 'Sem Mensalidades'],
+      buttonText: 'Ativar Essencial',
     },
     {
       id: 'basic',
-      name: 'Plano Semestral',
-      subtitle: '6 Meses de Acesso',
-      price: 'R$ 97,00',
-      savings: 'economize 35%',
-      features: ['Pedidos ILIMITADOS', 'Produtos ILIMITADOS', 'IA (Importação Ilimitada)'],
-      buttonText: 'Renovar Semestral',
+      name: 'Licença Premium',
+      subtitle: 'Tudo Liberado + IA',
+      price: 'R$ 297,00',
+      savings: 'O mais vendido',
+      features: ['Tudo do Essencial', 'Importação com IA', 'Etiquetas Térmicas', 'Suporte Prioritário'],
+      buttonText: 'Ativar Premium',
       highlight: true,
       icon: Sparkles
     },
     {
       id: 'pro',
-      name: 'Plano Anual',
-      subtitle: 'Acesso Total ILIMITADO',
-      price: 'R$ 169,00',
-      savings: 'economize 45%',
-      features: ['Pedidos ILIMITADOS', 'IA ILIMITADA', 'VIP Support'],
-      buttonText: 'Renovar Anual',
+      name: 'Licença Enterprise',
+      subtitle: 'Personalização Total',
+      price: 'R$ 497,00',
+      savings: 'Domínio Próprio',
+      features: ['Tudo do Premium', 'Domínio Customizado', 'App Android/iOS PWA', 'Consultoria VIP'],
+      buttonText: 'Falar com Suporte',
       icon: Sparkles
     }
   ];
@@ -64,10 +64,10 @@ export function SuspensionOverlay() {
     <div className="flex-1 flex flex-col items-center justify-center py-10 px-4 max-w-7xl mx-auto space-y-8 animate-in fade-in zoom-in duration-500">
       <div className="text-center space-y-3 max-w-2xl">
         <div className="w-20 h-20 bg-primary/10 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-pill animate-pulse">
-          <Rocket className="w-10 h-10 text-primary" />
+          <Sparkles className="w-10 h-10 text-primary" />
         </div>
-        <h2 className="text-4xl font-black tracking-tighter text-foreground">Sua jornada continua aqui</h2>
-        <p className="text-muted-foreground font-medium text-sm">Reative seu acesso agora e continue transformando seu restaurante com o Menu Pro.</p>
+        <h2 className="text-4xl font-black tracking-tighter text-foreground">Seu teste de 7 dias terminou</h2>
+        <p className="text-muted-foreground font-medium text-sm">Escolha sua licença vitalícia e continue vendendo sem pagar taxas ou mensalidades.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-6xl">

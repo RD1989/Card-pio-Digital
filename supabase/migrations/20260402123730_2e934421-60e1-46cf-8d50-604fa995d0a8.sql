@@ -12,7 +12,7 @@ CREATE TABLE public.invoices (
   due_date TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT (now() + interval '3 days'),
   paid_at TIMESTAMP WITH TIME ZONE,
   period_start TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
-  period_end TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT (now() + interval '30 days'),
+  period_end TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT (now() + interval '7 days'),
   created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
   updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
 );
