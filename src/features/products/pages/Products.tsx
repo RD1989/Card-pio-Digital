@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence, Reorder } from 'framer-motion';
-import { Plus, GripVertical, Edit2, Trash2, Wand2, Upload, X, Package, Settings2 } from 'lucide-react';
+import { Plus, GripVertical, Edit2, Trash2, Wand2, Upload, X, Package, Settings2, Info } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Tables } from '@/integrations/supabase/types';
 import { toast } from 'sonner';
@@ -427,14 +427,23 @@ export default function Products() {
                   </button>
                 </div>
               )}
-              <label className="flex items-center gap-2 px-4 py-3 rounded-xl border border-dashed border-border hover:border-primary/50 cursor-pointer transition-colors">
-                <Upload className="w-4 h-4 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">Upload de imagem</span>
-                <input type="file" accept="image/*" className="hidden" onChange={e => {
-                  const f = e.target.files?.[0];
-                  if (f) setProductImage(f);
-                }} />
-              </label>
+              <div className="flex flex-col gap-2 mt-1">
+                <label className="flex items-center gap-2 px-4 py-3 rounded-xl border border-dashed border-border hover:border-primary/50 cursor-pointer transition-colors">
+                  <Upload className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground mr-auto">Upload de imagem do produto</span>
+                  <input type="file" accept="image/*" className="hidden" onChange={e => {
+                    const f = e.target.files?.[0];
+                    if (f) setProductImage(f);
+                  }} />
+                </label>
+                <div className="flex items-start gap-1.5 text-xs text-muted-foreground bg-muted/30 p-2 rounded-lg border border-border/50">
+                  <Info className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                  <p>
+                    <strong>Tamanho ideal:</strong> 600x600px a 1000x1000px (proporção quadrada). 
+                    <br className="hidden sm:block"/>Máximo recomendado: 2MB. Use JPG, PNG ou WEBP.
+                  </p>
+                </div>
+              </div>
             </div>
             <div className="flex items-center gap-3">
               <Switch checked={productIsUpsell} onCheckedChange={setProductIsUpsell} />

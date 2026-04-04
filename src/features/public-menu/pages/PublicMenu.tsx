@@ -219,7 +219,11 @@ export default function PublicMenu() {
             const cur = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
             setIsOpen(cur >= todayHours.open_time && cur <= todayHours.close_time);
           } else { setIsOpen(true); }
+        } else {
+          setIsOpen(false);
         }
+      } else {
+        setIsOpen(true);
       }
 
       const grouped: MenuCategory[] = [];
@@ -347,6 +351,31 @@ export default function PublicMenu() {
           <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-6"><Clock className="w-6 h-6 text-primary animate-pulse" /></div>
           <h2 className="text-lg font-black uppercase tracking-tight mb-4">Já Voltamos!</h2>
           <p className="text-muted-foreground text-xs leading-relaxed">Estamos atualizando nossos itens e preparativos para te atender melhor. Obrigado pela paciência!</p>
+        </div>
+        <footer className="mt-12 text-[10px] uppercase font-black tracking-widest text-muted-foreground/30">Powered by <span className="text-primary/60">Menu Pro</span></footer>
+      </div>
+    );
+  }
+
+  if (isOpen === false) {
+    return (
+      <div className="min-h-screen bg-[#f8fafc] dark:bg-background flex flex-col items-center justify-center p-6 text-center" style={{ fontFamily: '"Plus Jakarta Sans", sans-serif' }}>
+        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="w-32 h-32 rounded-[40px] shadow-2xl overflow-hidden mb-8 bg-white p-4">
+          {profile.logo_url ? <img src={profile.logo_url} alt={profile.restaurant_name} className="w-full h-full object-contain" /> : <div className="w-full h-full flex items-center justify-center bg-primary/10 text-primary font-black text-3xl">{profile.restaurant_name[0]?.toUpperCase()}</div>}
+        </motion.div>
+        <h1 className="text-3xl font-black mb-2">{profile.restaurant_name}</h1>
+        <div className="bg-white dark:bg-card p-8 rounded-[32px] max-w-md w-full shadow-sm border border-border/5 flex flex-col items-center">
+          <div className="w-16 h-16 bg-red-50 dark:bg-red-900/20 rounded-full flex items-center justify-center mb-6">
+            <Clock className="w-8 h-8 text-red-500 animate-pulse" />
+          </div>
+          <h2 className="text-xl font-bold tracking-tight mb-3 text-foreground">Estamos Fechados no Momento</h2>
+          <p className="text-muted-foreground text-sm leading-relaxed mb-6">
+            Nosso delivery e retiradas estão temporariamente indisponíveis. 
+            Verifique nossos horários de funcionamento e volte mais tarde!
+          </p>
+          <Button variant="outline" className="w-full rounded-full" onClick={() => window.location.reload()}>
+            Tentar Novamente
+          </Button>
         </div>
         <footer className="mt-12 text-[10px] uppercase font-black tracking-widest text-muted-foreground/30">Powered by <span className="text-primary/60">Menu Pro</span></footer>
       </div>
