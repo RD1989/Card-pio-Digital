@@ -106,10 +106,39 @@ serve(async (req) => {
     }
 
     if (action === "delete") {
-      // Actually delete the user (Hard delete) - although user chose B, 
-      // I'll provide the option for the code, but UI will mostly use suspend.
       const { user_id } = payload;
+      console.log("Iniciando exclusão profunda para o usuário:", user_id);
+
+      // 1. Modifier Options (via join indirecto)
+      const { data: modifiers } = await supabase.from("product_modifiers").select("id").eq("user_id", user_id);
+      if (modifiers && modifiers.length > 0) {
+        const modIds = modifiers.map(m => m.id);
+        await supabase.from("modifier_options").delete().in("modifier_id", modIds);
+        await supabase.from("product_modifiers").delete().in("id", modIds);
+      }
+
+      // 2. Order Items (via join indirecto)
+      const { data: orders } = await supabase.from("orders").select("id").eq("restaurant_user_id", user_id);
+      if (orders && orders.length > 0) {
+        const orderIds = orders.map(o => o.id);
+        await supabase.from("order_items").delete().in("order_id", orderIds);
+        await supabase.from("orders").delete().in("id", orderIds);
+      }
+
+      // 3. Simple Table Deletion (by user_id)
+      await Promise.all([
+        supabase.from("products").delete().eq("user_id", user_id),
+        supabase.from("categories").delete().eq("user_id", user_id),
+        supabase.from("coupons").delete().eq("user_id", user_id),
+        supabase.from("invoices").delete().eq("user_id", user_id),
+        supabase.from("menu_views").delete().eq("restaurant_user_id", user_id),
+        supabase.from("business_hours").delete().eq("user_id", user_id),
+      ]);
+
+      // 4. Finally, Profiles and Auth User
+      await supabase.from("profiles").delete().eq("user_id", user_id);
       const { error: deleteError } = await supabase.auth.admin.deleteUser(user_id);
+      
       if (deleteError) throw deleteError;
 
       return new Response(JSON.stringify({ success: true }), {

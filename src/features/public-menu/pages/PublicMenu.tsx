@@ -208,10 +208,21 @@ export default function PublicMenu() {
     if (!slug) return;
     async function fetchMenu() {
       setLoading(true);
-      const { data: prof, error: profError } = await supabase
+      let { data: prof, error: profError } = await supabase
         .from('profiles').select('*').eq('slug', slug!).single();
 
-      if (profError || !prof) { setNotFound(true); setLoading(false); return; }
+      // Fallback: Se não encontrar pelo slug, tenta pelo user_id
+      if (profError || !prof) {
+        const { data: profById, error: idError } = await supabase
+          .from('profiles').select('*').eq('user_id', slug!).single();
+        
+        if (idError || !profById) {
+          setNotFound(true);
+          setLoading(false);
+          return;
+        }
+        prof = profById;
+      }
 
       setProfile(prof as unknown as Profile);
       setRestaurant(slug!, prof.user_id, prof.restaurant_name, prof.whatsapp || '');

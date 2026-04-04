@@ -28,6 +28,8 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [chartData, setChartData] = useState<{ day: string; value: number }[]>([]);
   const [pixLoading, setPixLoading] = useState(false);
+  const [slug, setSlug] = useState<string | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   const fetchStats = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -35,22 +37,27 @@ export default function Dashboard() {
 
     const { data: isSuperAdmin } = await supabase.rpc('is_super_admin', { _user_id: user.id });
     const userId = (isSuperAdmin && impersonatedUserId) ? impersonatedUserId : user.id;
+    setCurrentUserId(userId);
 
     setLoading(true);
     try {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
-      const [prodRes, ordersRes] = await Promise.all([
+      const [prodRes, ordersRes, profRes] = await Promise.all([
         supabase.from('products').select('id, is_active').eq('user_id', userId),
         supabase.from('orders').select('id, total, created_at, status, customer_name').eq('restaurant_user_id', userId).order('created_at', { ascending: false }).limit(100),
+        supabase.from('profiles').select('slug').eq('user_id', userId).single(),
       ]);
 
       if (prodRes.error) throw prodRes.error;
       if (ordersRes.error) throw ordersRes.error;
 
+      if (profRes.error && (profRes.error as any).code !== 'PGRST116') throw profRes.error;
+
       const products = prodRes.data || [];
       const orders = (ordersRes.data || []) as any[];
+      if (profRes.data) setSlug(profRes.data.slug);
       const todayOrders = orders.filter(o => new Date(o.created_at) >= today);
 
       setStats({
@@ -171,7 +178,7 @@ export default function Dashboard() {
             <Loader2 className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
             Atualizar
           </Button>
-          <Button className="rounded-2xl h-11 bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20" onClick={() => window.open('/menu/' + impersonatedUserId)}>
+          <Button className="rounded-2xl h-11 bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20" onClick={() => window.open('/menu/' + (slug || currentUserId))}>
             <ExternalLink className="w-4 h-4 mr-2" />
             Ver Cardápio
           </Button>
