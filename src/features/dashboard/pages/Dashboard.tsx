@@ -148,11 +148,6 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-8">
-      {/* Plan Banner — hidden for super admins unless impersonating */}
-      {planStatus && (!isSuperAdmin || impersonatedUserId) && (
-        <PlanBanner status={planStatus} />
-      )}
-
       <div>
         <h1 className="text-2xl font-bold">Meu Painel</h1>
         <p className="text-muted-foreground text-sm mt-1">
