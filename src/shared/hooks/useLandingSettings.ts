@@ -42,7 +42,7 @@ const DEFAULTS: LandingSettings = {
 const KEYS = Object.keys(DEFAULTS) as (keyof LandingSettings)[];
 
 export function useLandingSettings() {
-  const [settings, setSettings] = useState<LandingSettings>(DEFAULTS);
+  const [settings, setSettings] = useState<LandingSettings | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -82,5 +82,9 @@ export function useLandingSettings() {
     return () => window.removeEventListener('theme-updated', handleUpdate);
   }, []);
 
-  return { settings, loading, DEFAULTS };
+  return { 
+    settings: settings || DEFAULTS, 
+    loading: loading && !settings, 
+    DEFAULTS 
+  };
 }
