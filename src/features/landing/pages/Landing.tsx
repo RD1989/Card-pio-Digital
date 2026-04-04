@@ -48,6 +48,22 @@ const fadeUp = {
   }),
 };
 
+const formatYoutubeEmbedUrl = (url: string) => {
+  if (!url) return '';
+  if (url.includes('embed/')) return url;
+  
+  let videoId = '';
+  if (url.includes('v=')) {
+    videoId = url.split('v=')[1]?.split('&')[0];
+  } else if (url.includes('youtu.be/')) {
+    videoId = url.split('youtu.be/')[1]?.split('?')[0];
+  } else if (url.includes('youtube.com/shorts/')) {
+    videoId = url.split('shorts/')[1]?.split('?')[0];
+  }
+  
+  return videoId ? `https://www.youtube.com/embed/${videoId}` : url;
+};
+
 export default function Landing() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const { settings, loading } = useLandingSettings();
@@ -154,7 +170,7 @@ export default function Landing() {
               <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none z-10" />
               
               <iframe
-                src={videoUrl}
+                src={formatYoutubeEmbedUrl(videoUrl || '')}
                 className="absolute inset-0 w-full h-full"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen

@@ -19,6 +19,22 @@ const LANDING_KEYS = [
   'landing_video_url', 'landing_video_enabled',
 ];
 
+const formatYoutubeEmbedUrl = (url: string) => {
+  if (!url) return '';
+  if (url.includes('embed/')) return url;
+  
+  let videoId = '';
+  if (url.includes('v=')) {
+    videoId = url.split('v=')[1]?.split('&')[0];
+  } else if (url.includes('youtu.be/')) {
+    videoId = url.split('youtu.be/')[1]?.split('?')[0];
+  } else if (url.includes('youtube.com/shorts/')) {
+    videoId = url.split('shorts/')[1]?.split('?')[0];
+  }
+  
+  return videoId ? `https://www.youtube.com/embed/${videoId}` : url;
+};
+
 export default function SuperAdminLanding() {
   const [values, setValues] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
@@ -185,14 +201,14 @@ export default function SuperAdminLanding() {
                   placeholder="https://www.youtube.com/embed/dQw4w9WgXcQ" 
                 />
                 <p className="text-[10px] text-muted-foreground mt-1">
-                  Dica: No YouTube, clique em "Compartilhar" &gt; "Incorporar" e copie apenas o link do *src*.
+                  Dica: Você pode colar o link direto do YouTube ou Shorts. O sistema converterá para o formato correto automaticamente.
                 </p>
               </div>
 
               {val('video_url') && (
                 <div className="aspect-video relative rounded-xl overflow-hidden border-4 border-border/50 bg-black/5 flex items-center justify-center group">
                   <iframe 
-                    src={val('video_url')} 
+                    src={formatYoutubeEmbedUrl(val('video_url'))} 
                     className="absolute inset-0 w-full h-full"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowFullScreen
