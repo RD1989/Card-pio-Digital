@@ -219,7 +219,7 @@ export default function Branding() {
         <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-primary">
           <Palette className="w-4 h-4" /> Cor do Tema
         </div>
-        <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+        <div className="grid grid-cols-3 sm:grid-cols-7 gap-3">
           {presetColors.map((color) => (
             <button
               key={color.hex}
@@ -232,6 +232,31 @@ export default function Branding() {
               <span className="text-[10px] font-medium">{color.name}</span>
             </button>
           ))}
+          
+          {/* Custom Color Selector */}
+          <div className="relative">
+            <button
+              className={`w-full flex flex-col items-center gap-2 p-2 rounded-xl border transition-all ${
+                !presetColors.some(c => c.hex === selectedColor) ? 'border-primary bg-primary/10' : 'border-border'
+              }`}
+              onClick={() => document.getElementById('customColorPicker')?.click()}
+            >
+              <div 
+                className="w-8 h-8 rounded-full shadow-sm flex items-center justify-center bg-muted border border-border"
+                style={{ backgroundColor: !presetColors.some(c => c.hex === selectedColor) ? selectedColor : undefined }}
+              >
+                <Paintbrush className={`w-4 h-4 ${!presetColors.some(c => c.hex === selectedColor) ? 'text-white' : 'text-muted-foreground'}`} />
+              </div>
+              <span className="text-[10px] font-medium">Personalizar</span>
+            </button>
+            <input
+              id="customColorPicker"
+              type="color"
+              value={selectedColor}
+              onChange={(e) => setSelectedColor(e.target.value)}
+              className="absolute inset-0 opacity-0 cursor-pointer pointer-events-none"
+            />
+          </div>
         </div>
       </motion.section>
 

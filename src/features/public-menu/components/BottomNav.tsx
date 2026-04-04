@@ -16,18 +16,18 @@ export function BottomNav({ onHomeClick, onCategoriesClick, onSearchClick, onCar
 
   return (
     <motion.div
-      initial={{ y: 100, x: '-50%' }}
-      animate={{ y: 0, x: '-50%' }}
+      initial={{ y: 100 }}
+      animate={{ y: 0 }}
       transition={{ type: 'spring', stiffness: 260, damping: 28 }}
-      className="fixed bottom-6 left-1/2 z-50 w-[92%] max-w-[420px]"
+      className="fixed bottom-0 left-0 z-50 w-full"
     >
       <div
-        className="flex items-center justify-around px-4 py-3 rounded-[28px] border border-black/[0.06] dark:border-white/[0.08]"
+        className="flex items-center justify-around px-2 py-3 rounded-t-[28px] border-t border-black/[0.06] dark:border-white/[0.08]"
         style={{
-          background: 'rgba(255,255,255,0.92)',
+          background: 'rgba(255,255,255,0.96)',
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.15), 0 2px 8px rgba(0,0,0,0.08)',
+          boxShadow: '0 -4px 20px rgba(0,0,0,0.08)',
         }}
       >
         <NavBtn icon={Home} label="Início" onClick={onHomeClick} />
@@ -38,40 +38,28 @@ export function BottomNav({ onHomeClick, onCategoriesClick, onSearchClick, onCar
           whileTap={{ scale: 0.9 }}
           whileHover={{ scale: 1.06 }}
           onClick={onCartClick}
-          className="relative flex flex-col items-center gap-1 -mt-5"
+          className="relative flex flex-col items-center gap-1 -mt-8"
         >
           <div
-            className="w-14 h-14 rounded-[22px] flex items-center justify-center shadow-lg"
-            style={{ backgroundColor: accentColor, boxShadow: `0 8px 20px -4px ${accentColor}80` }}
+            className="w-16 h-16 rounded-[22px] flex items-center justify-center shadow-lg"
+            style={{ backgroundColor: accentColor, boxShadow: `0 8px 24px -4px ${accentColor}80` }}
           >
-            <ShoppingCart className="w-6 h-6 text-white" />
+            <ShoppingCart className="w-7 h-7 text-white" />
             {cartCount > 0 && (
               <motion.span
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                className="absolute -top-1 -right-1 bg-white text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center shadow border-2"
+                className="absolute -top-1 -right-1 bg-white text-[11px] font-black w-6 h-6 rounded-full flex items-center justify-center shadow border-2"
                 style={{ color: accentColor, borderColor: accentColor }}
               >
                 {cartCount}
               </motion.span>
             )}
           </div>
-          <span className="text-[9px] font-black uppercase tracking-widest text-gray-500">Sacola</span>
+          <span className="text-[10px] font-black uppercase tracking-widest text-gray-500">Sacola</span>
         </motion.button>
 
         <NavBtn icon={Search} label="Buscar" onClick={onSearchClick} />
-
-        {/* Placeholder 5th button */}
-        <motion.button
-          whileTap={{ scale: 0.9 }}
-          whileHover={{ scale: 1.05 }}
-          className="flex flex-col items-center gap-1.5 text-gray-400"
-        >
-          <div className="w-9 h-9 flex items-center justify-center rounded-[14px]">
-            <span className="text-xl">👤</span>
-          </div>
-          <span className="text-[9px] font-black uppercase tracking-widest opacity-70">Perfil</span>
-        </motion.button>
       </div>
     </motion.div>
   );
