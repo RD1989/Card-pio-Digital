@@ -32,8 +32,9 @@ export function PlanBanner({ status }: Props) {
             triggerSuccess();
           }
         }
-      )
-      .subscribe();
+      );
+      
+    channel.subscribe();
 
     return () => { supabase.removeChannel(channel); };
   }, [status.user_id]);
