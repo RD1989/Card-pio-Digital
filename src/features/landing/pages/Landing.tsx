@@ -4,7 +4,7 @@ import { GlassNavbar } from '@/shared/components/layout/GlassNavbar';
 import { PhoneSimulator } from '@/shared/components/common/PhoneSimulator';
 import {
   ArrowRight, MessageCircle, Tag, Link2, Award, LineChart, LayoutGrid,
-  Check, ChevronDown, Quote
+  Check, ChevronDown, Quote, Sparkles, UploadCloud
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useState, useRef } from 'react';
@@ -14,18 +14,18 @@ import phoneDashboard from '@/assets/phone-dashboard.png';
 import { useLandingSettings } from '@/shared/hooks/useLandingSettings';
 
 const features = [
-  { icon: MessageCircle, title: 'Pedidos via WhatsApp', desc: 'Receba o cardápio e pedidos direto no WhatsApp. Sem bots complexos, só vendas reais.' },
-  { icon: Tag, title: 'Gerador de Etiquetas', desc: 'Etiquetas com QR Code automáticas, imprima e cole nas mesas em 1 clique.' },
-  { icon: Link2, title: 'Link na Bio Exclusivo', desc: 'Uma página otimizada para WhatsApp, Instagram e Redes com seu cardápio QR Code.' },
-  { icon: Award, title: 'Sua Própria Marca', desc: 'Logo, cores e domínio exclusivos. Seu app com a cara do seu negócio.' },
-  { icon: LineChart, title: 'Métricas de Conversão', desc: 'Saiba quanto vendeu, quantos acessaram e quais os produtos mais pedidos.' },
-  { icon: LayoutGrid, title: 'Gestão Simplificada', desc: 'Adicione produtos, categorias e promoções de forma simples e direta.' },
+  { icon: Sparkles, title: 'I.A. Integrada', desc: 'Descrições inteligentes e persuasivas. Nossa IA cria os textos dos seus pratos de forma automática.' },
+  { icon: UploadCloud, title: 'Importação Automática', desc: 'Pare de cadastrar um por um. Importe seu cardápio inteiro do iFood com alguns cliques e ganhe tempo.' },
+  { icon: MessageCircle, title: 'Pedidos via WhatsApp', desc: 'Receba seus pedidos de forma clara e padronizada direto no seu zap. Zero taxas.' },
+  { icon: Award, title: 'Aplicativo Próprio', desc: 'Seu sistema rodando em link exclusivo. Personalize com a sua logo e a cor principal da sua marca e crie o seu ativo.' },
+  { icon: Tag, title: 'QR Code de Mesa', desc: 'Atenda nos salões espalhando QR Codes nas mesas usando nosso gerador 1 clique de etiquetas PDF.' },
+  { icon: LineChart, title: 'Painel de Gestão', desc: 'Histórico de vendas, produtos mais pedidos, cadastro de categorias e relatórios detalhados.' },
 ];
 
 const steps = [
-  { num: '1', title: 'Crie sua Conta', desc: 'Preencha os dados básicos do seu restaurante. Leva menos de 2 minutos.' },
-  { num: '2', title: 'Personalize e Adicione', desc: 'Coloque seu logo, defina suas cores e cadastre seus produtos pelo celular.' },
-  { num: '3', title: 'Pronto para Vender', desc: 'Compartilhe o link do seu cardápio e comece a receber pedidos imediatamente.' },
+  { num: '1', title: 'Crie sua Conta Grátis', desc: 'Em 2 minutos você faz seu cadastro básico. Comece direto no teste gratuito.' },
+  { num: '2', title: 'Importe seu Cardápio', desc: 'Importe listas de produtos instantaneamente ou crie-os com descrição automática via IA.' },
+  { num: '3', title: 'Sua Própria Ferramenta', desc: 'Pronto! Sem mensalidades absurdas e com vendas fluindo para seu WhatsApp.' },
 ];
 
 const defaultTestimonials = [
