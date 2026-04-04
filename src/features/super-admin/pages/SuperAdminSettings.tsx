@@ -100,13 +100,13 @@ export default function SuperAdminSettings() {
   const renderFields = (fields: SettingField[]) =>
     fields.map(field => (
       <div key={field.key} className="space-y-1.5">
-        <Label>{field.label}</Label>
+        <Label className="text-xs font-semibold uppercase text-muted-foreground">{field.label}</Label>
         {field.type === 'select' && field.options ? (
           <Select
             value={values[field.key] || ''}
             onValueChange={v => setValues(prev => ({ ...prev, [field.key]: v }))}
           >
-            <SelectTrigger><SelectValue placeholder={field.placeholder} /></SelectTrigger>
+            <SelectTrigger className="h-11"><SelectValue placeholder={field.placeholder} /></SelectTrigger>
             <SelectContent>
               {field.options.map(o => (
                 <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
@@ -119,13 +119,13 @@ export default function SuperAdminSettings() {
               type="color"
               value={values[field.key] || '#f59e0b'}
               onChange={e => setValues(prev => ({ ...prev, [field.key]: e.target.value }))}
-              className="w-10 h-10 rounded border border-border cursor-pointer"
+              className="w-12 h-11 rounded-lg border border-border cursor-pointer p-1"
             />
             <Input
               value={values[field.key] || ''}
               onChange={e => setValues(prev => ({ ...prev, [field.key]: e.target.value }))}
               placeholder={field.placeholder}
-              className="flex-1"
+              className="flex-1 h-11 uppercase font-mono text-sm"
             />
           </div>
         ) : (
@@ -135,15 +135,16 @@ export default function SuperAdminSettings() {
               value={values[field.key] || ''}
               onChange={e => setValues(prev => ({ ...prev, [field.key]: e.target.value }))}
               placeholder={field.placeholder}
+              className="h-11"
             />
             {field.secret && (
-              <button
-                type="button"
-                onClick={() => toggleVisibility(field.key)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-              >
-                {visibleSecrets[field.key] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              </button>
+               <button
+                 type="button"
+                 onClick={() => toggleVisibility(field.key)}
+                 className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-muted-foreground hover:text-foreground rounded-md hover:bg-muted"
+               >
+                 {visibleSecrets[field.key] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+               </button>
             )}
           </div>
         )}
@@ -161,25 +162,27 @@ export default function SuperAdminSettings() {
   return (
     <div className="space-y-6 max-w-3xl">
       <div>
-        <h1 className="text-2xl font-bold">Configurações Globais</h1>
-        <p className="text-muted-foreground text-sm mt-1">APIs, tema e pagamentos (Pix Próprio)</p>
+        <h1 className="text-xl sm:text-2xl font-bold">Configurações Globais</h1>
+        <p className="text-muted-foreground text-xs sm:text-sm mt-1">APIs, tema e pagamentos (Pix Próprio)</p>
       </div>
 
       <Tabs defaultValue="apis">
-        <TabsList className="grid grid-cols-3 w-full">
-          <TabsTrigger value="apis">IA (OpenRouter)</TabsTrigger>
-          <TabsTrigger value="ownpix">Pagamento (Pix)</TabsTrigger>
-          <TabsTrigger value="theme">Identidade Visual</TabsTrigger>
-        </TabsList>
+        <div className="w-full overflow-x-auto pb-1">
+          <TabsList className="flex w-max min-w-full sm:grid sm:grid-cols-3">
+            <TabsTrigger value="apis" className="flex-1 whitespace-nowrap">IA (OpenRouter)</TabsTrigger>
+            <TabsTrigger value="ownpix" className="flex-1 whitespace-nowrap">Pagamento (Pix)</TabsTrigger>
+            <TabsTrigger value="theme" className="flex-1 whitespace-nowrap">Identidade Visual</TabsTrigger>
+          </TabsList>
+        </div>
 
         <TabsContent value="apis" className="space-y-4 mt-4">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
             <Card className="glass-sm border-border">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg">
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
                   <Key className="w-5 h-5 text-primary" /> OpenRouter (IA)
                 </CardTitle>
-                <CardDescription>API para geração de descrições e extração de cardápios</CardDescription>
+                <CardDescription className="text-xs sm:text-sm">API para geração de descrições e extração de cardápios</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">{renderFields(openRouterFields)}</CardContent>
             </Card>
@@ -187,13 +190,13 @@ export default function SuperAdminSettings() {
         </TabsContent>
 
         <TabsContent value="ownpix" className="space-y-4 mt-4">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
             <Card className="glass-sm border-border bg-primary/5">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg">
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
                   <Package className="w-5 h-5 text-primary" /> Pix Próprio (Nubank)
                 </CardTitle>
-                <CardDescription>Chave Pix e Token de sincronização Gmail</CardDescription>
+                <CardDescription className="text-xs sm:text-sm">Chave Pix e Token de sincronização Gmail</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">{renderFields(ownPixFields)}</CardContent>
             </Card>
@@ -201,13 +204,13 @@ export default function SuperAdminSettings() {
         </TabsContent>
 
         <TabsContent value="theme" className="space-y-4 mt-4">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
             <Card className="glass-sm border-border">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg">
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
                   <Palette className="w-5 h-5 text-primary" /> Estética do Cardápio
                 </CardTitle>
-                <CardDescription>Cores e fontes globais da plataforma</CardDescription>
+                <CardDescription className="text-xs sm:text-sm">Cores e fontes globais da plataforma</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">{renderFields(themeFields)}</CardContent>
             </Card>
@@ -215,11 +218,10 @@ export default function SuperAdminSettings() {
         </TabsContent>
       </Tabs>
 
-      <Button onClick={handleSave} disabled={saving} className="gap-2 w-full sm:w-auto">
+      <Button onClick={handleSave} disabled={saving} className="gap-2 w-full sm:w-auto h-11 text-sm font-bold">
         {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-        Salvar Configurações
+        {saving ? 'Salvando...' : 'Salvar Configurações'}
       </Button>
     </div>
   );
 }
-

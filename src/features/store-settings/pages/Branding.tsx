@@ -146,205 +146,242 @@ export default function Branding() {
   }
 
   return (
-    <div className="space-y-8 max-w-3xl">
-      <div>
-        <h1 className="text-2xl font-bold font-inter">Identidade Visual</h1>
-        <p className="text-muted-foreground text-sm mt-1">Personalize a aparência do seu cardápio público</p>
+    <div className="space-y-8 max-w-6xl mx-auto">
+      <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold font-inter text-foreground">Identidade Visual</h1>
+          <p className="text-muted-foreground text-sm mt-1">Personalize a aparência do seu cardápio público</p>
+        </div>
+        {slug && <QRCodeGenerator slug={slug} restaurantName={restaurantName} />}
       </div>
 
-      {slug && <QRCodeGenerator slug={slug} restaurantName={restaurantName} />}
-
-      <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass p-6 space-y-4">
-        <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-primary">
-          <Type className="w-4 h-4" /> Nome do Restaurante
-        </div>
-        <input
-          type="text"
-          value={restaurantName}
-          onChange={(e) => setRestaurantName(e.target.value)}
-          placeholder="Ex: Bistrô da Vila"
-          className="w-full px-4 py-3 rounded-xl bg-muted/50 border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all font-inter"
-        />
-      </motion.section>
-
-      <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass p-6 space-y-4">
-        <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-primary">
-          <Upload className="w-4 h-4" /> Logo do Perfil
-        </div>
-        <div className="flex items-center gap-6">
-          <label className="flex flex-col items-center justify-center w-28 h-28 rounded-2xl border-2 border-dashed border-border hover:border-primary/50 cursor-pointer transition-colors bg-muted/30 overflow-hidden shrink-0">
-            {logoPreview ? (
-              <img src={logoPreview} alt="Logo" className="w-full h-full object-cover" />
-            ) : (
-              <span className="text-xs text-muted-foreground text-center px-2">Enviar Logo</span>
-            )}
-            <input type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
-          </label>
-          <div className="text-xs text-muted-foreground">
-            <p className="font-semibold text-primary">Resolução Ideal: 256x256px (1:1)</p>
-            <p className="mt-1">PNG ou JPG. Máximo 2MB.</p>
-          </div>
-        </div>
-      </motion.section>
-
-      <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="glass p-6 space-y-4">
-        <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-primary">
-          <Paintbrush className="w-4 h-4" /> Banner da Capa
-        </div>
-        <div className="space-y-4">
-          <label className="flex flex-col items-center justify-center w-full h-40 rounded-2xl border-2 border-dashed border-border hover:border-primary/50 cursor-pointer transition-colors bg-muted/30 relative overflow-hidden group">
-            {bannerPreview ? (
-              <>
-                <img src={bannerPreview} alt="Banner" className="w-full h-full object-cover transition-transform group-hover:scale-105" />
-                <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                  <span className="text-white text-xs font-semibold">Alterar Capa</span>
-                </div>
-              </>
-            ) : (
-              <div className="flex flex-col items-center gap-2">
-                <Upload className="w-6 h-6 text-muted-foreground" />
-                <span className="text-xs text-muted-foreground">Enviar imagem de capa profissional</span>
-              </div>
-            )}
-            <input type="file" accept="image/*" className="hidden" onChange={handleBannerUpload} />
-          </label>
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <p className="font-semibold text-primary">Resolução Ideal: 1200x400px (3:1)</p>
-            <p>Máximo 3MB.</p>
-          </div>
-        </div>
-      </motion.section>
-
-      <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass p-6 space-y-4">
-        <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-primary">
-          <Palette className="w-4 h-4" /> Cor do Tema
-        </div>
-        <div className="grid grid-cols-3 sm:grid-cols-7 gap-3">
-          {presetColors.map((color) => (
-            <button
-              key={color.hex}
-              onClick={() => setSelectedColor(color.hex)}
-              className={`flex flex-col items-center gap-2 p-2 rounded-xl border transition-all ${
-                selectedColor === color.hex ? 'border-primary bg-primary/10' : 'border-border'
-              }`}
-            >
-              <div className="w-8 h-8 rounded-full shadow-sm" style={{ backgroundColor: color.hex }} />
-              <span className="text-[10px] font-medium">{color.name}</span>
-            </button>
-          ))}
-          
-          {/* Custom Color Selector */}
-          <div className="relative">
-            <button
-              className={`w-full flex flex-col items-center gap-2 p-2 rounded-xl border transition-all ${
-                !presetColors.some(c => c.hex === selectedColor) ? 'border-primary bg-primary/10' : 'border-border'
-              }`}
-              onClick={() => document.getElementById('customColorPicker')?.click()}
-            >
-              <div 
-                className="w-8 h-8 rounded-full shadow-sm flex items-center justify-center bg-muted border border-border"
-                style={{ backgroundColor: !presetColors.some(c => c.hex === selectedColor) ? selectedColor : undefined }}
-              >
-                <Paintbrush className={`w-4 h-4 ${!presetColors.some(c => c.hex === selectedColor) ? 'text-white' : 'text-muted-foreground'}`} />
-              </div>
-              <span className="text-[10px] font-medium">Personalizar</span>
-            </button>
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr,380px] gap-8 items-start">
+        <div className="space-y-6">
+          <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-sm p-6 space-y-4">
+            <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-primary">
+              <Type className="w-4 h-4" /> Nome do Restaurante
+            </div>
             <input
-              id="customColorPicker"
-              type="color"
-              value={selectedColor}
-              onChange={(e) => setSelectedColor(e.target.value)}
-              className="absolute inset-0 opacity-0 cursor-pointer pointer-events-none"
+              type="text"
+              value={restaurantName}
+              onChange={(e) => setRestaurantName(e.target.value)}
+              placeholder="Ex: Bistrô da Vila"
+              className="w-full px-4 py-3 rounded-xl bg-muted/50 border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all font-inter"
             />
+          </motion.section>
+
+          <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass-sm p-6 space-y-4">
+            <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-primary">
+              <Upload className="w-4 h-4" /> Logo do Perfil
+            </div>
+            <div className="flex items-center gap-6">
+              <label className="flex flex-col items-center justify-center w-28 h-28 rounded-2xl border-2 border-dashed border-border hover:border-primary/50 cursor-pointer transition-colors bg-muted/30 overflow-hidden shrink-0">
+                {logoPreview ? (
+                  <img src={logoPreview} alt="Logo" className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-xs text-muted-foreground text-center px-2">Enviar Logo</span>
+                )}
+                <input type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
+              </label>
+              <div className="text-xs text-muted-foreground">
+                <p className="font-semibold text-primary">Resolução Ideal: 256x256px (1:1)</p>
+                <p className="mt-1">PNG ou JPG. Máximo 2MB.</p>
+              </div>
+            </div>
+          </motion.section>
+
+          <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="glass-sm p-6 space-y-4">
+            <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-primary">
+              <Paintbrush className="w-4 h-4" /> Banner da Capa
+            </div>
+            <div className="space-y-4">
+              <label className="flex flex-col items-center justify-center w-full h-40 rounded-2xl border-2 border-dashed border-border hover:border-primary/50 cursor-pointer transition-colors bg-muted/30 relative overflow-hidden group">
+                {bannerPreview ? (
+                  <>
+                    <img src={bannerPreview} alt="Banner" className="w-full h-full object-cover transition-transform group-hover:scale-105" />
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <span className="text-white text-xs font-semibold">Alterar Capa</span>
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex flex-col items-center gap-2">
+                    <Upload className="w-6 h-6 text-muted-foreground" />
+                    <span className="text-xs text-muted-foreground">Enviar imagem de capa profissional</span>
+                  </div>
+                )}
+                <input type="file" accept="image/*" className="hidden" onChange={handleBannerUpload} />
+              </label>
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <p className="font-semibold text-primary">Resolução Ideal: 1200x400px (3:1)</p>
+                <p>Máximo 3MB.</p>
+              </div>
+            </div>
+          </motion.section>
+
+          <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass-sm p-6 space-y-4">
+            <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-primary">
+              <Palette className="w-4 h-4" /> Cor do Tema
+            </div>
+            <div className="grid grid-cols-3 sm:grid-cols-7 gap-3">
+              {presetColors.map((color) => (
+                <button
+                  key={color.hex}
+                  onClick={() => setSelectedColor(color.hex)}
+                  className={`flex flex-col items-center gap-2 p-2 rounded-xl border transition-all ${
+                    selectedColor === color.hex ? 'border-primary bg-primary/10' : 'border-border'
+                  }`}
+                >
+                  <div className="w-8 h-8 rounded-full shadow-sm" style={{ backgroundColor: color.hex }} />
+                  <span className="text-[10px] font-medium">{color.name}</span>
+                </button>
+              ))}
+              <div className="relative">
+                <button
+                  className={`w-full flex flex-col items-center gap-2 p-2 rounded-xl border transition-all ${
+                    !presetColors.some(c => c.hex === selectedColor) ? 'border-primary bg-primary/10' : 'border-border'
+                  }`}
+                  onClick={() => document.getElementById('customColorPicker')?.click()}
+                >
+                  <div 
+                    className="w-8 h-8 rounded-full shadow-sm flex items-center justify-center bg-muted border border-border"
+                    style={{ backgroundColor: !presetColors.some(c => c.hex === selectedColor) ? selectedColor : undefined }}
+                  >
+                    <Paintbrush className={`w-4 h-4 ${!presetColors.some(c => c.hex === selectedColor) ? 'text-white' : 'text-muted-foreground'}`} />
+                  </div>
+                  <span className="text-[10px] font-medium">Outra</span>
+                </button>
+                <input
+                  id="customColorPicker"
+                  type="color"
+                  value={selectedColor}
+                  onChange={(e) => setSelectedColor(e.target.value)}
+                  className="absolute inset-0 opacity-0 cursor-pointer pointer-events-none"
+                />
+              </div>
+            </div>
+          </motion.section>
+
+          <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }} className="glass-sm p-6 space-y-4">
+            <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-primary">
+              <Palette className="w-4 h-4" /> Tema Visual
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              {[
+                { value: 'light', label: 'Claro', icon: '☀️' },
+                { value: 'dark', label: 'Escuro', icon: '🌙' },
+                { value: 'auto', label: 'Sistema', icon: '💻' }
+              ].map((theme) => (
+                <button
+                  key={theme.value}
+                  onClick={() => setThemeMode(theme.value)}
+                  className={`p-4 rounded-xl border transition-all flex flex-col items-center gap-2 ${
+                    themeMode === theme.value ? 'border-primary bg-primary/10' : 'border-border'
+                  }`}
+                >
+                  <span className="text-xl">{theme.icon}</span>
+                  <span className="text-[10px] font-medium">{theme.label}</span>
+                </button>
+              ))}
+            </div>
+          </motion.section>
+
+          <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.28 }} className="glass-sm p-6 space-y-4">
+            <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-primary">
+              <Eye className="w-4 h-4" /> Estilo da Experiência
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { value: 'classic', label: 'Clássico', desc: 'Simples e direto' },
+                { value: 'premium', label: 'Premium App', desc: 'Moderno (Estilo App)' }
+              ].map((layout) => (
+                <button
+                  key={layout.value}
+                  onClick={() => setMenuLayout(layout.value)}
+                  className={`p-4 rounded-xl border transition-all text-left flex flex-col gap-1 ${
+                    menuLayout === layout.value ? 'border-primary bg-primary/10' : 'border-border'
+                  }`}
+                >
+                  <span className="text-xs font-bold font-inter">{layout.label}</span>
+                  <span className="text-[10px] text-muted-foreground">{layout.desc}</span>
+                </button>
+              ))}
+            </div>
+          </motion.section>
+
+          <div className="pt-4">
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="w-full py-4 rounded-2xl bg-primary text-primary-foreground font-bold hover:opacity-95 transition-all flex items-center justify-center gap-3 shadow-lg glow-primary"
+            >
+              {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Publicar Alterações'}
+            </button>
           </div>
         </div>
-      </motion.section>
 
-      <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }} className="glass p-6 space-y-4">
-        <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-primary">
-          <Palette className="w-4 h-4" /> Tema Visual
-        </div>
-        <div className="grid grid-cols-3 gap-3">
-          {[
-            { value: 'light', label: 'Claro', icon: '☀️' },
-            { value: 'dark', label: 'Escuro', icon: '🌙' },
-            { value: 'auto', label: 'Sistema', icon: '💻' }
-          ].map((theme) => (
-            <button
-              key={theme.value}
-              onClick={() => setThemeMode(theme.value)}
-              className={`p-4 rounded-xl border transition-all flex flex-col items-center gap-2 ${
-                themeMode === theme.value ? 'border-primary bg-primary/10' : 'border-border'
-              }`}
+        {/* Live Preview Column */}
+        <div className="hidden lg:block sticky top-24">
+          <div className="relative mx-auto w-[320px] h-[640px] bg-slate-900 rounded-[3rem] border-[8px] border-slate-800 shadow-2xl overflow-hidden scale-90 origin-top">
+            {/* Notch */}
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-slate-800 rounded-b-2xl z-20" />
+            
+            <div 
+              className={`h-full w-full bg-background overflow-y-auto pb-16 custom-scrollbar ${themeMode === 'dark' ? 'dark' : ''}`}
+              style={{ fontFamily: fontOptions.find(f => f.value === fontStyle)?.family }}
             >
-              <span className="text-xl">{theme.icon}</span>
-              <span className="text-[10px] font-medium">{theme.label}</span>
-            </button>
-          ))}
-        </div>
-      </motion.section>
-
-      <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.28 }} className="glass p-6 space-y-4">
-        <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-primary">
-          <Eye className="w-4 h-4" /> Estilo da Experiência
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          {[
-            { value: 'classic', label: 'Clássico', desc: 'Simples e direto' },
-            { value: 'premium', label: 'Premium App', desc: 'Moderno (Estilo App)' }
-          ].map((layout) => (
-            <button
-              key={layout.value}
-              onClick={() => setMenuLayout(layout.value)}
-              className={`p-4 rounded-xl border transition-all text-left flex flex-col gap-1 ${
-                menuLayout === layout.value ? 'border-primary bg-primary/10' : 'border-border'
-              }`}
-            >
-              <span className="text-xs font-bold">{layout.label}</span>
-              <span className="text-[10px] text-muted-foreground">{layout.desc}</span>
-            </button>
-          ))}
-        </div>
-      </motion.section>
-
-      <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="glass p-6 space-y-2">
-        <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-primary mb-2">
-          <Eye className="w-4 h-4" /> Prévia do Cardápio
-        </div>
-        <div className="rounded-2xl border border-border bg-background overflow-hidden shadow-inner" style={{ fontFamily: fontOptions.find(f => f.value === fontStyle)?.family }}>
-          <div className="h-32 w-full bg-muted relative">
-            {bannerPreview && <img src={bannerPreview} alt="Banner prev" className="w-full h-full object-cover" />}
-            <div className="absolute -bottom-6 left-1/2 -translate-x-1/2">
-              <div className="w-20 h-20 rounded-full border-4 border-background bg-white shadow-xl overflow-hidden ring-1 ring-black/5">
-                {logoPreview ? (
-                  <img src={logoPreview} alt="Logo prev" className="w-full h-full object-cover" />
+              <div className="relative h-40 w-full bg-slate-200">
+                {bannerPreview ? (
+                  <img src={bannerPreview} alt="Banner prev" className="w-full h-full object-cover" />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-primary/10 text-primary font-bold">Logo</div>
+                  <div className="w-full h-full flex items-center justify-center bg-slate-300">
+                    <Paintbrush className="w-8 h-8 text-slate-400" />
+                  </div>
                 )}
+                
+                <div className="absolute -bottom-10 left-1/2 -translate-x-1/2">
+                  <div className="w-20 h-20 rounded-full border-4 border-background bg-card shadow-lg overflow-hidden">
+                    {logoPreview ? (
+                      <img src={logoPreview} alt="Logo prev" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-primary/10 text-primary font-bold text-xs uppercase text-center p-2">
+                        Logo
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-12 px-4 text-center space-y-4">
+                <h2 className="text-xl font-black tracking-tight" style={{ color: selectedColor }}>
+                  {restaurantName || 'Sua Loja'}
+                </h2>
+                
+                <div className="flex justify-center gap-2">
+                  <div className="w-16 h-2 bg-muted rounded-full animate-pulse" />
+                  <div className="w-10 h-2 bg-muted rounded-full animate-pulse" />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 mt-6">
+                  {[1, 2, 3, 4].map((i) => (
+                    <div key={i} className="bg-card border border-border rounded-xl p-2 space-y-2">
+                      <div className="w-full h-20 bg-muted rounded-lg" />
+                      <div className="w-3/4 h-2 bg-muted rounded" />
+                      <div className="w-1/2 h-2 bg-primary/20 rounded" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-[90%] h-12 bg-primary rounded-full shadow-lg flex items-center justify-center text-primary-foreground font-bold text-xs">
+                Ver Carrinho (0)
               </div>
             </div>
           </div>
-          <div className="pt-10 pb-6 text-center">
-            <h2 className="text-xl font-extrabold" style={{ color: selectedColor }}>{restaurantName || 'Menu Digital'}</h2>
-            <div className="mt-3 flex justify-center gap-1.5">
-              <div className="h-1.5 w-12 bg-muted rounded-full" />
-              <div className="h-1.5 w-8 bg-muted rounded-full opacity-50" />
-            </div>
-          </div>
+          <p className="text-center text-[10px] text-muted-foreground uppercase tracking-widest font-black mt-2">
+            Prévia em Tempo Real
+          </p>
         </div>
-      </motion.section>
-
-      <div className="mt-8">
-        <button
-          onClick={handleSave}
-          disabled={saving}
-          className="w-full py-4 rounded-2xl bg-primary text-primary-foreground font-bold hover:opacity-95 transition-all flex items-center justify-center gap-3 shadow-lg glow-primary"
-        >
-          {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Publicar Alterações'}
-        </button>
       </div>
     </div>
   );
 }
-
-

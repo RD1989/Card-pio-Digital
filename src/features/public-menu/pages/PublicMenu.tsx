@@ -136,7 +136,7 @@ const fadeUp = {
 
 /* ════════════════════════════════════════════════════════════════
    MAIN COMPONENT
-════════════════════════════════════════════════════════════════ */
+ ════════════════════════════════════════════════════════════════ */
 export default function PublicMenu() {
   const { slug } = useParams<{ slug: string }>();
   const { addItem, setRestaurant } = useCartStore();
@@ -155,6 +155,27 @@ export default function PublicMenu() {
 
   const isSuspended = profile &&
     (profile.is_active === false || profile.plan_status === 'expired' || profile.plan_status === 'inactive');
+
+  /* ── Interaction Observer for active category tracking ── */
+  useEffect(() => {
+    if (loading || menuCategories.length === 0) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setActiveCategory(entry.target.id.replace('cat-', ''));
+          }
+        });
+      },
+      { threshold: 0.3, rootMargin: '-10% 0px -70% 0px' }
+    );
+
+    const elements = document.querySelectorAll('section[id^="cat-"]');
+    elements.forEach((el) => observer.observe(el));
+
+    return () => observer.disconnect();
+  }, [loading, menuCategories, searchQuery]);
 
   /* ── Memoised static ratings ── */
   const itemRatings = useMemo(() => {
@@ -542,13 +563,6 @@ export default function PublicMenu() {
             {/* ── CATEGORY PILLS ── */}
             <div className="sticky top-0 z-40 bg-[#f4f4f4]/90 dark:bg-[#111111]/90 backdrop-blur-xl pt-3 pb-3 px-5 border-b border-black/[0.05] dark:border-white/[0.05]">
               <div className="flex items-center gap-2.5 overflow-x-auto no-scrollbar">
-                <CategoryPill
-                  emoji="⭐"
-                  label="Populares"
-                  active={!activeCategory}
-                  accentColor={accentColor}
-                  onClick={() => { setActiveCategory(null); window.scrollTo({ top: 320, behavior: 'smooth' }); }}
-                />
                 {filteredCategories.map(cat => {
                   const cfg = getCategoryConfig(cat.name);
                   return (
@@ -597,7 +611,6 @@ export default function PublicMenu() {
 
                   {/* Items */}
                   {isPremium ? (
-                    /* ▓▓ PREMIUM GRID — dark cards ▓▓ */
                     <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-3">
                       {cat.items.map((item, i) => {
                         const rating = itemRatings[item.id] || { star: '4.8', count: 80 };
@@ -612,26 +625,23 @@ export default function PublicMenu() {
                             onClick={() => setSelectedProduct(item)}
                             className="pm-dark-card rounded-[22px] overflow-hidden cursor-pointer group pm-card-hover"
                           >
-                            {/* Image */}
-                            <div className="relative h-40 overflow-hidden">
-                              {item.image_url
-                                ? <img src={item.image_url} alt={item.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                                : <div className="w-full h-full bg-[#2a2a2a] flex items-center justify-center"><Utensils className="w-8 h-8 text-white/10" /></div>
-                              }
-                              {/* Overlay gradient */}
+                            <div className="relative h-40 overflow-hidden bg-muted">
+                              {item.image_url ? (
+                                <ItemImage src={item.image_url} alt={item.name} />
+                              ) : (
+                                <div className="w-full h-full bg-[#2a2a2a] flex items-center justify-center">
+                                  <Utensils className="w-8 h-8 text-white/10" />
+                                </div>
+                              )}
                               <div className="absolute inset-0 bg-gradient-to-t from-[#111111]/90 via-black/20 to-transparent" />
-                              {/* Rating badge */}
                               <div className="absolute top-3 right-3 flex items-center gap-1 bg-black/50 backdrop-blur-md px-2 py-1 rounded-lg border border-white/10">
                                 <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
                                 <span className="text-white text-[11px] font-bold">{rating.star}</span>
                               </div>
                             </div>
-
-                            {/* Body */}
                             <div className="p-4">
                               <h3 className="text-white font-bold text-sm leading-tight line-clamp-1 mb-1">{item.name}</h3>
                               {item.description && <p className="text-white/40 text-[11px] line-clamp-1 mb-3">{item.description}</p>}
-
                               <div className="flex items-center justify-between mt-auto">
                                 <span className="font-extrabold text-base" style={{ color: accentColor }}>{formatCurrency(item.price)}</span>
                                 <button
@@ -649,7 +659,6 @@ export default function PublicMenu() {
                       })}
                     </div>
                   ) : (
-                    /* ▓▓ CLASSIC LIST — horizontal cards (iFood style) ▓▓ */
                     <div className="space-y-3">
                       {cat.items.map((item, i) => {
                         const rating = itemRatings[item.id] || { star: '4.8', count: 80 };
@@ -664,20 +673,20 @@ export default function PublicMenu() {
                             onClick={() => setSelectedProduct(item)}
                             className="bg-white dark:bg-[#1e1e1e] rounded-2xl overflow-hidden cursor-pointer pm-card-hover border border-black/[0.05] dark:border-white/[0.05] flex"
                           >
-                            {/* Image */}
-                            <div className="relative w-[120px] sm:w-[140px] h-[120px] sm:h-[140px] shrink-0 overflow-hidden">
-                              {item.image_url
-                                ? <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
-                                : <div className="w-full h-full bg-gray-100 dark:bg-[#2a2a2a] flex items-center justify-center"><Utensils className="w-8 h-8 text-gray-300 dark:text-white/10" /></div>
-                              }
+                            <div className="relative w-[120px] sm:w-[140px] h-[120px] sm:h-[140px] shrink-0 overflow-hidden bg-muted">
+                              {item.image_url ? (
+                                <ItemImage src={item.image_url} alt={item.name} />
+                              ) : (
+                                <div className="w-full h-full bg-gray-100 dark:bg-[#2a2a2a] flex items-center justify-center">
+                                  <Utensils className="w-8 h-8 text-gray-300 dark:text-white/10" />
+                                </div>
+                              )}
                               {!item.is_available && (
                                 <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
                                   <span className="text-white text-[10px] font-bold uppercase tracking-wider">Esgotado</span>
                                 </div>
                               )}
                             </div>
-
-                            {/* Content */}
                             <div className="flex-1 p-3 sm:p-4 flex flex-col justify-between min-w-0">
                               <div>
                                 <h3 className="font-bold text-sm sm:text-base leading-tight line-clamp-2 mb-1">{item.name}</h3>
@@ -685,9 +694,7 @@ export default function PublicMenu() {
                                   <p className="text-gray-500 dark:text-gray-400 text-[12px] leading-snug line-clamp-2">{item.description}</p>
                                 )}
                               </div>
-
                               <div className="flex items-center justify-between mt-2 gap-2">
-                                {/* Left: price + rating + time */}
                                 <div>
                                   <div className="flex items-center gap-2 mb-1">
                                     <div className="flex items-center gap-0.5">
@@ -695,17 +702,9 @@ export default function PublicMenu() {
                                       <span className="text-[11px] font-bold text-gray-700 dark:text-gray-300">{rating.star}</span>
                                       <span className="text-[10px] text-gray-400 ml-0.5">{rating.count}</span>
                                     </div>
-                                    <div className="flex items-center gap-0.5 text-gray-400">
-                                      <Clock className="w-3 h-3" />
-                                      <span className="text-[10px]">35-45 min</span>
-                                    </div>
                                   </div>
-                                  <span className="font-extrabold text-base text-gray-900 dark:text-white">
-                                    {formatCurrency(item.price)}
-                                  </span>
+                                  <span className="font-extrabold text-base text-gray-900 dark:text-white">{formatCurrency(item.price)}</span>
                                 </div>
-
-                                {/* Add button — green */}
                                 <button
                                   disabled={!item.is_available}
                                   onClick={e => { e.stopPropagation(); handleAdd({ id: item.id, name: item.name, price: item.price }); }}
@@ -729,7 +728,6 @@ export default function PublicMenu() {
           </div>
         </div>
 
-        {/* ── NAVIGATION & CART ── */}
         <BottomNav
           onHomeClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
           onCategoriesClick={() => document.getElementById(`cat-${filteredCategories[0]?.name}`)?.scrollIntoView({ behavior: 'smooth' })}
@@ -739,7 +737,6 @@ export default function PublicMenu() {
         />
         <CartDrawer accentColor={accentColor} />
 
-        {/* ── PRODUCT MODAL ── */}
         {selectedProduct && (
           <ProductDetailModal
             product={selectedProduct}
@@ -750,7 +747,6 @@ export default function PublicMenu() {
           />
         )}
 
-        {/* ── FOOTER ── */}
         <footer className="text-center py-10 px-6 bg-white dark:bg-[#1a1a1a] border-t border-black/[0.05] dark:border-white/[0.05]">
           <p className="text-[10px] text-gray-400 font-semibold tracking-widest uppercase">
             Powered by <span className="font-black" style={{ color: accentColor }}>Menu Pro</span>
@@ -761,22 +757,46 @@ export default function PublicMenu() {
   );
 }
 
-/* ════════════════════════════════════════════════════════════════
-   SUB-COMPONENTS
-════════════════════════════════════════════════════════════════ */
+function ItemImage({ src, alt }: { src: string; alt: string }) {
+  const [loaded, setLoaded] = useState(false);
+  return (
+    <div className="relative w-full h-full">
+      {!loaded && (
+        <div className="absolute inset-0 bg-muted animate-pulse flex items-center justify-center">
+          <Loader2 className="w-5 h-5 text-muted-foreground/20 animate-spin" />
+        </div>
+      )}
+      <img
+        src={src}
+        alt={alt}
+        className={`w-full h-full object-cover transition-opacity duration-500 ${loaded ? 'opacity-100' : 'opacity-0'}`}
+        onLoad={() => setLoaded(true)}
+      />
+    </div>
+  );
+}
 
 function CategoryPill({
   emoji, label, active, onClick, accentColor,
 }: {
   emoji: string; label: string; active: boolean; onClick: () => void; accentColor: string;
 }) {
+  const scrollRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (active && scrollRef.current) {
+      scrollRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    }
+  }, [active]);
+
   return (
     <button
+      ref={scrollRef}
       onClick={onClick}
-      className={`pm-cat-pill flex items-center gap-1.5 px-3.5 py-2 rounded-2xl shrink-0 text-sm font-semibold whitespace-nowrap ${
+      className={`pm-cat-pill flex items-center gap-1.5 px-3.5 py-2 rounded-2xl shrink-0 text-sm font-semibold whitespace-nowrap border transition-all ${
         active
-          ? 'text-white shadow-md'
-          : 'bg-white dark:bg-[#1e1e1e] text-gray-600 dark:text-gray-300 border border-black/[0.07] dark:border-white/[0.07]'
+          ? 'text-white shadow-md border-transparent'
+          : 'bg-white dark:bg-[#1e1e1e] text-gray-600 dark:text-gray-300 border-black/[0.07] dark:border-white/[0.07]'
       }`}
       style={active ? { backgroundColor: accentColor } : undefined}
     >

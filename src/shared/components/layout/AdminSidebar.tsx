@@ -75,16 +75,17 @@ export function AdminSidebar() {
             asChild 
             disabled={isDisabled}
             onClick={() => !isDisabled && isMobile && setOpenMobile(false)}
-            className={isDisabled ? "opacity-50 grayscale cursor-not-allowed pointer-events-none" : ""}
+            className={`h-11 rounded-xl transition-all duration-200 ${isDisabled ? "opacity-30 grayscale cursor-not-allowed pointer-events-none" : ""}`}
           >
             <NavLink
               to={isDisabled ? "#" : item.url}
               end={item.url === '/admin'}
-              className="hover:bg-sidebar-accent/50"
-              activeClassName="bg-primary/10 text-primary font-medium"
+              className="px-3 hover:bg-sidebar-accent/30 group"
+              activeClassName="bg-primary text-primary-foreground font-bold shadow-lg shadow-primary/20"
             >
-              <item.icon className="mr-2 h-4 w-4 shrink-0" />
-              {!collapsed && <span>{item.title} {isDisabled && "🔒"}</span>}
+              <item.icon className="mr-3 h-4.5 w-4.5 shrink-0 group-hover:scale-110 transition-transform" />
+              {!collapsed && <span className="text-sm tracking-tight">{item.title}</span>}
+              {!collapsed && isDisabled && <Shield className="ml-auto w-3 h-3 opacity-40" />}
             </NavLink>
           </SidebarMenuButton>
         </SidebarMenuItem>
@@ -99,53 +100,59 @@ export function AdminSidebar() {
 
       <SidebarContent>
         {menuGroups.map((group) => (
-          <SidebarGroup key={group.label}>
-            <SidebarGroupLabel className="text-[10px] uppercase tracking-widest font-black opacity-50 px-4">
+          <SidebarGroup key={group.label} className="py-2">
+            <SidebarGroupLabel className="text-[10px] uppercase tracking-[0.2em] font-black opacity-30 px-6 mb-2">
               {group.label}
             </SidebarGroupLabel>
             <SidebarGroupContent>
-              <SidebarMenu>{renderLinks(group.links)}</SidebarMenu>
+              <SidebarMenu className="px-2 space-y-1">{renderLinks(group.links)}</SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
         ))}
 
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-[10px] uppercase tracking-widest font-black opacity-50 px-4">Análise</SidebarGroupLabel>
+        <SidebarGroup className="py-2">
+          <SidebarGroupLabel className="text-[10px] uppercase tracking-[0.2em] font-black opacity-30 px-6 mb-2">Insights</SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>{renderLinks(moreLinks)}</SidebarMenu>
+            <SidebarMenu className="px-2">{renderLinks(moreLinks)}</SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter>
-        <SidebarMenu>
+      <SidebarFooter className="p-4 border-t border-sidebar-border bg-sidebar/50 backdrop-blur-sm">
+        <SidebarMenu className="space-y-1">
           {isSuperAdmin && (
             <SidebarMenuItem>
-              <SidebarMenuButton asChild>
+              <SidebarMenuButton asChild className="h-11 rounded-xl">
                 <NavLink
                   to="/super-admin"
-                  className="hover:bg-sidebar-accent/50 text-primary"
-                  activeClassName="bg-primary/10 font-medium"
+                  className="hover:bg-primary/5 text-primary"
+                  activeClassName="bg-primary/10 font-bold"
                 >
-                  <Shield className="mr-2 h-4 w-4 shrink-0" />
-                  {!collapsed && <span>Super Admin</span>}
+                  <Shield className="mr-3 h-4.5 w-4.5 shrink-0" />
+                  {!collapsed && <span className="text-sm">Super Admin</span>}
                 </NavLink>
               </SidebarMenuButton>
             </SidebarMenuItem>
           )}
+
+          <div className="h-px bg-sidebar-border my-2 mx-2 opacity-50" />
+
           <SidebarMenuItem>
-            <SidebarMenuButton onClick={toggle} className="hover:bg-sidebar-accent/50">
-              {mode === 'dark' ? <Sun className="mr-2 h-4 w-4" /> : <Moon className="mr-2 h-4 w-4" />}
-              {!collapsed && <span>{mode === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>}
+            <SidebarMenuButton onClick={toggle} className="h-11 rounded-xl hover:bg-sidebar-accent/50 transition-all">
+              <div className="flex items-center w-full">
+                {mode === 'dark' ? <Sun className="mr-3 h-4.5 w-4.5 text-amber-500" /> : <Moon className="mr-3 h-4.5 w-4.5 text-blue-600" />}
+                {!collapsed && <span className="text-sm font-medium">{mode === 'dark' ? 'Modo Claro' : 'Modo Escuro'}</span>}
+              </div>
             </SidebarMenuButton>
           </SidebarMenuItem>
+
           <SidebarMenuItem>
             <SidebarMenuButton
               onClick={async () => { await signOut(); navigate('/login'); }}
-              className="text-destructive hover:bg-destructive/10"
+              className="h-11 rounded-xl text-destructive hover:bg-destructive/10 transition-all font-semibold"
             >
-              <LogOut className="mr-2 h-4 w-4" />
-              {!collapsed && <span>Sair</span>}
+              <LogOut className="mr-3 h-4.5 w-4.5" />
+              {!collapsed && <span className="text-sm">Sair da Conta</span>}
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

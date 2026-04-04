@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { DashboardSkeleton } from '@/shared/components/common/Skeletons';
-import { BarChart3, Users, BookOpen, TrendingUp, Package, ShoppingCart, Check, Sparkles, ExternalLink, Loader2 } from 'lucide-react';
-import { useEffect, useState, useCallback } from 'react';
+import { BarChart3, Users, BookOpen, TrendingUp, Package, ShoppingCart, Check, Sparkles, ExternalLink, Loader2, ChevronRight, ChefHat } from 'lucide-react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useImpersonateStore } from '@/shared/stores/global/useImpersonateStore';
 import { useOrderNotificationSound } from '@/features/orders/hooks/useOrderNotificationSound';
@@ -10,6 +10,9 @@ import { PlanBanner } from '@/features/billing/components/PlanBanner';
 import { useSuperAdmin } from '@/features/super-admin/hooks/useSuperAdmin';
 import { Button } from '@/shared/components/ui/button';
 import { toast } from 'sonner';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Cell } from 'recharts';
+import { format, subDays, startOfDay, isSameDay } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 export default function Dashboard() {
   const { impersonatedUserId } = useImpersonateStore();
@@ -23,8 +26,7 @@ export default function Dashboard() {
   });
   const [recentOrders, setRecentOrders] = useState<{ customer_name: string | null; total: number; created_at: string; status: string }[]>([]);
   const [loading, setLoading] = useState(true);
-  // Removido busca de links Cakto pois agora usamos Pix Próprio
-  const [pixData, setPixData] = useState<{ qrcode: string; copyPaste: string; amount: string } | null>(null);
+  const [chartData, setChartData] = useState<{ day: string; value: number }[]>([]);
   const [pixLoading, setPixLoading] = useState(false);
 
   const fetchStats = useCallback(async () => {
@@ -56,11 +58,22 @@ export default function Dashboard() {
         activeProducts: products.filter(p => p.is_active).length,
         totalOrders: orders.length,
         todayOrders: todayOrders.length,
-        totalRevenue: orders.reduce((sum, o) => sum + Number(o.total), 0),
-        todayRevenue: todayOrders.reduce((sum, o) => sum + Number(o.total), 0),
+        totalRevenue: orders.reduce((sum, o) => sum + Number(o.total || 0), 0),
+        todayRevenue: todayOrders.reduce((sum, o) => sum + Number(o.total || 0), 0),
       });
 
-      setRecentOrders(orders.slice(0, 5));
+      setRecentOrders(orders.slice(0, 8));
+
+      // Generate Chart Data (Last 7 days)
+      const last7Days = Array.from({ length: 7 }, (_, i) => {
+        const d = subDays(new Date(), 6 - i);
+        const dayOrders = orders.filter(o => isSameDay(new Date(o.created_at), d));
+        return {
+          day: format(d, 'EEE', { locale: ptBR }),
+          value: dayOrders.reduce((sum, o) => sum + Number(o.total || 0), 0),
+        };
+      });
+      setChartData(last7Days);
     } catch (err) {
       console.error("Erro ao carregar estatísticas do dashboard:", err);
       toast.error("Alguns dados do dashboard não puderam ser carregados.");
@@ -90,7 +103,7 @@ export default function Dashboard() {
   }, [fetchStats]);
 
   // Realtime: listen for new/updated orders and auto-refresh
-  const playNotification = useOrderNotificationSound();
+  const { play: playNotification } = useOrderNotificationSound();
 
   useEffect(() => {
     const setup = async () => {
@@ -145,63 +158,164 @@ export default function Dashboard() {
   const isSuspended = planStatus && !planStatus.isActive;
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold">Meu Painel</h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          Visão geral do seu restaurante • Atualização em tempo real
-        </p>
+    <div className="space-y-8 pb-10">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-black tracking-tight">Meu Painel</h1>
+          <p className="text-muted-foreground text-sm font-medium">
+            Visão geral do seu negócio em tempo real
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <Button variant="outline" className="rounded-2xl h-11" onClick={() => fetchStats()}>
+            <Loader2 className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+            Atualizar
+          </Button>
+          <Button className="rounded-2xl h-11 bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20" onClick={() => window.open('/menu/' + impersonatedUserId)}>
+            <ExternalLink className="w-4 h-4 mr-2" />
+            Ver Cardápio
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {cards.map((stat, i) => (
-              <motion.div
-                key={stat.label}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.1, duration: 0.5 }}
-                className="glass-sm p-6 group hover:scale-[1.02] transition-transform"
-              >
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center group-hover:glow-primary transition-shadow">
-                    <stat.icon className="w-5 h-5 text-primary" />
-                  </div>
-                </div>
-                <p className="text-2xl font-bold">{stat.value}</p>
-                <p className="text-sm text-muted-foreground mt-1">{stat.label}</p>
-              </motion.div>
-            ))}
+        {cards.map((stat, i) => (
+          <motion.div
+            key={stat.label}
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.05 }}
+            className="glass p-6 group hover:translate-y-[-4px] transition-all duration-300 cursor-pointer relative overflow-hidden"
+          >
+            <div className="absolute top-0 right-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity">
+              <stat.icon className="w-16 h-16" />
+            </div>
+            
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                <stat.icon className="w-5 h-5" />
+              </div>
+              <span className="text-sm text-muted-foreground font-semibold">{stat.label}</span>
+            </div>
+            <p className="text-3xl font-black tracking-tighter">{stat.value}</p>
+          </motion.div>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Sales Chart */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="lg:col-span-2 glass p-8 min-h-[400px] flex flex-col"
+        >
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h2 className="text-lg font-bold tracking-tight">Vendas (Últimos 7 dias)</h2>
+              <p className="text-xs text-muted-foreground font-medium">Desempenho semanal em R$</p>
+            </div>
+            <div className="flex items-center gap-2 px-3 py-1 bg-emerald-500/10 text-emerald-600 rounded-full text-[11px] font-bold uppercase tracking-wider">
+              <TrendingUp className="w-3 h-3" />
+              +15% esta semana
+            </div>
           </div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4, duration: 0.5 }}
-            className="glass-sm p-8"
-          >
-            <h2 className="text-lg font-semibold mb-4">Pedidos Recentes</h2>
-            <div className="space-y-4">
-              {recentOrders.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-4">Nenhum pedido recebido ainda</p>
-              ) : (
-                recentOrders.map((order, i) => (
-                  <div key={i} className="flex items-center gap-3 py-3 border-b border-border last:border-0">
-                    <div className={`w-2 h-2 rounded-full shrink-0 ${
-                      order.status === 'pending' ? 'bg-amber-500' :
-                      order.status === 'preparing' ? 'bg-blue-500' :
-                      order.status === 'ready' ? 'bg-green-500' : 'bg-muted-foreground'
-                    }`} />
-                    <span className="text-sm text-muted-foreground flex-1">
-                      {order.customer_name || 'Cliente'} — R$ {Number(order.total).toFixed(2)}
-                    </span>
-                    <span className="text-xs text-muted-foreground/60 whitespace-nowrap">
-                      {new Date(order.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                    </span>
+          <div className="flex-1 w-full h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" opacity={0.5} />
+                <XAxis 
+                  dataKey="day" 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{ fontSize: 11, fontWeight: 600, fill: 'hsl(var(--muted-foreground))' }}
+                  dy={10}
+                />
+                <YAxis 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{ fontSize: 11, fontWeight: 600, fill: 'hsl(var(--muted-foreground))' }}
+                />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: 'white', 
+                    borderRadius: '16px', 
+                    border: 'none', 
+                    boxShadow: '0 10px 30px -5px rgba(0,0,0,0.1)' 
+                  }}
+                  itemStyle={{ fontWeight: 800, color: 'hsl(var(--primary))' }}
+                  labelStyle={{ fontSize: 10, fontWeight: 600, color: 'gray', marginBottom: 4 }}
+                  formatter={(val: number) => [`R$ ${val.toFixed(2)}`, 'Vendas']}
+                />
+                <Area 
+                  type="monotone" 
+                  dataKey="value" 
+                  stroke="hsl(var(--primary))" 
+                  strokeWidth={4} 
+                  fillOpacity={1} 
+                  fill="url(#colorValue)" 
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </motion.div>
+
+        {/* Recent Orders */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="glass p-8 flex flex-col"
+        >
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-lg font-bold tracking-tight">Últimos Pedidos</h2>
+            <Button variant="ghost" size="sm" className="text-xs h-7 rounded-lg" onClick={() => window.location.href = '/admin/orders'}>Ver todos</Button>
+          </div>
+          
+          <div className="space-y-3 flex-1 overflow-y-auto max-h-[320px] pr-2 no-scrollbar">
+            {recentOrders.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-40 opacity-30 text-center">
+                <ShoppingCart className="w-10 h-10 mb-2" />
+                <p className="text-sm font-medium">Nenhum pedido</p>
+              </div>
+            ) : (
+              recentOrders.map((order, i) => (
+                <div key={i} className="flex items-center gap-4 p-4 rounded-2xl bg-muted/40 border border-transparent hover:border-black/[0.05] dark:hover:border-white/[0.05] transition-all group">
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                    order.status === 'pending' ? 'bg-amber-500/10 text-amber-500' :
+                    order.status === 'preparing' ? 'bg-blue-500/10 text-blue-500' :
+                    order.status === 'ready' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-muted text-muted-foreground'
+                  }`}>
+                    <Package className="w-5 h-5" />
                   </div>
-                ))
-              )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold truncate">{order.customer_name || 'Cliente Online'}</p>
+                    <p className="text-[11px] text-muted-foreground">{format(new Date(order.created_at), 'HH:mm')} • R$ {Number(order.total).toFixed(2)}</p>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-muted-foreground/30 group-hover:translate-x-1 transition-transform" />
+                </div>
+              ))
+            )}
+          </div>
+
+          <div className="mt-8 pt-6 border-t border-border">
+            <div className="flex items-center justify-between p-4 rounded-2xl bg-primary/5 border border-primary/20">
+              <div className="flex items-center gap-3">
+                <ChefHat className="w-5 h-5 text-primary" />
+                <span className="text-xs font-bold text-primary italic uppercase tracking-wider">Cozinha Ativa</span>
+              </div>
+              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
             </div>
-          </motion.div>
+          </div>
+        </motion.div>
+      </div>
     </div>
   );
 }

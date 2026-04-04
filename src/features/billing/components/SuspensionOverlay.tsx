@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Check, ExternalLink, Sparkles } from 'lucide-react';
+import { Check, ExternalLink, Sparkles, Rocket } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 
 interface Plan {
@@ -62,12 +62,15 @@ export function SuspensionOverlay() {
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center py-10 px-4 max-w-7xl mx-auto space-y-8 animate-in fade-in zoom-in duration-500">
-      <div className="text-center space-y-2">
-        <h2 className="text-3xl font-black tracking-tight">Sua conta está suspensa</h2>
-        <p className="text-muted-foreground">Escolha um dos planos abaixo para reativar seu acesso instantaneamente.</p>
+      <div className="text-center space-y-3 max-w-2xl">
+        <div className="w-20 h-20 bg-primary/10 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-pill animate-pulse">
+          <Rocket className="w-10 h-10 text-primary" />
+        </div>
+        <h2 className="text-4xl font-black tracking-tighter text-foreground">Sua jornada continua aqui</h2>
+        <p className="text-muted-foreground font-medium text-sm">Reative seu acesso agora e continue transformando seu restaurante com o Menu Pro.</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-6xl">
         {plans.map((plan, i) => (
           <motion.div
             key={plan.id}
@@ -86,7 +89,7 @@ export function SuspensionOverlay() {
               </div>
             )}
             
-            <div className="mb-6">
+            <div className="mb-6 text-left">
               <div className="flex items-center gap-2">
                 <h3 className="text-xl font-bold">{plan.name}</h3>
                 {plan.icon && <plan.icon className={`w-4 h-4 ${plan.id === 'pro' ? 'text-amber-500 fill-amber-500' : 'text-primary'}`} />}
@@ -98,10 +101,10 @@ export function SuspensionOverlay() {
               </div>
             </div>
 
-            <ul className="space-y-3 mb-8 flex-1">
+            <ul className="space-y-3 mb-8 flex-1 text-left">
               {plan.features.map((feature, idx) => (
                 <li key={idx} className={`text-[13px] flex items-center gap-3 ${idx === 0 ? 'font-bold text-primary italic' : 'font-medium opacity-80'}`}>
-                  <Check className="w-4 h-4 shrink-0" />
+                  <Check className="w-4 h-4 shrink-0 text-primary" />
                   <span>{feature}</span>
                 </li>
               ))}
@@ -110,7 +113,7 @@ export function SuspensionOverlay() {
             <Button
               className={`w-full h-11 gap-2 font-bold text-sm ${
                 plan.highlight 
-                  ? 'bg-primary hover:bg-primary/90 text-white' 
+                  ? 'bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/10' 
                   : plan.id === 'pro' ? 'bg-foreground hover:bg-foreground/90 text-background' : 'variant-outline'
               }`}
               variant={plan.highlight || plan.id === 'pro' ? 'default' : 'outline'}
@@ -125,7 +128,7 @@ export function SuspensionOverlay() {
 
       <div className="text-center space-y-2 opacity-60">
         <p className="text-xs font-semibold text-muted-foreground">
-          Liberação manual via WhatsApp • Pagamento único (sem renovação automática)
+          Ativação via WhatsApp • Suporte imediato para renovação de planos
         </p>
       </div>
     </div>

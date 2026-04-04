@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { ShieldCheck, UserPlus, Trash2, Loader2, BarChart3 } from 'lucide-react';
+import { ShieldCheck, UserPlus, Trash2, Loader2, BarChart3, Package, ShoppingCart } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Button } from '@/shared/components/ui/button';
@@ -29,7 +29,7 @@ export default function SuperAdminSystem() {
   const [adding, setAdding] = useState(false);
 
   useEffect(() => {
-    async function fetch() {
+    async function loadData() {
       const [adminsRes, profilesRes, ordersRes, productsRes] = await Promise.all([
         (supabase as any).from('super_admins').select('*').order('created_at', { ascending: false }),
         supabase.from('profiles').select('user_id, restaurant_name, slug, plan'),
@@ -60,21 +60,13 @@ export default function SuperAdminSystem() {
       setStats(tenantStats);
       setLoading(false);
     }
-    fetch();
+    loadData();
   }, []);
 
   async function addAdmin() {
     const email = newEmail.trim().toLowerCase();
-    if (!email || !email.includes('@')) {
-      toast.error('Informe um e-mail válido');
-      return;
-    }
-    
-    // Check if already in list
-    if (admins.find(a => a.email.toLowerCase() === email)) {
-      toast.error('Este e-mail já é um administrador');
-      return;
-    }
+    if (!email || !email.includes('@')) { toast.error('Informe um e-mail válido'); return; }
+    if (admins.find(a => a.email.toLowerCase() === email)) { toast.error('Este e-mail já é um administrador'); return; }
 
     setAdding(true);
     try {
@@ -83,28 +75,20 @@ export default function SuperAdminSystem() {
         .insert({ email })
         .select()
         .single();
-        
       if (error) throw error;
-      
       toast.success('Super admin adicionado!');
       setAdmins(prev => [data, ...prev]);
       setNewEmail('');
     } catch (error: any) {
       toast.error('Erro ao adicionar: ' + (error.message || 'Erro desconhecido'));
-    } finally {
-      setAdding(false);
-    }
+    } finally { setAdding(false); }
   }
 
   async function removeAdmin(id: string, email: string) {
     if (!confirm(`Remover ${email} como super admin?`)) return;
     const { error } = await (supabase as any).from('super_admins').delete().eq('id', id);
-    if (error) {
-      toast.error('Erro: ' + error.message);
-    } else {
-      setAdmins(prev => prev.filter(a => a.id !== id));
-      toast.success('Removido');
-    }
+    if (error) { toast.error('Erro: ' + error.message); }
+    else { setAdmins(prev => prev.filter(a => a.id !== id)); toast.success('Removido'); }
   }
 
   if (loading) {
@@ -116,19 +100,26 @@ export default function SuperAdminSystem() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
+
+      {/* Header */}
       <div className="flex items-center gap-3">
-        <ShieldCheck className="w-5 h-5 text-primary" />
+        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+          <ShieldCheck className="w-5 h-5 text-primary" />
+        </div>
         <div>
-          <h1 className="text-2xl font-bold">Sistema & Administradores</h1>
-          <p className="text-muted-foreground text-sm">Gerencie super admins e veja estatísticas</p>
+          <h1 className="text-xl sm:text-2xl font-bold">Sistema & Administradores</h1>
+          <p className="text-muted-foreground text-xs sm:text-sm">Gerencie super admins e veja estatísticas</p>
         </div>
       </div>
 
-      {/* Super Admins */}
+      {/* Super Admins Card */}
       <Card className="glass-sm border-border">
-        <CardHeader>
-          <CardTitle className="text-lg">Super Administradores</CardTitle>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+            <ShieldCheck className="w-4 h-4 text-primary" />
+            Super Administradores
+          </CardTitle>
           <CardDescription>Usuários com acesso total ao painel global</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -138,48 +129,61 @@ export default function SuperAdminSystem() {
               value={newEmail}
               onChange={e => setNewEmail(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && addAdmin()}
-              className="flex-1"
+              className="flex-1 h-10"
             />
-            <Button onClick={addAdmin} disabled={adding} size="sm" className="gap-2">
+            <Button onClick={addAdmin} disabled={adding} className="gap-2 h-10 shrink-0">
               {adding ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserPlus className="w-4 h-4" />}
-              Adicionar
+              <span className="hidden sm:inline">Adicionar</span>
             </Button>
           </div>
-          <div className="space-y-2">
-            {admins.map(a => (
-              <div key={a.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
-                <div>
-                  <p className="text-sm font-medium">{a.email}</p>
-                  <p className="text-xs text-muted-foreground">Desde {new Date(a.created_at).toLocaleDateString('pt-BR')}</p>
-                </div>
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => removeAdmin(a.id, a.email)}>
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-              </div>
-            ))}
-          </div>
+
+          {admins.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-4">Nenhum super admin cadastrado</p>
+          ) : (
+            <div className="space-y-2">
+              {admins.map((a, i) => (
+                <motion.div
+                  key={a.id}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.05 }}
+                  className="flex items-center justify-between p-3 rounded-xl bg-muted/30 border border-border/50"
+                >
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium truncate">{a.email}</p>
+                    <p className="text-xs text-muted-foreground">Desde {new Date(a.created_at).toLocaleDateString('pt-BR')}</p>
+                  </div>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10 shrink-0" onClick={() => removeAdmin(a.id, a.email)}>
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </motion.div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
 
       {/* Stats per tenant */}
       <Card className="glass-sm border-border">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <BarChart3 className="w-5 h-5 text-primary" />
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+            <BarChart3 className="w-4 h-4 text-primary" />
             Estatísticas por Lojista
           </CardTitle>
           <CardDescription>Ranking por número de pedidos</CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
+        <CardContent className="p-0">
+
+          {/* Desktop table */}
+          <div className="hidden sm:block overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-border text-muted-foreground text-left">
-                  <th className="pb-3 font-medium">#</th>
-                  <th className="pb-3 font-medium">Lojista</th>
-                  <th className="pb-3 font-medium">Plano</th>
-                  <th className="pb-3 font-medium text-right">Produtos</th>
-                  <th className="pb-3 font-medium text-right">Pedidos</th>
+                <tr className="border-b border-border text-muted-foreground text-left bg-muted/20">
+                  <th className="px-5 py-3 font-semibold">#</th>
+                  <th className="px-5 py-3 font-semibold">Lojista</th>
+                  <th className="px-5 py-3 font-semibold">Plano</th>
+                  <th className="px-5 py-3 font-semibold text-right">Produtos</th>
+                  <th className="px-5 py-3 font-semibold text-right">Pedidos</th>
                 </tr>
               </thead>
               <tbody>
@@ -189,26 +193,58 @@ export default function SuperAdminSystem() {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: i * 0.03 }}
-                    className="border-b border-border/50 last:border-0"
+                    className="border-b border-border/50 last:border-0 hover:bg-muted/10"
                   >
-                    <td className="py-2.5 text-muted-foreground">{i + 1}</td>
-                    <td className="py-2.5">
-                      <p className="font-medium">{s.restaurant_name}</p>
+                    <td className="px-5 py-3 text-muted-foreground font-medium">{i + 1}</td>
+                    <td className="px-5 py-3">
+                      <p className="font-semibold">{s.restaurant_name}</p>
                       <p className="text-xs text-muted-foreground">/menu/{s.slug}</p>
                     </td>
-                    <td className="py-2.5">
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary capitalize">{s.plan}</span>
+                    <td className="px-5 py-3">
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary capitalize font-bold">{s.plan}</span>
                     </td>
-                    <td className="py-2.5 text-right">{s.products_count}</td>
-                    <td className="py-2.5 text-right font-medium">{s.orders_count}</td>
+                    <td className="px-5 py-3 text-right font-medium">{s.products_count}</td>
+                    <td className="px-5 py-3 text-right font-bold text-primary">{s.orders_count}</td>
                   </motion.tr>
                 ))}
               </tbody>
             </table>
           </div>
+
+          {/* Mobile list */}
+          <div className="sm:hidden divide-y divide-border/50">
+            {stats.slice(0, 20).map((s, i) => (
+              <motion.div
+                key={s.slug}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: i * 0.03 }}
+                className="px-4 py-3 flex items-center gap-3"
+              >
+                <span className="text-muted-foreground font-bold w-5 text-sm shrink-0">{i + 1}</span>
+                <div className="min-w-0 flex-1">
+                  <p className="font-semibold text-sm truncate">{s.restaurant_name}</p>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-bold capitalize">{s.plan}</span>
+                </div>
+                <div className="flex items-center gap-3 shrink-0 text-xs">
+                  <div className="flex items-center gap-1 text-muted-foreground">
+                    <Package className="w-3 h-3" />
+                    <span>{s.products_count}</span>
+                  </div>
+                  <div className="flex items-center gap-1 font-bold text-primary">
+                    <ShoppingCart className="w-3 h-3" />
+                    <span>{s.orders_count}</span>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+
+          {stats.length === 0 && (
+            <p className="text-center text-muted-foreground py-8 text-sm">Sem dados disponíveis</p>
+          )}
         </CardContent>
       </Card>
     </div>
   );
 }
-

@@ -78,11 +78,13 @@ export default function SuperAdminLanding() {
       </div>
 
       <Tabs defaultValue="hero">
-        <TabsList className="grid grid-cols-3 w-full">
-          <TabsTrigger value="hero">Hero & CTA</TabsTrigger>
-          <TabsTrigger value="plans">Planos</TabsTrigger>
-          <TabsTrigger value="footer">Rodapé</TabsTrigger>
-        </TabsList>
+        <div className="w-full overflow-x-auto pb-1">
+          <TabsList className="flex w-max min-w-full sm:grid sm:grid-cols-3">
+            <TabsTrigger value="hero" className="flex-1 whitespace-nowrap">Hero & CTA</TabsTrigger>
+            <TabsTrigger value="plans" className="flex-1 whitespace-nowrap">Planos</TabsTrigger>
+            <TabsTrigger value="footer" className="flex-1 whitespace-nowrap">Rodapé</TabsTrigger>
+          </TabsList>
+        </div>
 
         <TabsContent value="hero" className="space-y-4 mt-4">
           <Card className="glass-sm border-border">
@@ -134,7 +136,7 @@ export default function SuperAdminLanding() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <Label>Nome do Plano</Label>
                   <Input value={val('plan_basic_name')} onChange={e => set('plan_basic_name', e.target.value)} />
@@ -159,7 +161,7 @@ export default function SuperAdminLanding() {
               <CardDescription>Este é o plano destacado com badge "Popular"</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <Label>Nome do Plano</Label>
                   <Input value={val('plan_pro_name')} onChange={e => set('plan_pro_name', e.target.value)} />

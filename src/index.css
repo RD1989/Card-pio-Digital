@@ -10,43 +10,43 @@
 
 @layer base {
   :root {
-    --background: 40 30% 97%;
-    --foreground: 220 15% 12%;
-    --card: 0 0% 100%;
-    --card-foreground: 220 15% 12%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 220 15% 12%;
+    --background: 220 10% 94%;
+    --foreground: 220 30% 10%;
+    --card: 0 0% 98%;
+    --card-foreground: 220 30% 10%;
+    --popover: 0 0% 98%;
+    --popover-foreground: 220 30% 10%;
     --primary: 40 95% 52%;
-    --primary-foreground: 220 15% 12%;
-    --secondary: 40 20% 95%;
-    --secondary-foreground: 220 15% 12%;
-    --muted: 40 15% 95%;
-    --muted-foreground: 220 10% 35%;
+    --primary-foreground: 0 0% 0%;
+    --secondary: 220 10% 88%;
+    --secondary-foreground: 220 30% 10%;
+    --muted: 220 10% 88%;
+    --muted-foreground: 220 10% 30%;
     --accent: 40 95% 52%;
-    --accent-foreground: 220 15% 12%;
-    --destructive: 0 84% 60%;
+    --accent-foreground: 0 0% 0%;
+    --destructive: 0 84% 45%;
     --destructive-foreground: 0 0% 100%;
-    --border: 40 12% 89%;
-    --input: 40 12% 89%;
+    --border: 220 10% 80%;
+    --input: 220 10% 80%;
     --ring: 40 95% 52%;
     --radius: 0.75rem;
     --nav-bg: 160 20% 12%;
     --nav-foreground: 0 0% 95%;
     --cta-bg: 160 25% 14%;
     --whatsapp: 142 70% 40%;
-    --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 220 8% 26%;
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 220 30% 15%;
     --sidebar-primary: 40 95% 52%;
-    --sidebar-primary-foreground: 220 15% 12%;
-    --sidebar-accent: 40 15% 95%;
-    --sidebar-accent-foreground: 220 15% 12%;
-    --sidebar-border: 40 12% 91%;
+    --sidebar-primary-foreground: 0 0% 0%;
+    --sidebar-accent: 220 10% 88%;
+    --sidebar-accent-foreground: 220 30% 10%;
+    --sidebar-border: 220 10% 85%;
     --sidebar-ring: 40 95% 52%;
 
-    --glass-bg: 0 0% 100% / 0.12;
-    --glass-border: 0 0% 100% / 0.18;
-    --glass-shadow: 0 20px 50px -12px rgba(0,0,0,0.15);
-    --glass-shadow-lg: 0 30px 60px -15px rgba(0,0,0,0.25);
+    --glass-bg: 220 10% 98% / 0.75;
+    --glass-border: 0 0% 0% / 0.06;
+    --glass-shadow: 0 20px 50px -12px rgba(0,0,0,0.08);
+    --glass-shadow-lg: 0 30px 60px -15px rgba(0,0,0,0.12);
   }
 
   .dark {

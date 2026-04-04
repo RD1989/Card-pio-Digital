@@ -3,11 +3,12 @@ import { AdminSidebar } from '@/shared/components/layout/AdminSidebar';
 import { SidebarProvider, SidebarTrigger } from '@/shared/components/ui/sidebar';
 import { useImpersonateStore } from '@/shared/stores/global/useImpersonateStore';
 import { useSuperAdmin } from '@/features/super-admin/hooks/useSuperAdmin';
-import { X, Eye, Loader2 } from 'lucide-react';
+import { X, Eye, Loader2, Menu } from 'lucide-react';
 import { usePlanStatus } from '@/features/billing/hooks/usePlanStatus';
 import { SuspensionOverlay } from '@/features/billing/components/SuspensionOverlay';
 import { PlanBanner } from '@/features/billing/components/PlanBanner';
 import { Button } from '@/shared/components/ui/button';
+import { motion } from 'framer-motion';
 
 export function AdminLayout() {
   const { impersonatedUserId, impersonatedName, clearImpersonation } = useImpersonateStore();
@@ -49,6 +50,7 @@ export function AdminLayout() {
   }
 
   const isSuspended = planStatus && !planStatus.isActive;
+  // SÓ mostrar overlay se for um lojista logado ou um superadmin impersonando esse lojista
   const showSuspension = isSuspended && (!isSuperAdmin || !!impersonatedUserId);
 
   try {
@@ -63,26 +65,30 @@ export function AdminLayout() {
               <div className="bg-amber-500/10 border-b border-amber-500/30 px-4 py-2 flex items-center justify-between z-40">
                 <div className="flex items-center gap-2 text-sm text-amber-600 dark:text-amber-400">
                   <Eye className="w-4 h-4" />
-                  <span>Visualizando como: <strong>{impersonatedName}</strong></span>
+                  <span>Visualizando como: <strong className="font-bold">{impersonatedName}</strong></span>
                 </div>
                 <button
                   onClick={clearImpersonation}
-                  className="text-amber-600 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-200 p-1 rounded transition-colors"
+                  className="text-amber-600 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-200 p-1 rounded transition-colors flex items-center gap-1 text-xs font-bold uppercase tracking-wider"
                   title="Sair da simulação"
                 >
-                  <X className="w-4 h-4" />
+                  <X className="w-4 h-4" /> Sair
                 </button>
               </div>
             )}
 
             <header className="h-14 flex items-center px-4 border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-30">
-              <SidebarTrigger className="mr-3" />
-              <span className="text-gradient font-bold text-lg md:hidden">Menu Pro</span>
+              <div className="md:hidden mr-3">
+                <SidebarTrigger className="text-muted-foreground hover:text-foreground">
+                  <Menu className="w-5 h-5" />
+                </SidebarTrigger>
+              </div>
+              <span className="text-gradient font-black text-lg md:hidden tracking-tight">Menu Pro</span>
               <div className="flex-1" />
               {planStatus && <PlanBanner status={planStatus} />}
             </header>
             
-            <main className="flex-1 p-4 md:p-8 overflow-y-auto">
+            <main className="flex-1 p-4 md:p-8 overflow-y-auto pb-safe">
               <div className="max-w-[1600px] mx-auto w-full">
                 {showSuspension ? (
                   <SuspensionOverlay />

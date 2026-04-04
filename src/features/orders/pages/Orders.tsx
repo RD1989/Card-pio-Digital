@@ -46,7 +46,8 @@ export default function Orders() {
   const [restaurantName, setRestaurantName] = useState('Restaurante');
   const [printingOrder, setPrintingOrder] = useState<Order | null>(null);
   const printRef = useRef<HTMLDivElement>(null);
-  const playNotification = useOrderNotificationSound();
+  const { play: playNotification, init: initNotification, isReady: isNotificationReady } = useOrderNotificationSound();
+  const [realtimeStatus, setRealtimeStatus] = useState<'connected' | 'connecting' | 'error'>('connecting');
 
   const getUserId = useCallback(async () => {
     if (impersonatedUserId) return impersonatedUserId;
@@ -102,10 +103,17 @@ export default function Orders() {
       const channel = supabase
         .channel('orders-management-rt')
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders', filter: `restaurant_user_id=eq.${userId}` },
-          () => { playNotification(); fetchOrders(); })
+          () => { 
+            playNotification(); 
+            fetchOrders(); 
+            toast.info('🔔 Novo pedido recebido!', { duration: 4000 });
+          })
         .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'orders', filter: `restaurant_user_id=eq.${userId}` },
           () => { fetchOrders(); })
-        .subscribe();
+        .subscribe((status) => {
+          if (status === 'SUBSCRIBED') setRealtimeStatus('connected');
+          else if (status === 'CHANNEL_ERROR') setRealtimeStatus('error');
+        });
       return channel;
     };
     setup().then(ch => { channelRef = ch; });
@@ -159,6 +167,34 @@ export default function Orders() {
       <div>
         <h1 className="text-2xl font-bold">Gestão de Pedidos</h1>
         <p className="text-muted-foreground text-sm mt-1">Acompanhe e gerencie todos os pedidos em tempo real</p>
+      </div>
+
+      {/* Connection & Sound Status */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        {!isNotificationReady && (
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="flex-1 bg-amber-500/10 border border-amber-500/20 p-3 rounded-2xl flex items-center justify-between gap-4"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-amber-500/20 rounded-xl flex items-center justify-center">
+                <ChefHat className="w-5 h-5 text-amber-500 animate-bounce" />
+              </div>
+              <p className="text-sm font-medium text-amber-700 dark:text-amber-400">Notificações por voz silenciadas.</p>
+            </div>
+            <Button size="sm" variant="outline" className="bg-white/50 border-amber-500/30 text-amber-700 h-8" onClick={() => initNotification()}>
+              Ativar Campainha
+            </Button>
+          </motion.div>
+        )}
+        
+        <div className={`px-4 py-2 rounded-2xl border flex items-center gap-2 text-xs font-bold uppercase tracking-wider ${
+          realtimeStatus === 'connected' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600' : 'bg-muted border-border text-muted-foreground'
+        }`}>
+          <div className={`w-2 h-2 rounded-full ${realtimeStatus === 'connected' ? 'bg-emerald-500 animate-pulse' : 'bg-gray-400'}`} />
+          {realtimeStatus === 'connected' ? 'Realtime Ativo' : 'Conectando...'}
+        </div>
       </div>
 
       {/* Filters */}

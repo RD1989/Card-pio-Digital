@@ -204,15 +204,29 @@ export default function Products() {
       const { data, error } = await supabase.functions.invoke('generate-description', {
         body: { productName: productName.trim() },
       });
-      if (error) throw error;
+      
+      if (error) {
+        let erroMsg = error.message || 'Erro de comunicação de IA';
+        try {
+          if (error.context) {
+            const resp = await error.context.json();
+            if (resp && resp.error) erroMsg = resp.error;
+          }
+        } catch(e) {}
+        throw new Error(erroMsg);
+      }
+      
+      if (data?.error) throw new Error(data.error);
+
       if (data?.description) {
         setProductDesc(data.description);
         toast.success('Descrição gerada com IA!');
       }
-    } catch {
-      toast.error('Erro ao gerar descrição');
+    } catch (e: any) {
+      toast.error(e.message || 'Erro ao gerar descrição');
+    } finally {
+      setGeneratingAI(false);
     }
-    setGeneratingAI(false);
   }
 
   const filteredProducts = selectedCategory
@@ -393,7 +407,7 @@ export default function Products() {
               </div>
               <Textarea value={productDesc} onChange={e => setProductDesc(e.target.value)} placeholder="Descrição do produto..." rows={3} />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label>Preço (R$)</Label>
                 <Input type="number" step="0.01" value={productPrice} onChange={e => setProductPrice(e.target.value)} placeholder="0.00" />
