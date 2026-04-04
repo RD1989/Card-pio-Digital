@@ -392,9 +392,14 @@ export default function Landing() {
                   </div>
                 ))}
               </div>
-              <Link to="/register" className="mt-7 block w-full text-center py-3 rounded-xl bg-primary text-primary-foreground font-bold text-sm hover:opacity-90 transition-all glow-primary">
+              <a 
+                href={`https://wa.me/22996051620?text=${encodeURIComponent("Olá! Quero assinar o plano Pro e ter meu próprio sistema de delivery.")}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-7 block w-full text-center py-3 rounded-xl bg-primary text-primary-foreground font-bold text-sm hover:opacity-90 transition-all glow-primary"
+              >
                 ASSINAR PLANO PRO →
-              </Link>
+              </a>
             </motion.div>
           </div>
           <p className="text-center text-[11px] text-muted-foreground mt-5">💳 Pagamento via Pix · Sem compromisso · Cancele quando quiser</p>
