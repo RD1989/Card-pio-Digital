@@ -201,11 +201,14 @@ export default function Products() {
     if (!productName.trim()) { toast.error('Digite o nome do produto primeiro'); return; }
     setGeneratingAI(true);
     try {
+      console.log(`[AI Debug] Gerando descrição para: ${productName.trim()}`);
+      
       const { data, error } = await supabase.functions.invoke('generate-description', {
         body: { productName: productName.trim() },
       });
       
       if (error) {
+        console.error('[AI Error] Invoke error:', error);
         let erroMsg = error.message || 'Erro de comunicação de IA';
         try {
           if (error.context) {
@@ -216,13 +219,19 @@ export default function Products() {
         throw new Error(erroMsg);
       }
       
-      if (data?.error) throw new Error(data.error);
+      if (data?.error) {
+        console.error('[AI Error] Data error:', data.error);
+        throw new Error(data.error);
+      }
 
       if (data?.description) {
         setProductDesc(data.description);
         toast.success('Descrição gerada com IA!');
+      } else {
+        throw new Error('A IA não retornou uma descrição válida.');
       }
     } catch (e: any) {
+      console.error('[AI Exception]:', e);
       toast.error(e.message || 'Erro ao gerar descrição');
     } finally {
       setGeneratingAI(false);
