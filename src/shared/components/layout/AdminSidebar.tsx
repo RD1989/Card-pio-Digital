@@ -69,7 +69,7 @@ export function AdminSidebar() {
   const isSuspended = planStatus && !planStatus.isActive;
 
   const { isReady, realtimeStatus } = useBuzzerStore();
-  const { init: initBuzzer } = useOrderNotificationSound();
+  const { init: initBuzzer, stop: stopBuzzer } = useOrderNotificationSound();
 
   const renderLinks = (links: { title: string; url: string; icon: any }[]) =>
     links.map((item) => {
@@ -173,10 +173,13 @@ export function AdminSidebar() {
                   Ativar Campainha
                 </button>
               ) : (
-                <div className="flex items-center justify-center gap-2 py-1 text-emerald-600">
+                <button 
+                  onClick={() => stopBuzzer()}
+                  className="w-full h-8 flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-tighter bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 border border-emerald-500/20 rounded-xl transition-all"
+                >
                   <Sparkles className="w-3 h-3" />
-                  <span className="text-[10px] font-black uppercase tracking-widest">Campainha Ativa</span>
-                </div>
+                  Desativar Campainha
+                </button>
               )}
             </div>
           </SidebarMenuItem>

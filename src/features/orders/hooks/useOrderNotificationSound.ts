@@ -38,8 +38,20 @@ export function useOrderNotificationSound() {
     }
   }, [setIsReady]);
 
+  const stop = useCallback(() => {
+    try {
+      if (audioCtxRef.current && audioCtxRef.current.state !== 'closed') {
+        audioCtxRef.current.suspend();
+      }
+      setIsReady(false);
+    } catch (e) {
+      console.error('AudioContext stop error:', e);
+    }
+  }, [setIsReady]);
+
   const play = useCallback(() => {
     try {
+      if (!useBuzzerStore.getState().isReady) return; // Não toca se a campainha estiver desativada
       if (!audioCtxRef.current) return;
       const ctx = audioCtxRef.current;
       if (ctx.state === 'suspended') ctx.resume();
@@ -87,5 +99,5 @@ export function useOrderNotificationSound() {
     }
   }, []);
 
-  return { play, init, isReady };
+  return { play, init, stop, isReady };
 }

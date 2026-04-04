@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Package, Clock, ChefHat, CheckCircle2, Loader2, Search, Filter, ExternalLink, Printer } from 'lucide-react';
+import { Package, Clock, ChefHat, CheckCircle2, Loader2, Search, Filter, ExternalLink, Printer, Bell, BellOff, Sparkles } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useImpersonateStore } from '@/shared/stores/global/useImpersonateStore';
 import { useOrderNotificationSound } from '@/features/orders/hooks/useOrderNotificationSound';
@@ -46,7 +46,7 @@ export default function Orders() {
   const [restaurantName, setRestaurantName] = useState('Restaurante');
   const [printingOrder, setPrintingOrder] = useState<Order | null>(null);
   const printRef = useRef<HTMLDivElement>(null);
-  const { play: playNotification, init: initNotification, isReady: isNotificationReady } = useOrderNotificationSound();
+  const { play: playNotification, init: initNotification, stop: stopNotification, isReady: isNotificationReady } = useOrderNotificationSound();
   const [realtimeStatus, setRealtimeStatus] = useState<'connected' | 'connecting' | 'error'>('connecting');
 
   const getUserId = useCallback(async () => {
@@ -159,13 +159,26 @@ export default function Orders() {
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Gestão de Pedidos</h1>
-        <p className="text-muted-foreground text-sm mt-1">Acompanhe e gerencie todos os pedidos em tempo real</p>
+    <div className="space-y-6 animate-in fade-in zoom-in duration-500">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold">Gestão de Pedidos</h1>
+          <p className="text-muted-foreground text-sm mt-1">Acompanhe e gerencie todos os pedidos em tempo real</p>
+        </div>
+        
+        {/* Toggle da Campainha */}
+        <Button
+          variant={isNotificationReady ? "default" : "outline"}
+          className={`gap-2 h-10 px-4 rounded-xl shadow-lg transition-all duration-300 ${isNotificationReady ? 'bg-emerald-500 hover:bg-emerald-600 border-none shadow-emerald-500/20' : 'border-amber-500/30 text-amber-600 bg-amber-500/5 hover:bg-amber-500/10'}`}
+          onClick={() => isNotificationReady ? stopNotification() : initNotification()}
+        >
+          {isNotificationReady ? (
+            <><Sparkles className="w-4 h-4" /> Campainha Ativa (Desligar)</>
+          ) : (
+            <><BellOff className="w-4 h-4 animate-pulse" /> Campainha Desligada (Ativar)</>
+          )}
+        </Button>
       </div>
-
-
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
