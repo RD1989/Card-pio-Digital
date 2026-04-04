@@ -42,6 +42,7 @@ export default function SuperAdminLanding() {
   const set = (key: string, v: string) => setValues(prev => ({ ...prev, [`landing_${key}`]: v }));
 
   async function handleSave() {
+    setSaving(true);
     try {
       for (const fullKey of LANDING_KEYS) {
         const v = values[fullKey] ?? '';
@@ -54,6 +55,29 @@ export default function SuperAdminLanding() {
       window.dispatchEvent(new CustomEvent('theme-updated'));
     } catch (error: any) {
       toast.error('Erro ao salvar: ' + error.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleReset() {
+    if (!confirm('Deseja realmente restaurar todos os textos originais? Isso apagará suas personalizações.')) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from('global_settings' as any)
+        .delete()
+        .in('key', LANDING_KEYS);
+      if (error) throw error;
+      
+      toast.success('Padrões restaurados com sucesso!');
+      window.dispatchEvent(new CustomEvent('theme-updated'));
+      
+      const map: Record<string, string> = {};
+      LANDING_KEYS.forEach(k => { map[k] = ''; });
+      setValues(map);
+    } catch (error: any) {
+      toast.error('Erro ao restaurar: ' + error.message);
     } finally {
       setSaving(false);
     }
@@ -249,10 +273,15 @@ export default function SuperAdminLanding() {
         </TabsContent>
       </Tabs>
 
-      <Button onClick={handleSave} disabled={saving} className="gap-2 w-full sm:w-auto">
-        {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-        Salvar Alterações
-      </Button>
+      <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-border mt-8">
+        <Button onClick={handleSave} disabled={saving} className="gap-2 flex-1 sm:flex-none order-1 sm:order-2">
+          {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+          Salvar Alterações
+        </Button>
+        <Button onClick={handleReset} disabled={saving} variant="outline" className="gap-2 flex-1 sm:flex-none border-destructive/30 hover:bg-destructive/10 hover:text-destructive order-2 sm:order-1 lg:ml-auto">
+          Restaurar Padrões Originais
+        </Button>
+      </div>
     </div>
   );
 }

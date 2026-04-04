@@ -56,7 +56,7 @@ export default function Landing() {
   const faqs = defaultFaqs;
 
   // Parse dynamic values with fallbacks and safe checks
-  const getSafeString = (val: any, fallback: string) => typeof val === 'string' ? val : fallback;
+  const getSafeString = (val: any, fallback: string) => (typeof val === 'string' && val.trim().length > 0) ? val : fallback;
 
   const heroTitle = getSafeString(settings.hero_title, 'Seu Cardápio Digital Profissional, Simples e Poderoso');
   const heroSubtitle = getSafeString(settings.hero_subtitle, 'Teste grátis por 30 dias. Receba pedidos no WhatsApp, gere etiquetas com QR Code e aumente suas vendas com um cardápio que impressiona.');
@@ -116,12 +116,13 @@ export default function Landing() {
               >
                 CRIAR CONTA GRÁTIS
               </Link>
-              <Link
-                to="/demo-restaurant"
-                className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl border-2 border-border text-foreground font-semibold text-sm hover:bg-muted transition-all"
+              <Button
+                onClick={scrollToFeatures}
+                variant="outline"
+                className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl border-2 border-border text-foreground font-semibold text-sm hover:bg-muted transition-all h-auto"
               >
                 VER RECURSOS
-              </Link>
+              </Button>
             </div>
             <p className="mt-3 text-[11px] text-muted-foreground">💳 Sem cartão de crédito · ⚙️ Setup em 2 min</p>
           </motion.div>

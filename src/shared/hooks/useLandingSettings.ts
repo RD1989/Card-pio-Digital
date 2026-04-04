@@ -60,8 +60,9 @@ export function useLandingSettings() {
           const rawKey = row.key.replace('landing_', '');
           if (rawKey in DEFAULTS) {
             const key = rawKey as keyof LandingSettings;
-            if (row.value !== null && row.value !== undefined) {
-              merged[key] = String(row.value);
+            const value = row.value !== null && row.value !== undefined ? String(row.value).trim() : '';
+            if (value) {
+              merged[key] = value;
             }
           }
         });
