@@ -54,8 +54,19 @@ export default function Products() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { setLoading(false); return; }
 
-    const userId = impersonatedUserId || user.id;
-    console.log(`[Fetch] Buscando dados para: ${userId} (Sessão: ${user.id})`);
+    let userId = user.id;
+
+    // Apenas Super Admins podem usar IDs de terceiros
+    if (impersonatedUserId && impersonatedUserId !== user.id) {
+      const { data: isSuperAdmin } = await supabase.rpc('is_super_admin', { _user_id: user.id });
+      if (isSuperAdmin) {
+        userId = impersonatedUserId;
+      } else {
+        console.warn(`[Products Debug] Ignorando ID personificado ${impersonatedUserId}. Você não é Super Admin.`);
+      }
+    }
+
+    console.log(`[Fetch Debug] Carregando para: ${userId} | Usuário logado: ${user.id}`);
 
     const [catRes, prodRes] = await Promise.all([
       supabase.from('categories').select('*').eq('user_id', userId!).order('sort_order'),
@@ -72,7 +83,11 @@ export default function Products() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    const userId = impersonatedUserId || user.id;
+    let userId = user.id;
+    if (impersonatedUserId && impersonatedUserId !== user.id) {
+      const { data: isSuperAdmin } = await supabase.rpc('is_super_admin', { _user_id: user.id });
+      if (isSuperAdmin) userId = impersonatedUserId;
+    }
 
     const { error } = await supabase.from('categories').insert({
       name: categoryName.trim(),
@@ -149,7 +164,15 @@ export default function Products() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { setSaving(false); return; }
 
-    const userId = impersonatedUserId || user.id;
+    let userId = user.id;
+    if (impersonatedUserId && impersonatedUserId !== user.id) {
+      const { data: isSuperAdmin } = await supabase.rpc('is_super_admin', { _user_id: user.id });
+      if (isSuperAdmin) {
+        userId = impersonatedUserId;
+      } else {
+        console.warn(`[Save Debug] Redirecionando para gravar no próprio ID (${user.id}) para evitar RLS.`);
+      }
+    }
 
     const imageUrl = await handleUploadImage();
 

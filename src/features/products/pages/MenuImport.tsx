@@ -155,7 +155,7 @@ Retorne APENAS um JSON válido:
 
     setImporting(true);
     try {
-      // Pegamos o usuário real da sessão
+      // 1. Obter o usuário da sessão real
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         toast.error('Sessão expirada. Faça login novamente.');
@@ -163,15 +163,26 @@ Retorne APENAS um JSON válido:
         return; 
       }
 
-      // Se houver personificação e o usuário for admin, usamos o personificado.
-      // Caso contrário, usamos o user.id real para evitar erro de RLS 403.
+      // 2. Diagnosticar RLS / Personificação
       let userId = user.id;
+      
+      // Se houver tentativa de personificação, verificamos se o usuário é Super Admin
       if (impersonatedUserId && impersonatedUserId !== user.id) {
-        console.warn(`Personificação detectada: Usando ${impersonatedUserId} em vez de ${user.id}`);
-        userId = impersonatedUserId;
+        const { data: isSuperAdmin } = await supabase.rpc('is_super_admin', { _user_id: user.id });
+        
+        if (isSuperAdmin) {
+          console.warn(`[Admin] Personificação ativa para: ${impersonatedUserId}`);
+          userId = impersonatedUserId;
+        } else {
+          console.error(`[RLS Safety] Tentativa de usar ID ${impersonatedUserId} bloqueada. Você não é Super Admin.`);
+          toast.warning('Conflito de sessão detectado. Usando seu ID original para gravar.', {
+            description: 'Seus produtos serão salvos na sua própria conta.'
+          });
+          userId = user.id;
+        }
       }
 
-      console.log(`[Import] Iniciando para Usuário: ${userId} (Sessão: ${user.id})`);
+      console.log(`[Import Debug] Gravando para: ${userId} | Sessão: ${user.id}`);
 
       // 1. Get or create categories
       const categoryNames = [...new Set(selected.map(p => p.category))];
