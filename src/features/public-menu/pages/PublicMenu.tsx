@@ -418,25 +418,25 @@ export default function PublicMenu() {
           <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-transparent" />
           
           {/* Header Top Items - Aligned to Content Container */}
-          <div className="absolute top-8 left-0 right-0 z-20">
+          <div className="absolute top-6 left-0 right-0 z-20">
             <div className="max-w-[1600px] w-full mx-auto px-6 sm:px-12 flex items-center justify-between">
-              <div className="glass-sm px-5 py-2.5 flex items-center gap-3 text-white border-white/10 shadow-xl">
-                <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
-                  <MapPin className="w-4 h-4 text-primary" />
+              <div className="glass-sm px-4 py-2 flex items-center gap-2.5 text-white border-white/10 shadow-xl">
+                <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+                  <MapPin className="w-3.5 h-3.5 text-primary" />
                 </div>
-                <div className="text-[11px] leading-tight font-semibold">
-                  <p className="opacity-70 uppercase tracking-widest text-[9px]">Entregando agora em:</p>
-                  <p className="font-bold text-sm">Pinhais, PR</p>
+                <div className="text-[10px] leading-tight font-semibold">
+                  <p className="opacity-70 uppercase tracking-widest text-[8px]">Entregando em:</p>
+                  <p className="font-bold text-xs truncate max-w-[120px] sm:max-w-none">Pinhais, PR</p>
                 </div>
               </div>
               
               {isOpen !== null && (
-                <div className={`px-5 py-2.5 rounded-2xl text-[11px] font-black uppercase tracking-widest backdrop-blur-md ring-1 shadow-xl transition-all ${
+                <div className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest backdrop-blur-md ring-1 shadow-xl transition-all ${
                   isOpen ? 'bg-emerald-500/20 text-emerald-400 ring-emerald-500/30' : 'bg-rose-500/20 text-rose-400 ring-rose-500/30'
                 }`}>
-                  <div className="flex items-center gap-2">
-                    <div className={`w-2 h-2 rounded-full ${isOpen ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
-                    <span>{isOpen ? 'Aberto Agora' : 'Fechado'}</span>
+                  <div className="flex items-center gap-1.5">
+                    <div className={`w-1.5 h-1.5 rounded-full ${isOpen ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
+                    <span>{isOpen ? 'Aberto' : 'Fechado'}</span>
                   </div>
                 </div>
               )}
@@ -444,12 +444,12 @@ export default function PublicMenu() {
           </div>
 
           {/* Logo and Restaurant Info - Aligned to Content */}
-          <div className="absolute -bottom-12 left-0 right-0 z-30">
-            <div className="max-w-[1600px] w-full mx-auto px-6 sm:px-12 flex items-end gap-8">
+          <div className="absolute -bottom-8 left-0 right-0 z-30">
+            <div className="max-w-[1600px] w-full mx-auto px-6 sm:px-12 flex items-end gap-6">
               <motion.div 
-                whileHover={{ scale: 1.05, rotate: -2 }}
+                whileHover={{ scale: 1.05, rotate: -1 }}
                 transition={{ type: "spring", stiffness: 300 }}
-                className="w-32 h-32 sm:w-44 sm:h-44 rounded-[40px] border-[8px] border-[#f8fafc] dark:border-background bg-white shadow-2xl overflow-hidden shrink-0 relative"
+                className="w-28 h-28 sm:w-36 sm:h-36 rounded-[32px] border-[6px] border-[#f8fafc] dark:border-background bg-white shadow-2xl overflow-hidden shrink-0 relative"
               >
                 {profile.logo_url ? (
                   <img src={profile.logo_url} alt={profile.restaurant_name} className="w-full h-full object-cover" />
@@ -490,15 +490,21 @@ export default function PublicMenu() {
         </div>
       </motion.header>
 
-      <div className="max-w-[1600px] w-full mx-auto px-6 mt-20 sm:mt-24 space-y-12">
+      <div className="max-w-[1600px] w-full mx-auto px-6 mt-16 sm:mt-20 space-y-12">
         <div className="lg:hidden text-center space-y-4">
-            <h1 className="font-display italic text-4xl font-black tracking-tight leading-none">{profile.restaurant_name}</h1>
-            <div className="flex items-center justify-center gap-4 text-[10px] font-black uppercase tracking-widest opacity-60">
-              <span className="flex items-center gap-1"><Star className="w-3 h-3 fill-primary text-primary" /> 4.9</span>
-              <span>•</span>
-              <span>30-45 min</span>
-              <span>•</span>
-              <span className="text-emerald-500">Frete Grátis</span>
+            <h1 className="font-display italic text-4xl font-black tracking-tight leading-none text-foreground">{profile.restaurant_name}</h1>
+            <div className="flex items-center justify-center gap-3">
+              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white dark:bg-card rounded-xl shadow-sm border border-border/5 text-[10px] font-black uppercase tracking-tight">
+                <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
+                <span>4.9</span>
+              </div>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white dark:bg-card rounded-xl shadow-sm border border-border/5 text-[10px] font-black uppercase tracking-tight">
+                <Clock className="w-3 h-3 text-primary" />
+                <span>30-45 min</span>
+              </div>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 text-emerald-600 rounded-xl shadow-sm border border-emerald-500/10 text-[10px] font-black uppercase tracking-tight">
+                <span>Frete Grátis</span>
+              </div>
             </div>
         </div>
 
@@ -664,10 +670,10 @@ function CategoryButton({ label, icon: Icon, active, onClick, color }: { label: 
   return (
     <button
       onClick={onClick}
-      className={`flex flex-col items-center gap-2 group min-w-[80px] shrink-0 transition-all ${active ? 'scale-110' : 'hover:scale-105'}`}
+      className={`flex flex-col items-center gap-2 group min-w-[70px] shrink-0 transition-all ${active ? 'scale-110' : 'hover:scale-105'}`}
     >
-      <div className={`w-16 h-16 rounded-[24px] flex items-center justify-center transition-all bg-white dark:bg-card shadow-sm border-2 ${active ? 'border-primary ring-4 ring-primary/10' : 'border-transparent'}`}>
-        <Icon className="w-7 h-7" style={{ color: active ? 'var(--accent-color)' : color }} />
+      <div className={`w-14 h-14 rounded-[20px] flex items-center justify-center transition-all bg-white dark:bg-card shadow-sm border-2 ${active ? 'border-primary ring-4 ring-primary/10' : 'border-transparent'}`}>
+        <Icon className="w-6 h-6" style={{ color: active ? 'var(--accent-color)' : color }} />
       </div>
       <span className={`text-[10px] font-black uppercase tracking-widest text-center ${active ? 'text-primary' : 'text-muted-foreground opacity-60'}`}>{label}</span>
     </button>
