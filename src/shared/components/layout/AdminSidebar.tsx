@@ -21,16 +21,31 @@ import {
   useSidebar,
 } from '@/shared/components/ui/sidebar';
 
-const mainLinks = [
-  { title: 'Meu Painel', url: '/admin', icon: LayoutDashboard },
-  { title: 'Pedidos', url: '/admin/orders', icon: ShoppingCart },
-  { title: 'Produtos', url: '/admin/products', icon: Package },
-  { title: 'Importar Cardápio', url: '/admin/menu-import', icon: Sparkles },
-  { title: 'Cupons', url: '/admin/coupons', icon: Tag },
-  { title: 'Entregas', url: '/admin/delivery', icon: Truck },
-  { title: 'Horários', url: '/admin/hours', icon: Clock },
-  { title: 'Identidade', url: '/admin/branding', icon: Palette },
-  { title: 'Link na Bio', url: '/admin/links', icon: Link },
+const menuGroups = [
+  {
+    label: "Operação e Vendas",
+    links: [
+      { title: 'Início / Dashboard', url: '/admin', icon: LayoutDashboard },
+      { title: 'Gerenciar Pedidos', url: '/admin/orders', icon: ShoppingCart },
+    ]
+  },
+  {
+    label: "Gestão do Cardápio",
+    links: [
+      { title: 'Produtos e Preços', url: '/admin/products', icon: Package },
+      { title: 'Organizar / Importar', url: '/admin/menu-import', icon: Sparkles },
+      { title: 'Estilo do Cardápio', url: '/admin/branding', icon: Palette },
+    ]
+  },
+  {
+    label: "Configurações da Loja",
+    links: [
+      { title: 'Horários de Abrir', url: '/admin/hours', icon: Clock },
+      { title: 'Entrega e Taxas', url: '/admin/delivery', icon: Truck },
+      { title: 'Cupons de Desconto', url: '/admin/coupons', icon: Tag },
+      { title: 'Bio e Redes Sociais', url: '/admin/links', icon: Link },
+    ]
+  }
 ];
 
 const moreLinks = [
@@ -50,10 +65,8 @@ export function AdminSidebar() {
   const { status: planStatus } = usePlanStatus();
   const isSuspended = planStatus && !planStatus.isActive;
 
-  const renderLinks = (links: typeof mainLinks) =>
+  const renderLinks = (links: { title: string; url: string; icon: any }[]) =>
     links.map((item) => {
-      // Se estiver suspenso, bloqueia tudo exceto o dashboard principal 
-      // e permite que o Super Admin bypass apenas em sua própria sessão (sem impersonation)
       const isDisabled = isSuspended && item.url !== '/admin' && (!isSuperAdmin || !!impersonatedUserId);
       
       return (
@@ -81,19 +94,23 @@ export function AdminSidebar() {
   return (
     <Sidebar collapsible="icon">
       <div className="h-14 flex items-center px-4 border-b border-sidebar-border">
-        <img src={logo} alt="Menu Pro" className={collapsed ? 'h-14 w-auto mx-auto' : 'h-16 w-auto'} />
+        <img src={logo} alt="Menu Pro" className={collapsed ? 'h-10 w-auto mx-auto' : 'h-12 w-auto'} />
       </div>
 
       <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>Principal</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>{renderLinks(mainLinks)}</SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {menuGroups.map((group) => (
+          <SidebarGroup key={group.label}>
+            <SidebarGroupLabel className="text-[10px] uppercase tracking-widest font-black opacity-50 px-4">
+              {group.label}
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>{renderLinks(group.links)}</SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        ))}
 
         <SidebarGroup>
-          <SidebarGroupLabel>Gestão</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-[10px] uppercase tracking-widest font-black opacity-50 px-4">Análise</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>{renderLinks(moreLinks)}</SidebarMenu>
           </SidebarGroupContent>

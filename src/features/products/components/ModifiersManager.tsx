@@ -134,10 +134,10 @@ export function ModifiersManager({ productId, userId, open, onOpenChange }: Prop
       <DialogContent className="sm:max-w-lg glass-sm border-border max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Settings2 className="w-5 h-5 text-primary" /> Complementos / Adicionais
+            <Settings2 className="w-5 h-5 text-primary" /> Opções e Complementos
           </DialogTitle>
-          <DialogDescription className="sr-only">
-            Gerencie os grupos de complementos e opções para este produto.
+          <DialogDescription className="text-xs text-muted-foreground">
+            Configure os grupos de adicionais e variações para este item do seu cardápio.
           </DialogDescription>
         </DialogHeader>
 

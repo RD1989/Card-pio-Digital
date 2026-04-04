@@ -94,29 +94,24 @@ export function PlanBanner({ status }: Props) {
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-4xl mx-auto rounded-2xl border border-primary/20 bg-primary/5 p-4 flex items-center gap-4 backdrop-blur-sm shadow-sm"
+        className="rounded-xl border border-primary/20 bg-primary/5 p-2 md:p-3 flex items-center gap-2 md:gap-4 backdrop-blur-sm shadow-sm"
       >
-        <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center gradient-border shadow-inner">
-          <Clock className="w-6 h-6 text-primary" />
+        <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+          <Clock className="w-4 h-4 md:w-5 md:h-5 text-primary" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-bold tracking-tight">
-            Trial Gratuito — {daysRemaining} {daysRemaining === 1 ? 'dia' : 'dias'} restantes
+          <p className="text-[10px] md:text-xs font-bold tracking-tight truncate">
+            {daysRemaining} {daysRemaining === 1 ? 'dia' : 'dias'} restantes
           </p>
-          <p className="text-xs text-muted-foreground line-clamp-1">
-            Plano {plan === 'pro' ? 'Pro' : 'Básico'} • Pedidos e recursos ilimitados
+          <p className="hidden md:block text-[10px] text-muted-foreground line-clamp-1">
+            Plano {plan === 'pro' ? 'Pro' : 'Básico'} • Trial
           </p>
         </div>
-        <div className="px-3 py-1 bg-primary text-primary-foreground text-[10px] font-black italic rounded-md shadow-lg shadow-primary/20">
-          TESTE GRÁTIS
+        <div className="hidden xs:block px-2 py-0.5 bg-primary text-primary-foreground text-[8px] font-black italic rounded shadow-sm shrink-0">
+          TRIAL
         </div>
       </motion.div>
     );
-  }
-
-  // State: Suspended / Pending payment
-  if (isTrialExpired) {
-    return null; // O Dashboard já mostra os cards de redirecionamento para WhatsApp
   }
 
   // Active state UI
@@ -124,20 +119,20 @@ export function PlanBanner({ status }: Props) {
     <motion.div
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="w-full max-w-4xl mx-auto rounded-2xl border border-primary/20 bg-gradient-to-r from-primary/5 to-background p-4 flex items-center gap-4 backdrop-blur-sm shadow-sm"
+      className="rounded-xl border border-primary/20 bg-gradient-to-r from-primary/5 to-background p-2 md:p-3 flex items-center gap-2 md:gap-4 backdrop-blur-sm shadow-sm"
     >
-      <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center gradient-border shadow-inner">
-        {plan === 'pro' ? <Crown className="w-6 h-6 text-primary" /> : <Zap className="w-6 h-6 text-primary" />}
+      <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+        {plan === 'pro' ? <Crown className="w-4 h-4 md:w-5 md:h-5 text-primary" /> : <Zap className="w-4 h-4 md:w-5 md:h-5 text-primary" />}
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-bold tracking-tight">
-          Sua conta está Ativa — Plano {plan === 'pro' ? 'Pro' : 'Básico'}
+        <p className="text-[10px] md:text-xs font-bold tracking-tight truncate">
+          Plano {plan === 'pro' ? 'Pro' : 'Básico'}
         </p>
-        <p className="text-xs text-muted-foreground line-clamp-1">
-          Pedidos e recursos ilimitados liberados
+        <p className="hidden md:block text-[10px] text-muted-foreground line-clamp-1">
+          Acesso Total Liberado
         </p>
       </div>
-      <div className="px-3 py-1 bg-green-500 text-white text-[10px] font-black italic rounded-md shadow-lg shadow-green-500/20 uppercase">
+      <div className="hidden xs:block px-2 py-0.5 bg-green-500 text-white text-[8px] font-black italic rounded shadow-sm shrink-0 uppercase">
         ATIVO
       </div>
     </motion.div>
