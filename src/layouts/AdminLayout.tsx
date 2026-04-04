@@ -7,11 +7,16 @@ import { X, Eye, Loader2 } from 'lucide-react';
 import { usePlanStatus } from '@/features/billing/hooks/usePlanStatus';
 import { SuspensionOverlay } from '@/features/billing/components/SuspensionOverlay';
 import { PlanBanner } from '@/features/billing/components/PlanBanner';
+import { Button } from '@/shared/components/ui/button';
 
 export function AdminLayout() {
+  try {
   const { impersonatedUserId, impersonatedName, clearImpersonation } = useImpersonateStore();
   const { isSuperAdmin, loading: adminLoading } = useSuperAdmin();
   const { status: planStatus, loading: planLoading } = usePlanStatus();
+
+  // Log técnico imediato no console
+  console.log('🖥️ RENDER AdminLayout:', { isSuperAdmin, impersonatedUserId, adminLoading, planLoading });
 
   if (adminLoading || planLoading) {
     return (
@@ -36,25 +41,37 @@ export function AdminLayout() {
           >
             Demorando muito? Clique para recarregar
           </button>
+
+          {/* Dados de diagnóstico em caso de lentidão */}
+          <div className="mt-8 p-3 rounded bg-muted/50 border border-border text-[10px] font-mono text-left opacity-30">
+            ADMIN: {adminLoading ? 'PENDENTE' : (isSuperAdmin ? 'SUPER' : 'LOJISTA')}<br/>
+            PLAN: {planLoading ? 'BUSCANDO' : (planStatus ? 'OK' : 'FALHOU')}<br/>
+            MOCK: {impersonatedUserId || 'NENHUM'}
+          </div>
         </div>
       </div>
     );
   }
 
-  if (isSuperAdmin && !impersonatedUserId) {
+  // REDIRECIONAMENTO DE SEGURANÇA
+  // Se for super-admin mas não estiver simulando e cair no /admin, vai para /super-admin
+  if (isSuperAdmin && !impersonatedUserId && window.location.pathname === '/admin') {
     return <Navigate to="/super-admin" replace />;
   }
 
   const isSuspended = planStatus && !planStatus.isActive;
-  // O bloqueio é mostrado se a conta estiver suspensa, 
-  // EXCETO para o Super Admin em sua própria sessão.
-  // Se o Super Admin estiver "Acessando" (impersonating) um lojista suspenso, 
-  // ele verá o bloqueio para confirmar que a lógica funciona.
   const showSuspension = isSuspended && (!isSuperAdmin || !!impersonatedUserId);
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-background">
+      <div className="min-h-screen flex w-full bg-background relative">
+        {/* DIAGNOSTIC BADGE - Ficará visível para sabermos o estado do sistema */}
+        <div className="fixed top-2 right-2 z-[9999] px-2 py-1 bg-black/80 text-white text-[8px] font-mono rounded border border-white/20 select-none pointer-events-none opacity-50 hover:opacity-100 flex gap-2">
+           <span>ADMIN: {isSuperAdmin ? 'YES' : 'NO'}</span>
+           <span>IMPERSONATE: {impersonatedUserId ? 'YES' : 'NO'}</span>
+           <span>STATUS: {planStatus?.isActive ? 'ACTIVE' : 'SUSPENDED'}</span>
+        </div>
+
         <AdminSidebar />
 
         <div className="flex-1 flex flex-col min-w-0">
@@ -67,7 +84,8 @@ export function AdminLayout() {
               </div>
               <button
                 onClick={clearImpersonation}
-                className="text-amber-600 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-200 p-1 rounded"
+                className="text-amber-600 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-200 p-1 rounded transition-colors"
+                title="Sair da simulação"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -92,4 +110,24 @@ export function AdminLayout() {
       </div>
     </SidebarProvider>
   );
+  } catch (error: any) {
+    console.error('😭 FATAL RENDER ERROR:', error);
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-red-950 p-10 text-white">
+        <div className="max-w-md space-y-4">
+          <h1 className="text-2xl font-black uppercase tracking-tighter">Erro Crítico de Interface</h1>
+          <p className="text-sm opacity-80">Ocorreu um erro síncrono durante a renderização do painel administrativo. Isso geralmente indica um conflito de dados ou estado do sistema.</p>
+          <div className="p-4 bg-black/40 rounded font-mono text-xs overflow-auto max-h-40">
+            {error?.message || 'Erro desconhecido'}
+          </div>
+          <Button 
+            className="w-full bg-white text-red-950 hover:bg-white/90 font-bold"
+            onClick={() => { localStorage.clear(); window.location.href = '/'; }}
+          >
+            Limpar Tudo e Recomeçar
+          </Button>
+        </div>
+      </div>
+    );
+  }
 }

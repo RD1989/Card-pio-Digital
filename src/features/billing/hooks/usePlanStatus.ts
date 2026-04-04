@@ -31,19 +31,20 @@ export function usePlanStatus() {
     async function fetch() {
       if (!isMounted) return;
       setLoading(true);
+      let foundUserId: string | null = impersonatedUserId;
+
       try {
-        let userId = impersonatedUserId;
-        if (!userId) {
+        if (!foundUserId) {
           const { data: { user } } = await supabase.auth.getUser();
           if (!user) { setLoading(false); return; }
-          userId = user.id;
+          foundUserId = user.id;
         }
 
-        console.log(`🔍 Iniciando busca de plano para: ${userId} (Simulado: ${!!impersonatedUserId})`);
+        console.log(`🔍 Iniciando busca de plano para: ${foundUserId} (Simulado: ${!!impersonatedUserId})`);
 
         const [profileRes, ordersRes] = await Promise.all([
-          (supabase as any).from('profiles').select('plan, plan_status, trial_ends_at, is_active, order_limit, premium_until').eq('user_id', userId).single(),
-          (supabase as any).rpc('count_monthly_orders', { _user_id: userId }),
+          (supabase as any).from('profiles').select('plan, plan_status, trial_ends_at, is_active, order_limit, premium_until').eq('user_id', foundUserId).single(),
+          (supabase as any).rpc('count_monthly_orders', { _user_id: foundUserId }),
         ]).catch(err => {
           console.error("❌ Erro crítico nas queries do usePlanStatus:", err);
           return [ { data: null, error: err }, { data: 0, error: err } ];
@@ -53,7 +54,7 @@ export function usePlanStatus() {
         const monthlyOrders = ordersRes.data || 0;
 
         if (!profile) { 
-          console.warn(`⚠️ Perfil não encontrado para o usuário ${userId}`);
+          console.warn(`⚠️ Perfil não encontrado para o usuário ${foundUserId}`);
           if (isMounted) setLoading(false); 
           return; 
         }
@@ -77,7 +78,7 @@ export function usePlanStatus() {
         );
 
         console.group('🛡️ Verificação de Plano (usePlanStatus)');
-        console.log('User ID:', userId);
+        console.log('User ID:', foundUserId);
         console.log('Status no Perfil:', profile.plan_status);
         console.log('Ativo (is_active):', !isDeactivated);
         console.log('Expirado:', isExpired);
@@ -90,7 +91,7 @@ export function usePlanStatus() {
 
         if (isMounted) {
           setStatus({
-            user_id: userId,
+            user_id: foundUserId,
             plan: profile.plan || 'basic',
             planStatus: profile.plan_status || 'trial',
             trialEndsAt: profile.trial_ends_at,
@@ -102,7 +103,20 @@ export function usePlanStatus() {
           });
         }
       } catch (err) {
-        console.error("❌ Falha ao processar status do plano:", err);
+        console.error("❌ Falha catastrófica ao processar status do plano:", err);
+        if (isMounted) {
+          setStatus({
+            user_id: foundUserId || 'unknown',
+            plan: 'basic',
+            planStatus: 'trial',
+            trialEndsAt: null,
+            daysRemaining: 0,
+            isTrialExpired: false,
+            isActive: true, // Failsafe: se falhar tudo, deixamos ativo para não bloquear o usuário por erro do sistema
+            monthlyOrders: 0,
+            orderLimit: 9999,
+          });
+        }
       } finally {
         if (isMounted) {
           setLoading(false);

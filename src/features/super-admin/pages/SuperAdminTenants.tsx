@@ -74,11 +74,16 @@ export default function SuperAdminTenants() {
     fetch();
   }, []);
 
-  function handleImpersonate(tenant: Tenant) {
+  const handleImpersonate = (tenant: any) => {
     setImpersonation(tenant.user_id, tenant.restaurant_name);
-    toast.success(`Acessando dashboard de "${tenant.restaurant_name}"`);
-    navigate('/admin');
-  }
+    toast.success(`Iniciando simulação: "${tenant.restaurant_name}"`);
+    
+    // Pequeno atraso para garantir que o store do Zustand tenha sido 
+    // propagado pelo React antes de mudar a rota.
+    setTimeout(() => {
+      navigate('/admin');
+    }, 100);
+  };
 
   async function handlePlanChange(tenantUserId: string, newPlan: string) {
     await (supabase as any).from('profiles').update({ plan: newPlan }).eq('user_id', tenantUserId);
