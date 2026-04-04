@@ -1,5 +1,5 @@
 import logo from '@/assets/logo.png';
-import { LayoutDashboard, BookOpen, BarChart3, Tags, Wallet, Package, Truck, Palette, LogOut, Moon, Sun, Sparkles, Shield, Tag, Clock, Link, ShoppingCart } from 'lucide-react';
+import { LayoutDashboard, BookOpen, BarChart3, Tags, Wallet, Package, Truck, Palette, LogOut, Moon, Sun, Sparkles, Shield, Tag, Clock, Link, ShoppingCart, Bell, BellOff, Wifi, WifiOff } from 'lucide-react';
 import { NavLink } from '@/shared/components/layout/NavLink';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useThemeStore } from '@/shared/stores/global/useThemeStore';
@@ -7,6 +7,9 @@ import { useAuth } from '@/features/auth/hooks/useAuth';
 import { useSuperAdmin } from '@/features/super-admin/hooks/useSuperAdmin';
 import { usePlanStatus } from '@/features/billing/hooks/usePlanStatus';
 import { useImpersonateStore } from '@/shared/stores/global/useImpersonateStore';
+import { useBuzzerStore } from '@/shared/stores/global/useBuzzerStore';
+import { useOrderNotificationSound } from '@/features/orders/hooks/useOrderNotificationSound';
+import { motion, AnimatePresence } from 'framer-motion';
 
 import {
   Sidebar,
@@ -64,6 +67,9 @@ export function AdminSidebar() {
   
   const { status: planStatus } = usePlanStatus();
   const isSuspended = planStatus && !planStatus.isActive;
+
+  const { isReady, realtimeStatus } = useBuzzerStore();
+  const { init: initBuzzer } = useOrderNotificationSound();
 
   const renderLinks = (links: { title: string; url: string; icon: any }[]) =>
     links.map((item) => {
@@ -136,6 +142,44 @@ export function AdminSidebar() {
           )}
 
           <div className="h-px bg-sidebar-border my-2 mx-2 opacity-50" />
+
+          {/* Buzzer Widget */}
+          <SidebarMenuItem>
+            <div className={`mx-2 mb-2 p-3 rounded-2xl border transition-all duration-300 ${
+              isReady ? 'bg-emerald-500/5 border-emerald-500/20' : 'bg-amber-500/5 border-amber-500/20 shadow-[0_0_15px_rgba(245,158,11,0.1)]'
+            }`}>
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <div className={`w-2 h-2 rounded-full ${
+                    realtimeStatus === 'connected' ? 'bg-emerald-500 animate-pulse' : 
+                    realtimeStatus === 'connecting' ? 'bg-amber-500 animate-bounce' : 'bg-red-500'
+                  }`} />
+                  <span className="text-[10px] font-black uppercase tracking-widest opacity-60">
+                    {realtimeStatus === 'connected' ? 'Online' : 'Conectando...'}
+                  </span>
+                </div>
+                {isReady ? (
+                  <Bell className="w-3 h-3 text-emerald-500" />
+                ) : (
+                  <BellOff className="w-3 h-3 text-amber-500 animate-pulse" />
+                )}
+              </div>
+
+              {!isReady ? (
+                <button 
+                  onClick={() => initBuzzer()}
+                  className="w-full h-8 text-[10px] font-black uppercase tracking-tighter bg-amber-500 hover:bg-amber-600 text-white border-none rounded-xl shadow-lg shadow-amber-500/20 animate-pulse transition-all active:scale-95"
+                >
+                  Ativar Campainha
+                </button>
+              ) : (
+                <div className="flex items-center justify-center gap-2 py-1 text-emerald-600">
+                  <Sparkles className="w-3 h-3" />
+                  <span className="text-[10px] font-black uppercase tracking-widest">Campainha Ativa</span>
+                </div>
+              )}
+            </div>
+          </SidebarMenuItem>
 
           <SidebarMenuItem>
             <SidebarMenuButton onClick={toggle} className="h-11 rounded-xl hover:bg-sidebar-accent/50 transition-all">

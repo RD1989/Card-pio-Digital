@@ -109,35 +109,6 @@ export default function Dashboard() {
     fetchStats();
   }, [fetchStats]);
 
-  // Realtime: listen for new/updated orders and auto-refresh
-  const { play: playNotification } = useOrderNotificationSound();
-
-  useEffect(() => {
-    const setup = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return null;
-
-      const { data: isSuperAdmin } = await supabase.rpc('is_super_admin', { _user_id: user.id });
-      const userId = (isSuperAdmin && impersonatedUserId) ? impersonatedUserId : user.id;
-      const channel = supabase
-        .channel('dashboard-orders-rt')
-        .on(
-          'postgres_changes',
-          { event: 'INSERT', schema: 'public', table: 'orders', filter: `restaurant_user_id=eq.${userId}` },
-          () => { playNotification(); fetchStats(); }
-        )
-        .on(
-          'postgres_changes',
-          { event: 'UPDATE', schema: 'public', table: 'orders', filter: `restaurant_user_id=eq.${userId}` },
-          () => { fetchStats(); }
-        )
-        .subscribe();
-      return channel;
-    };
-    let channelRef: Awaited<ReturnType<typeof setup>>;
-    setup().then(ch => { channelRef = ch; });
-    return () => { if (channelRef) supabase.removeChannel(channelRef); };
-  }, [fetchStats, impersonatedUserId, playNotification]);
   const handleActivatePlan = (planType: 'monthly' | 'basic' | 'pro') => {
     const messages = {
       monthly: "Olá! Quero renovar meu Plano Mensal.",

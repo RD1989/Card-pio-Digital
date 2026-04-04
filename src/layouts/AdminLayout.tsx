@@ -3,17 +3,67 @@ import { AdminSidebar } from '@/shared/components/layout/AdminSidebar';
 import { SidebarProvider, SidebarTrigger } from '@/shared/components/ui/sidebar';
 import { useImpersonateStore } from '@/shared/stores/global/useImpersonateStore';
 import { useSuperAdmin } from '@/features/super-admin/hooks/useSuperAdmin';
-import { X, Eye, Loader2, Menu } from 'lucide-react';
+import { X, Eye, Loader2, Menu, Bell } from 'lucide-react';
 import { usePlanStatus } from '@/features/billing/hooks/usePlanStatus';
 import { SuspensionOverlay } from '@/features/billing/components/SuspensionOverlay';
 import { PlanBanner } from '@/features/billing/components/PlanBanner';
 import { Button } from '@/shared/components/ui/button';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useEffect, useCallback } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useBuzzerStore } from '@/shared/stores/global/useBuzzerStore';
+import { useOrderNotificationSound } from '@/features/orders/hooks/useOrderNotificationSound';
+import { toast } from 'sonner';
 
 export function AdminLayout() {
   const { impersonatedUserId, impersonatedName, clearImpersonation } = useImpersonateStore();
   const { isSuperAdmin, loading: adminLoading } = useSuperAdmin();
   const { status: planStatus, loading: planLoading } = usePlanStatus();
+  const { setRealtimeStatus } = useBuzzerStore();
+  const { play: playNotification } = useOrderNotificationSound();
+
+  const setupRealtime = useCallback(async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { data: isSuperAdmin } = await supabase.rpc('is_super_admin', { _user_id: user.id });
+    const userId = (isSuperAdmin && impersonatedUserId) ? impersonatedUserId : user.id;
+
+    console.log('[Buzzer] Configurando ouvinte global para:', userId);
+    setRealtimeStatus('connecting');
+
+    const channel = supabase
+      .channel(`global-orders-${userId}`)
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'orders', filter: `restaurant_user_id=eq.${userId}` },
+        (payload) => {
+          console.log('[Buzzer] Novo pedido detectado!', payload);
+          playNotification();
+          toast.info('🔔 Novo pedido recebido!', { 
+            description: 'Verifique a aba de pedidos.',
+            duration: 6000,
+            action: {
+              label: 'Ver Pedido',
+              onClick: () => window.location.href = '/admin/orders'
+            }
+          });
+        }
+      )
+      .subscribe((status) => {
+        console.log(`[Buzzer] Status da conexão Realtime (${userId}):`, status);
+        if (status === 'SUBSCRIBED') setRealtimeStatus('connected');
+        if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') setRealtimeStatus('error');
+      });
+
+    return channel;
+  }, [impersonatedUserId, playNotification, setRealtimeStatus]);
+
+  useEffect(() => {
+    let channelRef: any;
+    setupRealtime().then(ch => { channelRef = ch; });
+    return () => { if (channelRef) supabase.removeChannel(channelRef); };
+  }, [setupRealtime]);
 
   if (adminLoading || planLoading) {
     return (
