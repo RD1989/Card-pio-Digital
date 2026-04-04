@@ -22,41 +22,52 @@ export function BottomNav({ onHomeClick, onCategoriesClick, onSearchClick, onCar
       className="fixed bottom-0 left-0 z-50 w-full"
     >
       <div
-        className="flex items-center justify-around px-2 py-3 rounded-t-[28px] border-t border-black/[0.06] dark:border-white/[0.08]"
+        className="flex items-center justify-around px-2 py-2 rounded-t-[24px] border-t border-black/[0.06] dark:border-white/[0.08]"
         style={{
-          background: 'rgba(255,255,255,0.96)',
+          background: 'rgba(255,255,255,0.98)',
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
-          boxShadow: '0 -4px 20px rgba(0,0,0,0.08)',
+          boxShadow: '0 -2px 15px rgba(0,0,0,0.05)',
         }}
       >
         <NavBtn icon={Home} label="Início" onClick={onHomeClick} />
         <NavBtn icon={List} label="Cardápio" onClick={onCategoriesClick} />
 
-        {/* Cart button — central highlighted */}
+        {/* Cart button — aligned with others */}
         <motion.button
           whileTap={{ scale: 0.9 }}
-          whileHover={{ scale: 1.06 }}
           onClick={onCartClick}
-          className="relative flex flex-col items-center gap-1 -mt-8"
+          className="relative flex flex-col items-center gap-1 text-gray-500 hover:text-gray-800 transition-colors group"
         >
-          <div
-            className="w-16 h-16 rounded-[22px] flex items-center justify-center shadow-lg"
-            style={{ backgroundColor: accentColor, boxShadow: `0 8px 24px -4px ${accentColor}80` }}
+          <div 
+            className={`w-10 h-10 flex items-center justify-center rounded-[14px] transition-all ${cartCount > 0 ? 'text-white' : 'group-hover:bg-gray-100'}`}
+            style={cartCount > 0 ? { backgroundColor: accentColor, boxShadow: `0 4px 12px -2px ${accentColor}60` } : undefined}
           >
-            <ShoppingCart className="w-7 h-7 text-white" />
+            <ShoppingCart className={`w-5 h-5 ${cartCount > 0 ? 'scale-110' : 'group-hover:scale-110'} transition-transform`} />
+            
             {cartCount > 0 && (
               <motion.span
                 initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                className="absolute -top-1 -right-1 bg-white text-[11px] font-black w-6 h-6 rounded-full flex items-center justify-center shadow border-2"
+                animate={{ scale: 1.1 }}
+                className="absolute -top-1 -right-1 bg-white text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center shadow-md border"
                 style={{ color: accentColor, borderColor: accentColor }}
               >
                 {cartCount}
               </motion.span>
             )}
           </div>
-          <span className="text-[10px] font-black uppercase tracking-widest text-gray-500">Sacola</span>
+          <span className="text-[9px] font-black uppercase tracking-widest opacity-70 group-hover:opacity-100">Sacola</span>
+
+          {/* Pulse effect when adding items */}
+          {cartCount > 0 && (
+            <motion.div
+              initial={{ scale: 1, opacity: 0.5 }}
+              animate={{ scale: 1.5, opacity: 0 }}
+              transition={{ repeat: Infinity, duration: 1.5 }}
+              className="absolute inset-0 rounded-full"
+              style={{ backgroundColor: accentColor }}
+            />
+          )}
         </motion.button>
 
         <NavBtn icon={Search} label="Buscar" onClick={onSearchClick} />
