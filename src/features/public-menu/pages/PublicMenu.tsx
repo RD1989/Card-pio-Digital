@@ -1,8 +1,9 @@
 import { motion } from 'framer-motion';
 import { useParams } from 'react-router-dom';
-import { Star, Clock, MapPin, Plus, Loader2 } from 'lucide-react';
+import { Star, Clock, MapPin, Plus, Loader2, Home, List, ShoppingCart, Search, Menu as MenuIcon, X } from 'lucide-react';
 import { useCartStore } from '@/features/public-menu/stores/useCartStore';
 import { CartDrawer } from '@/features/public-menu/components/CartDrawer';
+import { BottomNav } from '@/features/public-menu/components/BottomNav';
 import { ProductSearch } from '@/shared/components/common/ProductSearch';
 import { MenuSkeleton } from '@/shared/components/common/Skeletons';
 import { ProductDetailModal, SelectedAddon } from '@/features/public-menu/components/ProductDetailModal';
@@ -38,6 +39,8 @@ interface Profile {
   primary_color: string;
   delivery_fee: number;
   font_style?: string;
+  theme_mode?: 'light' | 'dark' | 'auto';
+  menu_layout?: 'classic' | 'premium';
   is_active: boolean;
   plan_status: string;
 }
@@ -106,6 +109,8 @@ export default function PublicMenu() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isOpen, setIsOpen] = useState<boolean | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
   const isSuspended = profile && (profile.is_active === false || profile.plan_status === 'expired' || profile.plan_status === 'inactive');
 
@@ -115,7 +120,6 @@ export default function PublicMenu() {
     async function fetchMenu() {
       setLoading(true);
 
-      // 1. Find profile by slug
       const { data: prof, error: profError } = await supabase
         .from('profiles')
         .select('*')
@@ -136,7 +140,6 @@ export default function PublicMenu() {
         return;
       }
 
-      // 2. Fetch categories and products in parallel
       const [catRes, prodRes, hoursRes] = await Promise.all([
         supabase.from('categories').select('*').eq('user_id', prof.user_id).order('sort_order'),
         supabase.from('products').select('*').eq('user_id', prof.user_id).eq('is_active', true).order('sort_order'),
@@ -146,7 +149,6 @@ export default function PublicMenu() {
       const categories = (catRes.data || []) as Category[];
       const products = (prodRes.data || []) as Product[];
 
-      // Check business hours
       const hours = hoursRes.data || [];
       if (hours.length > 0) {
         const now = new Date();
@@ -163,9 +165,7 @@ export default function PublicMenu() {
         }
       }
 
-      // 3. Group products by category
       const grouped: MenuCategory[] = [];
-
       categories.forEach((cat) => {
         const catProducts = products.filter((p) => p.category_id === cat.id);
         if (catProducts.length > 0) {
@@ -173,7 +173,6 @@ export default function PublicMenu() {
         }
       });
 
-      // Products without category
       const uncategorized = products.filter((p) => !p.category_id);
       if (uncategorized.length > 0) {
         grouped.push({ name: 'Outros', items: uncategorized });
@@ -182,7 +181,6 @@ export default function PublicMenu() {
       setMenuCategories(grouped);
       setLoading(false);
 
-      // Track menu view for conversion metrics
       (supabase as any).from('menu_views').insert({
         restaurant_user_id: prof.user_id,
         slug: slug,
@@ -192,7 +190,6 @@ export default function PublicMenu() {
     fetchMenu();
   }, [slug, setRestaurant]);
 
-  // SEO: Inject dynamic meta tags and structured data
   useEffect(() => {
     if (!profile) return;
     document.title = `${profile.restaurant_name} — Cardápio Digital`;
@@ -213,7 +210,6 @@ export default function PublicMenu() {
     setMeta('og:url', window.location.href);
     if (profile.logo_url) setMeta('og:image', profile.logo_url);
 
-    // JSON-LD structured data
     const jsonLd = document.createElement('script');
     jsonLd.type = 'application/ld+json';
     jsonLd.id = 'menu-jsonld';
@@ -237,7 +233,6 @@ export default function PublicMenu() {
     };
   }, [profile]);
 
-  // Inject restaurant accent color as CSS variable
   useEffect(() => {
     if (profile?.primary_color) {
       const hsl = hexToHsl(profile.primary_color);
@@ -246,15 +241,31 @@ export default function PublicMenu() {
       document.documentElement.style.setProperty('--accent', hsl);
       document.documentElement.style.setProperty('--ring', hsl);
     }
+
+    const theme = profile?.theme_mode || 'auto';
+    const root = document.documentElement;
+    
+    if (theme === 'dark') {
+      root.classList.add('dark');
+    } else if (theme === 'light') {
+      root.classList.remove('dark');
+    } else {
+      if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        root.classList.add('dark');
+      } else {
+        root.classList.remove('dark');
+      }
+    }
+
     return () => {
       document.documentElement.style.removeProperty('--accent-color');
       document.documentElement.style.removeProperty('--primary');
       document.documentElement.style.removeProperty('--accent');
       document.documentElement.style.removeProperty('--ring');
+      root.classList.remove('dark');
     };
-  }, [profile?.primary_color]);
+  }, [profile?.primary_color, profile?.theme_mode]);
 
-  // Load custom Google Font for this restaurant
   useEffect(() => {
     const fontKey = profile?.font_style || 'inter';
     const googleFont = GOOGLE_FONT_MAP[fontKey];
@@ -348,119 +359,144 @@ export default function PublicMenu() {
     );
   }
 
-  return (
-    <div className="min-h-screen bg-background relative" style={{ fontFamily: 'var(--menu-font, Inter, sans-serif)' }}>
-      {/* Ambient */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[400px] h-[400px] bg-primary/10 rounded-full blur-[100px] pointer-events-none" />
+  const isPremium = profile.menu_layout === 'premium';
 
-      {/* Header with Professional Layout */}
+  return (
+    <div className={`min-h-screen bg-background relative transition-colors duration-500`} style={{ fontFamily: 'var(--menu-font, Inter, sans-serif)' }}>
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/20 rounded-full blur-[120px] animate-pulse" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-primary/10 rounded-full blur-[100px]" />
+      </div>
+
       <motion.header
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
         className="relative z-10 w-full"
       >
-        {/* Banner Area */}
-        <div className="h-44 sm:h-56 w-full bg-muted relative overflow-hidden">
+        <div className="h-56 sm:h-72 w-full relative overflow-hidden group">
           {profile.banner_url ? (
-            <img 
-              src={profile.banner_url} 
-              alt="Capa" 
-              className="w-full h-full object-cover brightness-[0.85]" 
-            />
+            <img src={profile.banner_url} alt="Capa" className="w-full h-full object-cover brightness-[0.8] transition-transform duration-700 group-hover:scale-110" />
           ) : (
-            <div className="w-full h-full bg-gradient-to-br from-primary/10 to-primary/5" />
+            <div className="w-full h-full bg-gradient-to-br from-primary/30 to-background" />
           )}
-
-          {/* Logo Overlapping */}
-          <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 z-20">
-            <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full border-[6px] border-background bg-white shadow-2xl overflow-hidden ring-1 ring-black/5">
-              {profile.logo_url ? (
-                <img src={profile.logo_url} alt={profile.restaurant_name} className="w-full h-full object-cover" />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center bg-primary/10 text-primary font-black text-2xl">
-                  {profile.restaurant_name[0]?.toUpperCase()}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Restaurant Info */}
-        <div className="pt-12 pb-6 px-6 text-center max-w-xl mx-auto">
-          <h1 className="font-display italic text-3xl sm:text-4xl font-extrabold tracking-tight">
-            {profile.restaurant_name}
-          </h1>
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
           
-          <div className="flex items-center justify-center gap-4 mt-3 text-sm font-semibold">
-            <div className="flex items-center gap-1.5 px-3 py-1 bg-primary/10 text-primary rounded-full">
-              <Star className="w-4 h-4 fill-primary" />
-              <span>4.9</span>
-            </div>
-            
-            {isOpen !== null ? (
-              isOpen ? (
-                <div className="flex items-center gap-1.5 px-3 py-1 bg-green-500/10 text-green-600 rounded-full">
-                  <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                  <span>Aberto Agora</span>
+          <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-10 flex flex-col sm:flex-row items-center sm:items-end justify-between gap-6 max-w-7xl mx-auto w-full">
+            <div className="flex flex-col sm:flex-row items-center gap-6">
+              <motion.div 
+                whileHover={{ scale: 1.05 }}
+                className="w-28 h-28 sm:w-36 sm:h-36 rounded-full border-[4px] border-background bg-card shadow-2xl overflow-hidden ring-1 ring-black/5 shrink-0"
+              >
+                {profile.logo_url ? (
+                  <img src={profile.logo_url} alt={profile.restaurant_name} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-primary/10 text-primary font-black text-3xl">
+                    {profile.restaurant_name[0]?.toUpperCase()}
+                  </div>
+                )}
+              </motion.div>
+              <div className="text-center sm:text-left space-y-2">
+                <h1 className="font-display italic text-4xl sm:text-6xl font-extrabold tracking-tight text-foreground drop-shadow-sm">
+                  {profile.restaurant_name}
+                </h1>
+                <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4">
+                  <div className="flex items-center gap-1.5 px-3 py-1 bg-primary/20 backdrop-blur-md text-primary rounded-full text-xs font-bold ring-1 ring-primary/20">
+                    <Star className="w-3.5 h-3.5 fill-primary" />
+                    <span>4.9 • Premium</span>
+                  </div>
+                  {isOpen !== null && (
+                    <div className={`flex items-center gap-1.5 px-3 py-1 backdrop-blur-md rounded-full text-xs font-bold ring-1 ${
+                      isOpen ? 'bg-emerald-500/20 text-emerald-500 ring-emerald-500/20' : 'bg-rose-500/20 text-rose-500 ring-rose-500/20'
+                    }`}>
+                      <div className={`w-1.5 h-1.5 rounded-full ${isOpen ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
+                      <span>{isOpen ? 'Aberto' : 'Fechado'}</span>
+                    </div>
+                  )}
                 </div>
-              ) : (
-                <div className="flex items-center gap-1.5 px-3 py-1 bg-red-500/10 text-red-600 rounded-full">
-                  <Clock className="w-4 h-4" />
-                  <span>Fechado</span>
-                </div>
-              )
-            ) : (
-              <div className="flex items-center gap-1.5 px-3 py-1 bg-primary/10 text-primary rounded-full">
-                <Clock className="w-4 h-4" />
-                <span>Aberto</span>
               </div>
-            )}
-          </div>
-
-          <div className="flex items-center justify-center gap-2 mt-4 text-xs text-muted-foreground opacity-60">
-            <MapPin className="w-3 h-3" /> Pinhais, PR
+            </div>
           </div>
         </div>
       </motion.header>
 
-      {/* Menu */}
-      <div className="max-w-2xl mx-auto px-6 pb-28 space-y-6">
-        {/* Search */}
-        <ProductSearch value={searchQuery} onChange={setSearchQuery} />
+      <div className="sticky top-0 z-40 w-full bg-background/80 backdrop-blur-xl border-b border-border/50 py-4">
+        <div className="max-w-7xl mx-auto px-6 overflow-x-auto no-scrollbar flex items-center gap-3">
+          <Button 
+            variant="ghost" 
+            size="sm"
+            onClick={() => {
+              setActiveCategory(null);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            className={`rounded-full px-4 text-xs font-bold uppercase tracking-widest ${!activeCategory ? 'bg-primary text-primary-foreground' : 'text-muted-foreground'}`}
+          >
+            Tudo
+          </Button>
+          {menuCategories.map((cat) => (
+            <Button 
+              key={cat.name}
+              variant="ghost" 
+              size="sm"
+              onClick={() => {
+                setActiveCategory(cat.name);
+                const el = document.getElementById(`category-${cat.name}`);
+                el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }}
+              className={`rounded-full px-4 text-xs font-bold uppercase tracking-widest transition-all ${activeCategory === cat.name ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-primary/10'}`}
+            >
+              {cat.name}
+            </Button>
+          ))}
+        </div>
+      </div>
 
-        {menuCategories.length === 0 ? (
-          <p className="text-center text-muted-foreground py-16">Nenhum produto disponível no momento.</p>
-        ) : (
-          (() => {
-            const q = searchQuery.toLowerCase().trim();
-            const filtered = q
-              ? menuCategories.map(cat => ({
-                  ...cat,
-                  items: cat.items.filter(item =>
-                    item.name.toLowerCase().includes(q) ||
-                    (item.description && item.description.toLowerCase().includes(q))
-                  ),
-                })).filter(cat => cat.items.length > 0)
-              : menuCategories;
+      <div className="max-w-7xl mx-auto px-6 pt-8 pb-32">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+          <div className="lg:col-span-3 space-y-8">
+            <div className="glass-sm p-6 space-y-6">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                  <MapPin className="w-5 h-5" />
+                </div>
+                <div className="text-sm">
+                  <p className="font-bold">Localização</p>
+                  <p className="text-muted-foreground">Pinhais, PR</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                  <Clock className="w-5 h-5" />
+                </div>
+                <div className="text-sm">
+                  <p className="font-bold">Tempo médio</p>
+                  <p className="text-muted-foreground">30-45 min</p>
+                </div>
+              </div>
+            </div>
+            <div className="hidden lg:block">
+              <ProductSearch value={searchQuery} onChange={setSearchQuery} />
+            </div>
+          </div>
 
-            if (filtered.length === 0) {
-              return (
-                <p className="text-center text-muted-foreground py-16">
-                  Nenhum produto encontrado para "{searchQuery}"
-                </p>
-              );
-            }
-
-            return filtered.map((cat, catIdx) => (
+          <div className="lg:col-span-9 space-y-12">
+            <div className="lg:hidden">
+              <ProductSearch value={searchQuery} onChange={setSearchQuery} />
+            </div>
+            {menuCategories.map((cat, catIdx) => (
               <motion.section
+                id={`category-${cat.name}`}
                 key={cat.name}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: catIdx * 0.1, duration: 0.5 }}
+                viewport={{ once: true, margin: "-100px" }}
+                transition={{ delay: catIdx * 0.1, duration: 0.6 }}
               >
-                <h2 className="text-lg font-bold uppercase tracking-wider text-primary mb-4">{cat.name}</h2>
-                <div className="space-y-3">
+                <div className="flex items-center gap-4 mb-8">
+                  <h2 className="text-2xl font-black uppercase tracking-tighter text-foreground leading-none">{cat.name}</h2>
+                  <div className="h-px flex-1 bg-gradient-to-r from-border to-transparent" />
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {cat.items.map((item, i) => (
                     <motion.div
                       key={item.id}
@@ -469,63 +505,64 @@ export default function PublicMenu() {
                       whileInView="visible"
                       viewport={{ once: true }}
                       variants={fadeUp}
-                      className="glass-sm p-5 flex justify-between items-start gap-4 hover:scale-[1.01] transition-transform cursor-pointer"
+                      className="glass-sm group p-4 flex gap-5 hover:scale-[1.02] transition-all duration-300 cursor-pointer border-primary/5 hover:border-primary/20 relative overflow-hidden"
                       onClick={() => handleProductClick(item)}
                     >
+                      <div className="absolute top-0 left-0 w-2 h-0 bg-primary group-hover:h-full transition-all duration-500" />
                       {item.image_url && (
-                        <img src={item.image_url} alt={item.name} className="w-16 h-16 rounded-xl object-cover shrink-0" />
+                        <div className="w-24 h-24 sm:w-32 sm:h-32 shrink-0 rounded-2xl overflow-hidden shadow-lg ring-1 ring-black/5">
+                          <img src={item.image_url} alt={item.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                        </div>
                       )}
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold">{item.name}</h3>
-                        {item.description && (
-                          <p className="text-sm text-muted-foreground mt-1 leading-relaxed line-clamp-2">{item.description}</p>
-                        )}
-                        <div className="flex items-center gap-2 mt-2">
-                          <span className="font-bold text-primary text-sm">{formatCurrency(item.price)}</span>
-                          {!item.is_available && (
-                            <span className="text-[10px] bg-red-500 text-white px-2 py-0.5 rounded-full font-bold">
-                              ESGOTADO
-                            </span>
-                          )}
+                      <div className="flex-1 flex flex-col justify-between py-1">
+                        <div>
+                          <h3 className="font-black text-lg group-hover:text-primary transition-colors leading-tight">{item.name}</h3>
+                          {item.description && <p className="text-sm text-muted-foreground mt-2 leading-relaxed line-clamp-2">{item.description}</p>}
+                        </div>
+                        <div className="flex items-center justify-between mt-4">
+                          <div className="flex items-center gap-2">
+                            <span className="font-black text-primary text-xl">{formatCurrency(item.price)}</span>
+                            {!item.is_available && (
+                              <span className="text-[10px] bg-rose-500 text-white px-2 py-0.5 rounded-full font-black uppercase">ESGOTADO</span>
+                            )}
+                          </div>
+                          <button
+                            disabled={!item.is_available}
+                            onClick={(e) => { e.stopPropagation(); handleAdd({ id: item.id, name: item.name, price: item.price }); }}
+                            className={`shrink-0 w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${item.is_available ? 'bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground shadow-lg hover:shadow-primary/40' : 'bg-muted text-muted-foreground cursor-not-allowed opacity-50'}`}
+                          >
+                            <Plus className="w-6 h-6" />
+                          </button>
                         </div>
                       </div>
-                      <button
-                        disabled={!item.is_available}
-                        onClick={(e) => { e.stopPropagation(); handleAdd({ id: item.id, name: item.name, price: item.price }); }}
-                        className={`shrink-0 w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
-                          item.is_available 
-                            ? 'bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground' 
-                            : 'bg-muted text-muted-foreground cursor-not-allowed opacity-50'
-                        }`}
-                      >
-                        <Plus className="w-5 h-5" />
-                      </button>
                     </motion.div>
                   ))}
                 </div>
               </motion.section>
-            ));
-          })()
-        )}
+            ))}
+          </div>
+        </div>
       </div>
 
-      {selectedProduct && (
-        <ProductDetailModal
-          product={selectedProduct}
-          open={!!selectedProduct}
-          onClose={() => setSelectedProduct(null)}
-          onAdd={handleAdd}
+      {selectedProduct && <ProductDetailModal product={selectedProduct} open={!!selectedProduct} onClose={() => setSelectedProduct(null)} onAdd={handleAdd} />}
+
+      {isPremium ? (
+        <BottomNav 
+          onHomeClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          onCategoriesClick={() => document.querySelector('section')?.scrollIntoView({ behavior: 'smooth' })}
+          onSearchClick={() => { window.scrollTo({ top: 300, behavior: 'smooth' }); setTimeout(() => document.querySelector('input')?.focus(), 600); }}
+          onCartClick={() => setIsCartOpen(true)}
         />
+      ) : (
+        <CartDrawer open={isCartOpen} onOpenChange={setIsCartOpen} />
       )}
 
-      <CartDrawer />
+      {isPremium && <CartDrawer open={isCartOpen} onOpenChange={setIsCartOpen} />}
 
-      <footer className="text-center py-6 text-xs text-muted-foreground/60">
-        Powered by <span className="text-gradient font-semibold">Menu Pro</span>
+      <footer className="text-center py-12 px-6 border-t border-border/10">
+        <p className="text-xs text-muted-foreground/40 font-bold uppercase tracking-widest">Experiência Exclusiva <span className="text-primary">{profile.restaurant_name}</span></p>
+        <p className="text-[10px] text-muted-foreground/30 mt-2">Powered by <span className="text-primary/60 font-black">Menu Pro</span></p>
       </footer>
     </div>
   );
 }
-
-
-

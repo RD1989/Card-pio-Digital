@@ -34,6 +34,8 @@ export default function Branding() {
   const [bannerPreview, setBannerPreview] = useState<string | null>(null);
   const [bannerFile, setBannerFile] = useState<File | null>(null);
   const [fontStyle, setFontStyle] = useState('inter');
+  const [themeMode, setThemeMode] = useState('auto');
+  const [menuLayout, setMenuLayout] = useState('classic');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -55,6 +57,8 @@ export default function Branding() {
         setSlug(profile.slug || '');
         setSelectedColor(profile.primary_color || presetColors[0].hex);
         setFontStyle((profile as any).font_style || 'inter');
+        setThemeMode((profile as any).theme_mode || 'auto');
+        setMenuLayout((profile as any).menu_layout || 'classic');
         if (profile.logo_url) setLogoPreview(profile.logo_url);
         if ((profile as any).banner_url) setBannerPreview((profile as any).banner_url);
       }
@@ -123,6 +127,8 @@ export default function Branding() {
       restaurant_name: restaurantName.trim(),
       primary_color: selectedColor,
       font_style: fontStyle,
+      theme_mode: themeMode,
+      menu_layout: menuLayout,
       logo_url: logoUrl || '',
       banner_url: bannerUrl || '',
     }).eq('user_id', userId);
@@ -231,19 +237,46 @@ export default function Branding() {
 
       <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }} className="glass p-6 space-y-4">
         <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-primary">
-          <Paintbrush className="w-4 h-4" /> Família Tipográfica
+          <Palette className="w-4 h-4" /> Tema Visual
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          {fontOptions.map((font) => (
+        <div className="grid grid-cols-3 gap-3">
+          {[
+            { value: 'light', label: 'Claro', icon: '☀️' },
+            { value: 'dark', label: 'Escuro', icon: '🌙' },
+            { value: 'auto', label: 'Sistema', icon: '💻' }
+          ].map((theme) => (
             <button
-              key={font.value}
-              onClick={() => setFontStyle(font.value)}
-              className={`p-3 rounded-xl border transition-all ${
-                fontStyle === font.value ? 'border-primary bg-primary/10' : 'border-border'
+              key={theme.value}
+              onClick={() => setThemeMode(theme.value)}
+              className={`p-4 rounded-xl border transition-all flex flex-col items-center gap-2 ${
+                themeMode === theme.value ? 'border-primary bg-primary/10' : 'border-border'
               }`}
             >
-              <span className="text-base font-bold block" style={{ fontFamily: font.family }}>Aa</span>
-              <span className="text-[10px] text-muted-foreground block">{font.label}</span>
+              <span className="text-xl">{theme.icon}</span>
+              <span className="text-[10px] font-medium">{theme.label}</span>
+            </button>
+          ))}
+        </div>
+      </motion.section>
+
+      <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.28 }} className="glass p-6 space-y-4">
+        <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-primary">
+          <Eye className="w-4 h-4" /> Estilo da Experiência
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          {[
+            { value: 'classic', label: 'Clássico', desc: 'Simples e direto' },
+            { value: 'premium', label: 'Premium App', desc: 'Moderno (Estilo App)' }
+          ].map((layout) => (
+            <button
+              key={layout.value}
+              onClick={() => setMenuLayout(layout.value)}
+              className={`p-4 rounded-xl border transition-all text-left flex flex-col gap-1 ${
+                menuLayout === layout.value ? 'border-primary bg-primary/10' : 'border-border'
+              }`}
+            >
+              <span className="text-xs font-bold">{layout.label}</span>
+              <span className="text-[10px] text-muted-foreground">{layout.desc}</span>
             </button>
           ))}
         </div>
