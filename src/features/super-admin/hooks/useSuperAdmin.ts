@@ -20,14 +20,25 @@ export function useSuperAdmin() {
     setLoading(true);
 
     async function check() {
-      const { data, error } = await supabase.rpc('is_super_admin', {
-        _user_id: user.id,
-      });
+      try {
+        const { data, error } = await supabase.rpc('is_super_admin', {
+          _user_id: user.id,
+        });
 
-      if (!isMounted) return;
+        if (!isMounted) return;
 
-      setIsSuperAdmin(!error && !!data);
-      setLoading(false);
+        if (error) {
+          console.error("Erro ao verificar status de super admin:", error);
+          setIsSuperAdmin(false);
+        } else {
+          setIsSuperAdmin(!!data);
+        }
+      } catch (err) {
+        console.error("Falha fatal na verificação de super admin:", err);
+        setIsSuperAdmin(false);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
     }
 
     check();

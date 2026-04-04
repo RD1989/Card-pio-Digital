@@ -35,29 +35,39 @@ export default function Dashboard() {
       userId = user.id;
     }
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    setLoading(true);
+    try {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
 
-    const [prodRes, ordersRes] = await Promise.all([
-      supabase.from('products').select('id, is_active').eq('user_id', userId),
-      supabase.from('orders').select('id, total, created_at, status, customer_name').eq('restaurant_user_id', userId).order('created_at', { ascending: false }).limit(100),
-    ]);
+      const [prodRes, ordersRes] = await Promise.all([
+        supabase.from('products').select('id, is_active').eq('user_id', userId),
+        supabase.from('orders').select('id, total, created_at, status, customer_name').eq('restaurant_user_id', userId).order('created_at', { ascending: false }).limit(100),
+      ]);
 
-    const products = prodRes.data || [];
-    const orders = (ordersRes.data || []) as any[];
-    const todayOrders = orders.filter(o => new Date(o.created_at) >= today);
+      if (prodRes.error) throw prodRes.error;
+      if (ordersRes.error) throw ordersRes.error;
 
-    setStats({
-      totalProducts: products.length,
-      activeProducts: products.filter(p => p.is_active).length,
-      totalOrders: orders.length,
-      todayOrders: todayOrders.length,
-      totalRevenue: orders.reduce((sum, o) => sum + Number(o.total), 0),
-      todayRevenue: todayOrders.reduce((sum, o) => sum + Number(o.total), 0),
-    });
+      const products = prodRes.data || [];
+      const orders = (ordersRes.data || []) as any[];
+      const todayOrders = orders.filter(o => new Date(o.created_at) >= today);
 
-    setRecentOrders(orders.slice(0, 5));
-    setLoading(false);
+      setStats({
+        totalProducts: products.length,
+        activeProducts: products.filter(p => p.is_active).length,
+        totalOrders: orders.length,
+        todayOrders: todayOrders.length,
+        totalRevenue: orders.reduce((sum, o) => sum + Number(o.total), 0),
+        todayRevenue: todayOrders.reduce((sum, o) => sum + Number(o.total), 0),
+      });
+
+      setRecentOrders(orders.slice(0, 5));
+    } catch (err) {
+      console.error("Erro ao carregar estatísticas do dashboard:", err);
+      toast.error("Alguns dados do dashboard não puderam ser carregados.");
+    } finally {
+      setLoading(false);
+    }
   }, [impersonatedUserId]);
 
   useEffect(() => {

@@ -32,6 +32,7 @@ const LICENSE_STATUS = {
   warning: { label: 'Vencendo', color: 'bg-amber-500/10 text-amber-500 border-amber-500/30' },
   expired: { label: 'Expirada', color: 'bg-red-500/10 text-red-500 border-red-500/30' },
   trial: { label: 'Trial', color: 'bg-blue-500/10 text-blue-500 border-blue-500/30' },
+  suspended: { label: 'Suspensa', color: 'bg-red-500/20 text-red-600 border-red-600/40' },
 };
 
 export default function SuperAdminTenants() {
@@ -120,33 +121,42 @@ export default function SuperAdminTenants() {
 
   async function handleToggleActive(tenantUserId: string, currentActive: boolean) {
     const newActive = !currentActive;
+    setChangingStatus(true);
     
-    const { data, error } = await supabase.functions.invoke('admin-user-mgmt', {
-      body: { action: 'suspend', payload: { user_id: tenantUserId, active: newActive } }
-    });
+    try {
+      const { data, error } = await supabase.functions.invoke('admin-user-mgmt', {
+        body: { action: 'suspend', payload: { user_id: tenantUserId, active: newActive } }
+      });
 
-    if (error) { 
-      console.error("Function error details:", error);
-      let errorMsg = error.message;
-      
-      // Tentativa de extrair mensagem detalhada do corpo da resposta
-      try {
-        // No SDK v2, o erro das funções pode ter um .context se for FunctionsHttpError
-        const response = (error as any).context;
-        if (response && typeof response.json === 'function') {
-          const body = await response.json();
-          if (body && body.error) errorMsg = body.error;
+      if (error) { 
+        console.error("Function error details:", error);
+        let errorMsg = error.message;
+        
+        try {
+          const response = (error as any).context;
+          if (response && typeof response.json === 'function') {
+            const body = await response.json();
+            if (body && body.error) errorMsg = body.error;
+          }
+        } catch (e) {
+          console.error("Erro ao analisar resposta de erro:", e);
         }
-      } catch (e) {
-        console.error("Erro ao analisar resposta de erro:", e);
-      }
 
-      toast.error(`Erro ao alternar status: ${errorMsg}`); 
-      return; 
+        toast.error(`Erro ao alternar status: ${errorMsg}`); 
+        return; 
+      }
+      
+      setTenants(prev => prev.map(t => t.user_id === tenantUserId ? { ...t, is_active: newActive } : t));
+      
+      // Update selectedTenant if modal is open
+      if (selectedTenant && selectedTenant.user_id === tenantUserId) {
+        setSelectedTenant(prev => prev ? { ...prev, is_active: newActive } : null);
+      }
+      
+      toast.success(newActive ? 'Lojista ativado' : 'Lojista desativado');
+    } finally {
+      setChangingStatus(false);
     }
-    
-    setTenants(prev => prev.map(t => t.user_id === tenantUserId ? { ...t, is_active: newActive } : t));
-    toast.success(newActive ? 'Lojista ativado' : 'Lojista desativado');
   }
 
   async function handleCreateTenant() {
@@ -241,9 +251,22 @@ export default function SuperAdminTenants() {
   function getLicenseInfo(t: Tenant) {
     const now = new Date();
     
+    // Check if account is suspended first
+    if (!t.is_active) {
+      return {
+        status: 'suspended' as const,
+        days: 0,
+        label: 'Inativo / Susp.',
+        date: '-'
+      };
+    }
+
     if (t.plan_status === 'trial') {
       const trialEnd = t.trial_ends_at ? new Date(t.trial_ends_at) : null;
       const days = trialEnd ? Math.ceil((trialEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)) : 0;
+      
+      if (days < 0) return { status: 'expired' as const, days, label: 'Trial Expirado', date: trialEnd?.toLocaleDateString('pt-BR') || '-' };
+      
       return { 
         status: 'trial' as const, 
         days, 
@@ -273,8 +296,8 @@ export default function SuperAdminTenants() {
 
   const stats = {
     total: tenants.length,
-    active: tenants.filter(t => t.is_active && getLicenseInfo(t).status !== 'expired').length,
-    expiring: tenants.filter(t => getLicenseInfo(t).status === 'warning').length,
+    active: tenants.filter(t => t.is_active && ['active', 'warning', 'trial'].includes(getLicenseInfo(t).status)).length,
+    expiring: tenants.filter(t => t.is_active && getLicenseInfo(t).status === 'warning').length,
     expired: tenants.filter(t => !t.is_active || getLicenseInfo(t).status === 'expired').length,
   };
 
@@ -618,8 +641,14 @@ export default function SuperAdminTenants() {
                         onClick={() => handleToggleActive(selectedTenant.user_id, selectedTenant.is_active)}
                         disabled={changingStatus}
                       >
-                        {selectedTenant.is_active ? <UserX className="w-4 h-4" /> : <UserCheck className="w-4 h-4" />}
-                        {selectedTenant.is_active ? 'Suspender Acesso Agora' : 'Reativar Lojista Agora'}
+                        {changingStatus ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : selectedTenant.is_active ? (
+                          <UserX className="w-4 h-4" />
+                        ) : (
+                          <UserCheck className="w-4 h-4" />
+                        )}
+                        {changingStatus ? 'Processando...' : selectedTenant.is_active ? 'Suspender Acesso Agora' : 'Reativar Lojista Agora'}
                       </Button>
                       <Button 
                         variant="ghost" 

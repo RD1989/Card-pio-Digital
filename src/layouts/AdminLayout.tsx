@@ -16,7 +16,12 @@ export function AdminLayout() {
   if (adminLoading || planLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+          <span className="text-xs font-bold tracking-widest text-muted-foreground uppercase opacity-50 animate-pulse">
+            Iniciando Sessão...
+          </span>
+        </div>
       </div>
     );
   }
