@@ -28,12 +28,11 @@ export default function Dashboard() {
   const [pixLoading, setPixLoading] = useState(false);
 
   const fetchStats = useCallback(async () => {
-    let userId = impersonatedUserId;
-    if (!userId) {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { setLoading(false); return; }
-      userId = user.id;
-    }
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { setLoading(false); return; }
+
+    const { data: isSuperAdmin } = await supabase.rpc('is_super_admin', { _user_id: user.id });
+    const userId = (isSuperAdmin && impersonatedUserId) ? impersonatedUserId : user.id;
 
     setLoading(true);
     try {
@@ -94,13 +93,12 @@ export default function Dashboard() {
   const playNotification = useOrderNotificationSound();
 
   useEffect(() => {
-    let userId = impersonatedUserId;
     const setup = async () => {
-      if (!userId) {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
-        userId = user.id;
-      }
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
+
+      const { data: isSuperAdmin } = await supabase.rpc('is_super_admin', { _user_id: user.id });
+      const userId = (isSuperAdmin && impersonatedUserId) ? impersonatedUserId : user.id;
       const channel = supabase
         .channel('dashboard-orders-rt')
         .on(

@@ -20,12 +20,11 @@ export default function Analytics() {
   const [dailyData, setDailyData] = useState<DayData[]>([]);
 
   const fetch = useCallback(async () => {
-    let userId = impersonatedUserId;
-    if (!userId) {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { setLoading(false); return; }
-      userId = user.id;
-    }
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { setLoading(false); return; }
+
+    const { data: isSuperAdmin } = await supabase.rpc('is_super_admin', { _user_id: user.id });
+    const userId = (isSuperAdmin && impersonatedUserId) ? impersonatedUserId : user.id;
 
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
