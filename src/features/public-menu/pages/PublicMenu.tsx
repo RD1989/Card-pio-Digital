@@ -737,7 +737,7 @@ function CategoryButton({ label, icon: Icon, active, onClick, color }: { label: 
       className={`flex flex-col items-center gap-2 group min-w-[64px] shrink-0 transition-all ${active ? 'scale-110' : 'hover:scale-105'}`}
     >
       <div className={`w-12 h-12 rounded-[16px] flex items-center justify-center transition-all bg-white dark:bg-card shadow-sm border-2 ${active ? 'border-primary ring-4 ring-primary/10' : 'border-transparent'}`}>
-        <Icon className="w-5 h-5" style={{ color: active ? 'var(--accent-color)' : color }} />
+        <Icon className="w-4 h-4 transition-transform group-hover:scale-110" style={{ color: active ? 'var(--accent-color)' : color }} />
       </div>
       <span className={`text-[9px] font-black uppercase tracking-widest text-center ${active ? 'text-primary' : 'text-muted-foreground opacity-60'}`}>{label}</span>
     </button>
