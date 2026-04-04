@@ -2,7 +2,7 @@
 UPDATE public.global_settings
 SET value = CASE 
     WHEN key = 'landing_hero_title' THEN 'Tenha seu Próprio Cardápio Digital: Pague Uma Vez, Use para Sempre'
-    WHEN key = 'landing_hero_subtitle' THEN 'Sem mensalidades e sem taxas por pedido. Experimente grátis por 7 dias e automatize seu delivery com um sistema que é realmente seu.'
+    WHEN key = 'landing_hero_subtitle' THEN 'Sem mensalidades recorrentes e sem taxas por pedido. Experimente grátis por 10 dias e automatize seu delivery com um sistema que é realmente seu.'
     WHEN key = 'landing_hero_badge' THEN '🚀 Licença Vitalícia: Sem Mensalidades'
     WHEN key = 'landing_plan_basic_price' THEN 'Vitalício'
     WHEN key = 'landing_plan_basic_features' THEN 'Pedidos ILIMITADOS|Produtos ILIMITADOS|Menu Digital Premium|Integrado com WhatsApp|QR Code Exclusivo|Horário de Funcionamento|Gestão de Entregas|Cobre o custo em 1 dia'

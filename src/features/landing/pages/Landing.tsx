@@ -74,15 +74,15 @@ export default function Landing() {
   // Parse dynamic values with fallbacks and safe checks
   const getSafeString = (val: any, fallback: string) => (typeof val === 'string' && val.trim().length > 0) ? val : fallback;
 
-  const heroTitle = getSafeString(settings.hero_title, 'Tenha seu Próprio Cardápio Digital: Planos Flexíveis sem Taxas Mensais');
-  const heroSubtitle = getSafeString(settings.hero_subtitle, 'Sem mensalidades recorrentes e sem taxas por pedido. Experimente grátis por 7 dias e escolha o plano que melhor se adapta ao seu negócio.');
-  const heroBadge = getSafeString(settings.hero_badge, '🚀 Planos Semestrais e Anuais: Mais Autonomia');
-  const basicName = getSafeString(settings.plan_basic_name, 'Plano Semestral');
-  const basicPrice = getSafeString(settings.plan_basic_price, '6 Meses');
-  const basicFeatures = getSafeString(settings.plan_basic_features, 'Pedidos ILIMITADOS|Produtos ILIMITADOS|Menu Digital Premium|Integrado com WhatsApp|QR Code Exclusivo|Horário de Funcionamento|Gestão de Entregas|Custo Imbatível').split('|');
-  const proName = getSafeString(settings.plan_pro_name, 'Plano Anual');
-  const proPrice = getSafeString(settings.plan_pro_price, '12 Meses');
-  const proFeatures = getSafeString(settings.plan_pro_features, 'Tudo do Plano Semestral|Importação de Cardápio com IA|Gerador de Descrições Premium|Suporte Prioritário VIP|Acompanhamento em Tempo Real|Sem Taxas Ocultas|Economia Garantida').split('|');
+  const heroTitle = getSafeString(settings.hero_title, 'Tenha seu Próprio Cardápio Digital: Seu Sistema, Suas Regras');
+  const heroSubtitle = getSafeString(settings.hero_subtitle, 'Esqueça as taxas por pedido e mensalidades abusivas. Comece a usar seu sistema próprio hoje mesmo, gratuitamente por 10 dias.');
+  const heroBadge = getSafeString(settings.hero_badge, '🚀 Sua Própria Plataforma de Delivery');
+  const basicName = getSafeString(settings.plan_basic_name, 'Sistema Completo');
+  const basicPrice = getSafeString(settings.plan_basic_price, '10 Dias Grátis');
+  const basicFeatures = getSafeString(settings.plan_basic_features, 'Pedidos ILIMITADOS|Produtos ILIMITADOS|Menu Digital Premium|Integrado com WhatsApp|QR Code Exclusivo|Horário de Funcionamento|Gestão de Entregas|Sua Autonomia Digital').split('|');
+  const proName = getSafeString(settings.plan_pro_name, 'Recursos Avançados');
+  const proPrice = getSafeString(settings.plan_pro_price, 'Incluso no Teste');
+  const proFeatures = getSafeString(settings.plan_pro_features, 'Inteligência Artificial para Descrições|Importação de Cardápio com IA|Suporte Prioritário VIP|Acompanhamento em Tempo Real|Sem Taxas Ocultas|Tecnologia de Ponta').split('|');
   const ctaTitle = getSafeString(settings.cta_title, 'SISTEMA PRÓPRIO SEM MENSALIDADES');
   const ctaSubtitle = getSafeString(settings.cta_subtitle, 'Chega de pagar taxas para plataformas que não entendem o seu negócio. Junte-se a centenas de lojistas que já têm sua autonomia digital.');
   const footerText = getSafeString(settings.footer_text, '© 2026 Menu Pro. Todos os direitos reservados.');
@@ -330,10 +330,10 @@ export default function Landing() {
             className="text-center mb-14"
           >
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight leading-tight">
-              Escolha seu plano e{' '}
-              <span className="font-display italic text-gradient underline decoration-primary/30 underline-offset-4">venda mais</span>
+              Tudo o que seu{' '}
+              <span className="font-display italic text-gradient underline decoration-primary/30 underline-offset-4">sistema próprio</span> oferece
             </h2>
-            <p className="mt-3 text-sm text-muted-foreground">Planos flexíveis para o tamanho do seu sonho. Aproveite 7 dias grátis.</p>
+            <p className="mt-3 text-sm text-muted-foreground">Tecnologia de ponta para o seu delivery crescer sem amarras. Teste tudo por 10 dias.</p>
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-3xl mx-auto">
@@ -345,12 +345,12 @@ export default function Landing() {
               className="bg-card border border-border rounded-2xl p-8 relative overflow-hidden"
             >
               <div className="absolute top-0 right-0 bg-primary/10 text-primary text-[10px] font-bold px-4 py-1 rounded-bl-xl">
-                7 dias de teste grátis
+                10 dias de teste grátis
               </div>
-              <h3 className="font-bold text-lg">{basicName}</h3>
-              <p className="text-xs text-muted-foreground mt-1">Acesso completo por 6 meses sem interrupções</p>
+              <h3 className="font-bold text-lg">Essenciais do Sistema</h3>
+              <p className="text-xs text-muted-foreground mt-1">A base sólida para sua operação digital</p>
               <div className="mt-5 flex items-baseline gap-1">
-                <span className="text-4xl font-extrabold uppercase tracking-tighter text-primary">INVESTIMENTO ÚNICO</span>
+                <span className="text-4xl font-extrabold uppercase tracking-tighter text-primary">SISTEMA PRÓPRIO</span>
               </div>
               <p className="text-[11px] text-muted-foreground mt-1">Livre-se das mensalidades para sempre</p>
               <div className="mt-6 space-y-2.5">
@@ -375,13 +375,13 @@ export default function Landing() {
               className="bg-card border-2 border-primary rounded-2xl p-8 relative overflow-hidden"
             >
               <div className="absolute top-0 right-0 flex">
-                <span className="bg-primary/20 text-primary text-[10px] font-bold px-3 py-1">Plano 12 Meses</span>
-                <span className="bg-primary text-primary-foreground text-[10px] font-bold px-3 py-1 rounded-bl-xl uppercase tracking-widest font-black">Melhor Valor</span>
+                <span className="bg-primary/20 text-primary text-[10px] font-bold px-3 py-1 text-center">Tecnologia IA</span>
+                <span className="bg-primary text-primary-foreground text-[10px] font-bold px-3 py-1 rounded-bl-xl uppercase tracking-widest font-black">Diferencial</span>
               </div>
-              <h3 className="font-bold text-lg">{proName}</h3>
-              <p className="text-xs text-muted-foreground mt-1">Acesso total por 1 ano com todos os recursos de IA</p>
+              <h3 className="font-bold text-lg">Inteligência & Escala</h3>
+              <p className="text-xs text-muted-foreground mt-1">Ferramentas avançadas para quem quer liderar o mercado</p>
               <div className="mt-5 flex items-baseline gap-1">
-                <span className="text-4xl font-extrabold uppercase tracking-tighter">PAGAMENTO ÚNICO</span>
+                <span className="text-4xl font-extrabold uppercase tracking-tighter">SEM TAXAS</span>
               </div>
               <p className="text-[11px] text-muted-foreground mt-1">A solução definitiva para o seu delivery</p>
               <div className="mt-6 space-y-2.5">

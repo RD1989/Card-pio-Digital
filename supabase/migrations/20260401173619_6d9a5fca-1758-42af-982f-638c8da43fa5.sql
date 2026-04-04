@@ -18,7 +18,7 @@ BEGIN
     COALESCE(NEW.raw_user_meta_data->>'full_name', 'Minha Loja'),
     'basic',
     'trial',
-    now() + interval '7 days'
+    now() + interval '10 days'
   );
   RETURN NEW;
 END;

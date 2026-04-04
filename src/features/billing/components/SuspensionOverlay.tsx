@@ -56,7 +56,7 @@ export function SuspensionOverlay() {
         <div className="w-20 h-20 bg-primary/10 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-pill animate-pulse">
           <Sparkles className="w-10 h-10 text-primary" />
         </div>
-        <h2 className="text-4xl font-black tracking-tighter text-foreground">Seu teste de 7 dias terminou</h2>
+        <h2 className="text-4xl font-black tracking-tighter text-foreground">Seu teste de 10 dias terminou</h2>
         <p className="text-muted-foreground font-medium text-sm">Escolha sua licença e continue vendendo sem pagar taxas mensais ou por pedido.</p>
       </div>
 
