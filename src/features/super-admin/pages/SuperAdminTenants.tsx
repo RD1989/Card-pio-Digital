@@ -160,52 +160,117 @@ export default function SuperAdminTenants() {
   }
 
   async function handleSeedDemoProducts(tenantUserId: string) {
-    if (!confirm('Deseja gerar 10 produtos incriveis para este lojista? Isso recriará categorias base.')) return;
+    if (!confirm('Deseja transformar este lojista em uma demonstração premium? Serão criados 10 produtos, categorias, modificadores, horários e identidade visual.')) return;
     setSeeding(true);
     try {
+      // 1. Atualizar Profile (Branding)
+      await (supabase as any)
+        .from('profiles')
+        .update({ primary_color: '#e11d48' }) // Um tom de vermelho/rosa premium
+        .eq('user_id', tenantUserId);
+
+      // 2. Criar Horários (Aberto Sempre)
+      const days = [0, 1, 2, 3, 4, 5, 6];
+      const businessHours = days.map(d => ({
+        user_id: tenantUserId,
+        day_of_week: d,
+        open_time: '08:00:00',
+        close_time: '23:59:00',
+        is_open: true
+      }));
+      await (supabase as any).from('business_hours').upsert(businessHours, { onConflict: 'user_id,day_of_week' });
+
+      // 3. Criar Categorias
       const categories = [
-        { name: 'Hambúrgueres', sort_order: 1 },
-        { name: 'Pizzas', sort_order: 2 },
-        { name: 'Bebidas', sort_order: 3 },
-        { name: 'Sobremesas', sort_order: 4 }
+        { name: '🍔 Hambúrgueres', sort_order: 1, user_id: tenantUserId },
+        { name: '🍕 Pizzas', sort_order: 2, user_id: tenantUserId },
+        { name: '🥤 Bebidas', sort_order: 3, user_id: tenantUserId },
+        { name: '🍰 Sobremesas', sort_order: 4, user_id: tenantUserId }
       ];
       const { data: catData, error: catError } = await (supabase as any)
         .from('categories')
-        .insert(categories.map(c => ({ ...c, user_id: tenantUserId })))
+        .insert(categories)
         .select();
 
-      if (catError || !catData) throw new Error('Erro ao criar categorias');
+      if (catError || !catData) throw new Error('Erro ao criar categorias: ' + (catError?.message || 'Sem dados'));
 
-      const burgers = catData.find((c: any) => c.name === 'Hambúrgueres').id;
-      const pizzas = catData.find((c: any) => c.name === 'Pizzas').id;
-      const bebidas = catData.find((c: any) => c.name === 'Bebidas').id;
-      const doces = catData.find((c: any) => c.name === 'Sobremesas').id;
+      const burgers = catData.find((c: any) => c.name.includes('Hambúrgueres'))?.id;
+      const pizzas = catData.find((c: any) => c.name.includes('Pizzas'))?.id;
+      const bebidas = catData.find((c: any) => c.name.includes('Bebidas'))?.id;
+      const doces = catData.find((c: any) => c.name.includes('Sobremesas'))?.id;
 
-      const products = [
+      if (!burgers || !pizzas || !bebidas || !doces) throw new Error('Erro ao mapear IDs das categorias');
+
+      // 4. Criar Produtos (10 intens)
+      const productsList = [
         { category_id: burgers, name: 'Smash Duplo Cheddar', description: 'Dois blends de 90g ultra smash, muito cheddar derretido, cebola caramelizada e molho da casa no pão brioche.', price: 34.90, image_url: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&q=80&w=800' },
-        { category_id: burgers, name: 'Bacon Gourmet', description: 'Blend 160g de costela, fatias crocantes de bacon artesanal, queijo prato, picles e maionese defumada.', price: 38.50, image_url: 'https://images.unsplash.com/photo-1594212686153-2775f0f3dc10?auto=format&fit=crop&q=80&w=800' },
-        { category_id: burgers, name: 'Frango Empanado Crispy', description: 'Sobrecoxa empanada super crocante, alface americana, tomate verde e maionese verde.', price: 29.90, image_url: 'https://images.unsplash.com/photo-1615719413546-198b25453f85?auto=format&fit=crop&q=80&w=800' },
-        { category_id: pizzas, name: 'Pizza Margherita', description: 'Massa de fermentação natural, molho de tomate pelati, muçarela de búfala e manjericão fresco.', price: 54.00, image_url: 'https://images.unsplash.com/photo-1604068549290-dea0e4a305ca?auto=format&fit=crop&q=80&w=800' },
-        { category_id: pizzas, name: 'Pizza Calabresa Artesanal', description: 'Calabresa fatiada fininha com cebola roxa, azeitonas pretas chilenas e toque de orégano.', price: 49.90, image_url: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&q=80&w=800' },
-        { category_id: pizzas, name: 'Pizza Quatro Queijos', description: 'Gorgonzola, catupiry original, provolone e muçarela sobre molho artesanal.', price: 62.00, image_url: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&q=80&w=800' },
-        { category_id: bebidas, name: 'Refrigerante Cola Lata', description: 'Geladíssima 350ml.', price: 6.50, image_url: 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&q=80&w=800' },
-        { category_id: bebidas, name: 'Suco Natural de Laranja', description: 'Copo 500ml de suco fresco espremido na hora, sem açúcar.', price: 12.00, image_url: 'https://images.unsplash.com/photo-1621506289937-a8e4df240d0b?auto=format&fit=crop&q=80&w=800' },
-        { category_id: doces, name: 'Pudim de Leite', description: 'Pudim liso de leite condensado com calda de caramelo escura. Receita da vovó.', price: 14.50, image_url: 'https://images.unsplash.com/photo-1541783245831-57d6fb0926d3?auto=format&fit=crop&q=80&w=800' },
-        { category_id: doces, name: 'Brownie com Sorvete', description: 'Brownie quente recheado com nozes, acompanhado de bola de sorvete de baunilha.', price: 21.00, image_url: 'https://images.unsplash.com/photo-1606313564200-e75d5e30476c?auto=format&fit=crop&q=80&w=800' }
+        { category_id: burgers, name: 'Bacon Gourmet Special', description: 'Blend 160g de costela, fatias crocantes de bacon artesanal, queijo prato, picles e maionese defumada.', price: 38.50, image_url: 'https://images.unsplash.com/photo-1594212686153-2775f0f3dc10?auto=format&fit=crop&q=80&w=800' },
+        { category_id: burgers, name: 'Chicken Crispy Supreme', description: 'Sobrecoxa empanada super crocante, alface americana, tomate verde e maionese verde especial.', price: 29.90, image_url: 'https://images.unsplash.com/photo-1615719413546-198b25453f85?auto=format&fit=crop&q=80&w=800' },
+        { category_id: pizzas, name: 'Pizza Margherita DOC', description: 'Massa de fermentação natural, molho de tomate pelati, muçarela de búfala e manjericão fresco.', price: 54.00, image_url: 'https://images.unsplash.com/photo-1604068549290-dea0e4a305ca?auto=format&fit=crop&q=80&w=800' },
+        { category_id: pizzas, name: 'Calabresa Artesanal', description: 'Calabresa fatiada fininha com cebola roxa, azeitonas pretas chilenas e toque de orégano.', price: 49.90, image_url: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&q=80&w=800' },
+        { category_id: pizzas, name: 'Quatro Queijos Premium', description: 'Gorgonzola, catupiry original, provolone e muçarela sobre molho artesanal.', price: 62.00, image_url: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&q=80&w=800' },
+        { category_id: bebidas, name: 'Coca-Cola Zero Lata', description: 'Geladíssima 350ml.', price: 6.50, image_url: 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&q=80&w=800' },
+        { category_id: bebidas, name: 'Suco de Laranja Natural', description: 'Copo 500ml de suco fresco espremido na hora, sem açúcar.', price: 12.00, image_url: 'https://images.unsplash.com/photo-1621506289937-a8e4df240d0b?auto=format&fit=crop&q=80&w=800' },
+        { category_id: doces, name: 'Pudim de Leite Condensado', description: 'Pudim liso de leite condensado com calda de caramelo escura. Receita tradicional.', price: 14.50, image_url: 'https://images.unsplash.com/photo-1541783245831-57d6fb0926d3?auto=format&fit=crop&q=80&w=800' },
+        { category_id: doces, name: 'Brownie com Sorvete', description: 'Brownie quente recheado com nozes, acompanhado de bola de sorvete de baunilha cream.', price: 21.00, image_url: 'https://images.unsplash.com/photo-1606313564200-e75d5e30476c?auto=format&fit=crop&q=80&w=800' }
       ];
 
-      const { error: prodError } = await (supabase as any)
+      const { data: prodData, error: prodError } = await (supabase as any)
         .from('products')
-        .insert(products.map((p, i) => ({ ...p, user_id: tenantUserId, sort_order: i, is_active: true })));
+        .insert(productsList.map((p, i) => ({
+          ...p,
+          user_id: tenantUserId,
+          restaurant_id: tenantUserId,
+          sort_order: i,
+          is_active: true,
+          is_available: true,
+        })))
+        .select();
 
-      if (prodError) throw new Error('Erro ao criar produtos');
-      toast.success('10 produtos inseridos com sucesso!');
+      if (prodError || !prodData) throw new Error('Erro ao criar produtos: ' + prodError?.message);
+
+      // 5. Criar Modificadores para o Smash Duplo (O primeiro burger)
+      const smashId = prodData.find(p => p.name.includes('Smash'))?.id;
+      if (smashId) {
+        const { data: modData, error: modError } = await (supabase as any)
+          .from('product_modifiers')
+          .insert([
+            { product_id: smashId, user_id: tenantUserId, name: 'Escolha o ponto da carne', is_required: true, max_selections: 1, sort_order: 1 },
+            { product_id: smashId, user_id: tenantUserId, name: 'Adicionais extras?', is_required: false, max_selections: 5, sort_order: 2 }
+          ])
+          .select();
+
+        if (modData && !modError) {
+          const pontoId = modData.find(m => m.name.includes('ponto'))?.id;
+          const extrasId = modData.find(m => m.name.includes('Adicionais'))?.id;
+
+          if (pontoId) {
+            await (supabase as any).from('modifier_options').insert([
+              { modifier_id: pontoId, name: 'Ao Ponto (Rosado no centro)', price: 0, sort_order: 1 },
+              { modifier_id: pontoId, name: 'Bem Passado', price: 0, sort_order: 2 }
+            ]);
+          }
+
+          if (extrasId) {
+            await (supabase as any).from('modifier_options').insert([
+              { modifier_id: extrasId, name: 'Bacon Crocante', price: 5.00, sort_order: 1 },
+              { modifier_id: extrasId, name: 'Queijo Cheddar Extra', price: 4.00, sort_order: 2 },
+              { modifier_id: extrasId, name: 'Ovo Frito', price: 3.00, sort_order: 3 }
+            ]);
+          }
+        }
+      }
+
+      toast.success('🚀 Demonstração de 10 produtos e horários gerada com sucesso!');
+      fetchTenants(); // Recarregar lista para refletir mudanças se necessário
     } catch (e: any) {
-      toast.error(e.message || 'Erro ao gerar produtos demo');
+      toast.error(e.message || 'Erro ao gerar demonstração');
     } finally {
       setSeeding(false);
     }
   }
+
+
 
   const filtered = tenants.filter(t => {
     const matchSearch = t.restaurant_name.toLowerCase().includes(search.toLowerCase()) ||
@@ -459,7 +524,12 @@ export default function SuperAdminTenants() {
                       </div>
                     </td>
                     <td className="p-3 text-right">
-                      <div className="flex items-center justify-end gap-1.5">
+                      <div className="flex items-center justify-end gap-1.5 flex-wrap">
+                        <Button variant="outline" size="sm" className="gap-1.5 h-8 text-xs font-bold text-blue-600 border-blue-500/20 hover:bg-blue-500/10"
+                          onClick={() => handleSeedDemoProducts(t.user_id)}>
+                          {seeding ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <PackagePlus className="w-3.5 h-3.5" />}
+                          Demo
+                        </Button>
                         <Button variant="default" size="sm" className="gap-1.5 h-8 text-xs font-bold"
                           onClick={() => { setSelectedTenant(t); setShowManageModal(true); }}>
                           <Settings className="w-3.5 h-3.5" /> Gerenciar
@@ -541,14 +611,20 @@ export default function SuperAdminTenants() {
               </div>
 
               {/* Card Footer — ações */}
-              <div className="px-4 pb-4 flex gap-2">
-                <Button variant="default" className="flex-1 gap-2 h-9 text-xs font-bold"
-                  onClick={() => { setSelectedTenant(t); setShowManageModal(true); }}>
-                  <Settings className="w-3.5 h-3.5" /> Gerenciar
+              <div className="px-4 pb-4 flex flex-col gap-2">
+                <Button variant="outline" className="w-full gap-2 h-9 text-xs font-bold text-blue-600 border-blue-500/20 hover:bg-blue-500/10 hover:border-blue-500/40" onClick={() => handleSeedDemoProducts(t.user_id)}>
+                  {seeding ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <PackagePlus className="w-3.5 h-3.5" />}
+                  {seeding ? 'Injetando...' : 'Injetar Demo (10 Produtos)'}
                 </Button>
-                <Button variant="outline" className="flex-1 gap-2 h-9 text-xs" onClick={() => handleImpersonate(t)}>
-                  <Eye className="w-3.5 h-3.5" /> Acessar
-                </Button>
+                <div className="flex gap-2">
+                  <Button variant="default" className="flex-1 gap-2 h-9 text-xs font-bold"
+                    onClick={() => { setSelectedTenant(t); setShowManageModal(true); }}>
+                    <Settings className="w-3.5 h-3.5" /> Gerenciar
+                  </Button>
+                  <Button variant="outline" className="flex-1 gap-2 h-9 text-xs" onClick={() => handleImpersonate(t)}>
+                    <Eye className="w-3.5 h-3.5" /> Acessar
+                  </Button>
+                </div>
               </div>
             </motion.div>
           );

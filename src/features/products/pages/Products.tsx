@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence, Reorder } from 'framer-motion';
-import { Plus, GripVertical, Edit2, Trash2, Wand2, Upload, X, Package, Settings2, Info } from 'lucide-react';
+import { Plus, GripVertical, Edit2, Trash2, Wand2, Upload, X, Package, Settings2, Info, PackagePlus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Tables } from '@/integrations/supabase/types';
 import { toast } from 'sonner';
@@ -37,6 +37,7 @@ export default function Products() {
   const [productImageUrl, setProductImageUrl] = useState('');
   const [saving, setSaving] = useState(false);
   const [generatingAI, setGeneratingAI] = useState(false);
+  const [seeding, setSeeding] = useState(false);
 
   // Category form
   const [categoryName, setCategoryName] = useState('');
@@ -238,6 +239,124 @@ export default function Products() {
     }
   }
 
+  async function handleSeedDemoProducts() {
+    if (!confirm('Deseja transformar seu cardápio em uma demonstração premium? Serão criados 10 produtos, categorias, modificadores, horários e identidade visual.')) return;
+    setSeeding(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      
+      const { data: isSuperAdmin } = await supabase.rpc('is_super_admin', { _user_id: user.id });
+      const targetUserId = (isSuperAdmin && impersonatedUserId) ? impersonatedUserId : user.id;
+
+      // 1. Atualizar Profile (Branding)
+      await supabase
+        .from('profiles')
+        .update({ primary_color: '#e11d48' } as any)
+        .eq('user_id', targetUserId);
+
+      // 2. Criar Horários (Aberto Sempre)
+      const days = [0, 1, 2, 3, 4, 5, 6];
+      const businessHours = days.map(d => ({
+        user_id: targetUserId,
+        day_of_week: d,
+        open_time: '08:00:00',
+        close_time: '23:59:00',
+        is_open: true
+      }));
+      await supabase.from('business_hours').upsert(businessHours, { onConflict: 'user_id,day_of_week' });
+
+      // 3. Criar Categorias
+      const newCategories = [
+        { name: '🍔 Hambúrgueres', sort_order: categories.length + 1, user_id: targetUserId },
+        { name: '🍕 Pizzas', sort_order: categories.length + 2, user_id: targetUserId },
+        { name: '🥤 Bebidas', sort_order: categories.length + 3, user_id: targetUserId },
+        { name: '🍰 Sobremesas', sort_order: categories.length + 4, user_id: targetUserId }
+      ];
+      
+      const { data: catData, error: catError } = await supabase
+        .from('categories')
+        .insert(newCategories)
+        .select();
+
+      if (catError || !catData) throw new Error('Erro ao criar categorias: ' + catError?.message);
+
+      const burgers = catData.find((c) => c.name.includes('Hambúrgueres'))?.id;
+      const pizzas = catData.find((c) => c.name.includes('Pizzas'))?.id;
+      const bebidas = catData.find((c) => c.name.includes('Bebidas'))?.id;
+      const doces = catData.find((c) => c.name.includes('Sobremesas'))?.id;
+
+      if (!burgers || !pizzas || !bebidas || !doces) throw new Error('Erro ao mapear IDs das categorias');
+
+      // 4. Criar Produtos (10 intens)
+      const demoProducts = [
+        { category_id: burgers, name: 'Smash Duplo Cheddar', description: 'Dois blends de 90g ultra smash, muito cheddar derretido, cebola caramelizada e molho da casa no pão brioche.', price: 34.90, image_url: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&q=80&w=800' },
+        { category_id: burgers, name: 'Bacon Gourmet Special', description: 'Blend 160g de costela, fatias crocantes de bacon artesanal, queijo prato, picles e maionese defumada.', price: 38.50, image_url: 'https://images.unsplash.com/photo-1594212686153-2775f0f3dc10?auto=format&fit=crop&q=80&w=800' },
+        { category_id: burgers, name: 'Chicken Crispy Supreme', description: 'Sobrecoxa empanada super crocante, alface americana, tomate verde e maionese verde especial.', price: 29.90, image_url: 'https://images.unsplash.com/photo-1615719413546-198b25453f85?auto=format&fit=crop&q=80&w=800' },
+        { category_id: pizzas, name: 'Pizza Margherita DOC', description: 'Massa de fermentação natural, molho de tomate pelati, muçarela de búfala e manjericão fresco.', price: 54.00, image_url: 'https://images.unsplash.com/photo-1604068549290-dea0e4a305ca?auto=format&fit=crop&q=80&w=800' },
+        { category_id: pizzas, name: 'Calabresa Artesanal', description: 'Calabresa fatiada fininha com cebola roxa, azeitonas pretas chilenas e toque de orégano.', price: 49.90, image_url: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&q=80&w=800' },
+        { category_id: pizzas, name: 'Quatro Queijos Premium', description: 'Gorgonzola, catupiry original, provolone e muçarela sobre molho artesanal.', price: 62.00, image_url: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&q=80&w=800' },
+        { category_id: bebidas, name: 'Coca-Cola Zero Lata', description: 'Geladíssima 350ml.', price: 6.50, image_url: 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&q=80&w=800' },
+        { category_id: bebidas, name: 'Suco de Laranja Natural', description: 'Copo 500ml de suco fresco espremido na hora, sem açúcar.', price: 12.00, image_url: 'https://images.unsplash.com/photo-1621506289937-a8e4df240d0b?auto=format&fit=crop&q=80&w=800' },
+        { category_id: doces, name: 'Pudim de Leite Condensado', description: 'Pudim liso de leite condensado com calda de caramelo escura. Receita tradicional.', price: 14.50, image_url: 'https://images.unsplash.com/photo-1541783245831-57d6fb0926d3?auto=format&fit=crop&q=80&w=800' },
+        { category_id: doces, name: 'Brownie com Sorvete', description: 'Brownie quente recheado com nozes, acompanhado de bola de sorvete de baunilha cream.', price: 21.00, image_url: 'https://images.unsplash.com/photo-1606313564200-e75d5e30476c?auto=format&fit=crop&q=80&w=800' }
+      ];
+
+      const { data: prodData, error: prodError } = await supabase
+        .from('products')
+        .insert(demoProducts.map((p, i) => ({ 
+          ...p, 
+          user_id: targetUserId, 
+          restaurant_id: targetUserId,
+          sort_order: products.length + i, 
+          is_active: true,
+          is_available: true
+        })))
+        .select();
+
+      if (prodError || !prodData) throw new Error('Erro ao criar produtos: ' + prodError?.message);
+
+      // 5. Criar Modificadores para o Smash Duplo (O primeiro burger)
+      const smashId = prodData.find(p => p.name.includes('Smash'))?.id;
+      if (smashId) {
+        const { data: modData, error: modError } = await (supabase as any)
+          .from('product_modifiers')
+          .insert([
+            { product_id: smashId, user_id: targetUserId, name: 'Escolha o ponto da carne', is_required: true, max_selections: 1, sort_order: 1 },
+            { product_id: smashId, user_id: targetUserId, name: 'Adicionais extras?', is_required: false, max_selections: 5, sort_order: 2 }
+          ])
+          .select();
+
+        if (modData && !modError) {
+          const pontoId = modData.find((m: any) => m.name.includes('ponto'))?.id;
+          const extrasId = modData.find((m: any) => m.name.includes('Adicionais'))?.id;
+
+          if (pontoId) {
+            await (supabase as any).from('modifier_options').insert([
+              { modifier_id: pontoId, name: 'Ao Ponto (Rosado no centro)', price: 0, sort_order: 1 },
+              { modifier_id: pontoId, name: 'Bem Passado', price: 0, sort_order: 2 }
+            ]);
+          }
+
+          if (extrasId) {
+            await (supabase as any).from('modifier_options').insert([
+              { modifier_id: extrasId, name: 'Bacon Crocante', price: 5.00, sort_order: 1 },
+              { modifier_id: extrasId, name: 'Queijo Cheddar Extra', price: 4.00, sort_order: 2 },
+              { modifier_id: extrasId, name: 'Ovo Frito', price: 3.00, sort_order: 3 }
+            ]);
+          }
+        }
+      }
+
+      toast.success('🚀 Demonstração premium de 10 produtos e horários gerada com sucesso!');
+      fetchData();
+    } catch (e: any) {
+      toast.error(e.message || 'Erro ao gerar demonstração');
+    } finally {
+      setSeeding(false);
+    }
+  }
+
   const filteredProducts = selectedCategory
     ? products.filter(p => p.category_id === selectedCategory)
     : products;
@@ -257,9 +376,15 @@ export default function Products() {
           <h1 className="text-2xl font-bold">Gestão de Produtos</h1>
           <p className="text-muted-foreground text-sm mt-1">Organize seu cardápio digital</p>
         </div>
-        <Button onClick={() => openProductModal()} className="gap-2">
-          <Plus className="w-4 h-4" /> Novo Produto
-        </Button>
+        <div className="flex gap-2 flex-wrap justify-end">
+          <Button variant="outline" onClick={handleSeedDemoProducts} disabled={seeding} className="gap-2 text-blue-600 border-blue-200 hover:bg-blue-50/50">
+            <PackagePlus className="w-4 h-4" /> 
+            {seeding ? 'Gerando...' : 'Gerar 10 Produtos'}
+          </Button>
+          <Button onClick={() => openProductModal()} className="gap-2">
+            <Plus className="w-4 h-4" /> Novo Produto
+          </Button>
+        </div>
       </div>
 
       {/* Categories */}
