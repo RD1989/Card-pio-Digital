@@ -16,27 +16,44 @@ export function PlanBanner({ status }: Props) {
 
   useEffect(() => {
     if (!status.user_id) return;
+    let channel: any = null;
 
-    const channel = supabase
-      .channel(`profile_active_check_${status.user_id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'profiles',
-          filter: `user_id=eq.${status.user_id}`,
-        },
-        (payload) => {
-          if (payload.new.is_active === true && (payload.old?.is_active === false || !payload.old)) {
-            triggerSuccess();
-          }
-        }
-      );
-      
-    channel.subscribe();
+    const setup = async () => {
+      try {
+        // Nome único para evitar conflito "after subscribe"
+        const channelName = `active_check_${status.user_id}_${Math.random().toString(36).substring(7)}`;
+        
+        channel = supabase
+          .channel(channelName)
+          .on(
+            'postgres_changes',
+            {
+              event: 'UPDATE',
+              schema: 'public',
+              table: 'profiles',
+              filter: `user_id=eq.${status.user_id}`,
+            },
+            (payload: any) => {
+              if (payload.new?.is_active === true && (payload.old?.is_active === false || !payload.old)) {
+                triggerSuccess();
+              }
+            }
+          );
+          
+        await channel.subscribe();
+      } catch (err) {
+        // Silenciar erro do realtime para não derrubar o site
+        console.warn('⚠️ Falha silenciosa no Realtime do PlanBanner:', err);
+      }
+    };
 
-    return () => { supabase.removeChannel(channel); };
+    // Pequeno atraso para o setup, reduzindo concorrência em re-renders
+    const timer = setTimeout(setup, 100);
+ 
+    return () => { 
+      clearTimeout(timer);
+      if (channel) supabase.removeChannel(channel).catch(() => {});
+    };
   }, [status.user_id]);
 
   const triggerSuccess = () => {

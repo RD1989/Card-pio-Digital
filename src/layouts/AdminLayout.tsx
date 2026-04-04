@@ -14,9 +14,6 @@ export function AdminLayout() {
   const { isSuperAdmin, loading: adminLoading } = useSuperAdmin();
   const { status: planStatus, loading: planLoading } = usePlanStatus();
 
-  // Log técnico imediato no console para acompanhamento
-  console.log('🖥️ RENDER AdminLayout:', { isSuperAdmin, impersonatedUserId, adminLoading, planLoading });
-
   if (adminLoading || planLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background text-foreground">
@@ -31,14 +28,8 @@ export function AdminLayout() {
                 Iniciando Sessão Segura
               </span>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                Estamos preparando seu ambiente de trabalho. Isso leva apenas alguns instantes.
+                Preparando seu ambiente administrativo...
               </p>
-            </div>
-            
-            {/* Dados de diagnóstico visíveis para o usuário em caso de travamento */}
-            <div className="p-3 rounded bg-muted/50 border border-border text-[10px] font-mono text-left opacity-30 mx-auto w-fit">
-              ADMIN: {adminLoading ? '...' : (isSuperAdmin ? 'SI' : 'NO')}<br/>
-              IMPERSONATE: {impersonatedUserId ? 'SI' : 'NO'}
             </div>
           </div>
           
@@ -46,35 +37,24 @@ export function AdminLayout() {
             onClick={() => window.location.reload()}
             className="mt-4 text-[10px] font-bold uppercase tracking-widest text-primary hover:underline"
           >
-            Clique para recarregar a página
+            Clique para recarregar
           </button>
         </div>
       </div>
     );
   }
 
-  // REDIRECIONAMENTO DE SEGURANÇA
-  // Se for super-admin mas não estiver simulando e cair no /admin, vai para /super-admin
   if (isSuperAdmin && !impersonatedUserId && window.location.pathname === '/admin') {
     return <Navigate to="/super-admin" replace />;
   }
 
   const isSuspended = planStatus && !planStatus.isActive;
-  // O bloqueio é mostrado se a conta estiver suspensa, 
-  // EXCETO para o Super Admin em sua própria sessão.
   const showSuspension = isSuspended && (!isSuperAdmin || !!impersonatedUserId);
 
-  // Aqui usamos um try/catch APENAS para a parte de renderização do JSX, 
-  // que é o local seguro para capturar erros de sub-componentes.
   try {
     return (
       <SidebarProvider>
         <div className="min-h-screen flex w-full bg-background relative">
-          {/* BADGE DE DIAGNÓSTICO (Opcional, mas útil por enquanto) */}
-          <div className="fixed top-2 right-2 z-[9999] px-2 py-1 bg-black/80 text-white text-[8px] font-mono rounded border border-white/20 opacity-30 select-none pointer-events-none">
-             ADMIN: {isSuperAdmin ? 'YES' : 'NO'} | IMPERSONATE: {impersonatedUserId ? 'YES' : 'NO'}
-          </div>
-
           <AdminSidebar />
 
           <div className="flex-1 flex flex-col min-w-0">

@@ -130,6 +130,8 @@ export function usePlanStatus() {
     // Iniciar listener de Tempo Real para o perfil do usuário
     let channel: any = null;
     const setupRealtime = async () => {
+      if (!isMounted) return;
+
       try {
         let currentId = impersonatedUserId;
         if (!currentId) {
@@ -139,14 +141,11 @@ export function usePlanStatus() {
         
         if (!currentId) return;
 
-        // Se já houver um canal, remova-o antes de recriar
-        if (channel) {
-          supabase.removeChannel(channel);
-        }
+        // Criar novo canal com identificador aleatório para evitar colisão
+        const channelName = `status_sync_${currentId}_${Math.random().toString(36).substring(7)}`;
 
-        // Criar novo canal com timestamp para garantir unicidade
         channel = supabase
-          .channel(`profile_status_${currentId}_${Date.now()}`)
+          .channel(channelName)
           .on(
             'postgres_changes',
             {
@@ -156,26 +155,27 @@ export function usePlanStatus() {
               filter: `user_id=eq.${currentId}`,
             },
             (payload: any) => {
-              console.log('🔄 Mudança de perfil detectada no Realtime!', payload);
-              fetch(); // Forçar nova busca de dados quando o perfil mudar
+              if (isMounted) {
+                console.log('🔄 Mudança de perfil detectada no Realtime!', payload);
+                fetch(); 
+              }
             }
-          )
-          .subscribe((status: string) => {
-            console.log(`🔌 Conexão Realtime (Status): ${status}`);
-          });
+          );
+          
+        await channel.subscribe();
       } catch (err) {
-        console.error("❌ Erro ao configurar Realtime no usePlanStatus:", err);
+        console.warn("⚠️ Falha silenciosa no Realtime do usePlanStatus:", err);
       }
     };
 
-    setupRealtime();
+    const realtimeTimer = setTimeout(setupRealtime, 150);
 
     return () => {
       isMounted = false;
       clearTimeout(failsafeTimeout);
+      clearTimeout(realtimeTimer);
       if (channel) {
-        console.log('🧹 Limpando canal de Realtime');
-        supabase.removeChannel(channel);
+        supabase.removeChannel(channel).catch(() => {});
       }
     };
   }, [impersonatedUserId]);
