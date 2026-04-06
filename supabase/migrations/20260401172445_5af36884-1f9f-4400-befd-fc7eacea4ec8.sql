@@ -1,0 +1,1 @@
+ALTER TABLE public.profiles ADD COLUMN font_style text NOT NULL DEFAULT 'inter';
