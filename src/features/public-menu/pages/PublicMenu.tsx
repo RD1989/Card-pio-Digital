@@ -150,17 +150,29 @@ const slideIn = {
  ════════════════════════════════════════════════════════════════ */
 function HeroSlider({ profile, menuCategories, accentColor }: { profile: Profile, menuCategories: MenuCategory[], accentColor: string }) {
   const slides = useMemo(() => {
-    const list = [];
-    if (profile.banner_url) {
+    const list: { id: string, image: string, title: string }[] = [];
+    
+    // 1. Prioritize Multi-Banners (Carousel)
+    const bannerUrls = (profile as any).banner_urls as string[] || [];
+    if (bannerUrls.length > 0) {
+      bannerUrls.forEach((url, idx) => {
+        list.push({ id: `banner-${idx}`, image: url, title: profile.restaurant_name });
+      });
+    } else if (profile.banner_url) {
+      // 2. Fallback to Legacy Single Banner
       list.push({ id: 'main', image: profile.banner_url, title: profile.restaurant_name });
     }
-    if (menuCategories && menuCategories.length > 0) {
+
+    // 3. Optional: Add product images as secondary slides if list is short
+    if (list.length < 2 && menuCategories && menuCategories.length > 0) {
       const allProducts = menuCategories.flatMap(c => c.items);
       const withImages = allProducts.filter(p => !!p.image_url);
-      withImages.slice(0, 3).forEach(p => {
-        list.push({ id: p.id, image: p.image_url!, title: p.name });
+      withImages.slice(0, 2).forEach(p => {
+        list.push({ id: `prod-${p.id}`, image: p.image_url!, title: p.name });
       });
     }
+
+    // 4. Final Fallback
     if (list.length === 0) {
       list.push({ id: 'default', image: '', title: profile.restaurant_name });
     }
@@ -178,7 +190,7 @@ function HeroSlider({ profile, menuCategories, accentColor }: { profile: Profile
   }, [slides.length]);
 
   return (
-    <div className="absolute inset-0 w-full h-full overflow-hidden">
+    <div className="absolute inset-0 w-full h-full overflow-hidden" style={{ aspectRatio: '1024/683' }}>
       <AnimatePresence mode="popLayout" initial={false}>
         <motion.div
           key={current}
@@ -198,7 +210,7 @@ function HeroSlider({ profile, menuCategories, accentColor }: { profile: Profile
 
       {/* Better indicators */}
       {slides.length > 1 && (
-        <div className="absolute bottom-[35%] left-0 right-0 z-10 flex justify-center gap-1.5 px-6">
+        <div className="absolute bottom-[28%] left-0 right-0 z-10 flex justify-center gap-1.5 px-6">
            <div className="flex bg-black/40 backdrop-blur-xl px-2.5 py-1.5 rounded-full border border-white/10">
              {slides.map((_, idx) => (
                 <button

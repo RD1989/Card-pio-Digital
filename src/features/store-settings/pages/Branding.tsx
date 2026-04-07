@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Palette, Upload, Type, Eye, Loader2, Paintbrush } from 'lucide-react';
+import { Palette, Upload, Type, Eye, Loader2, Paintbrush, X, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useImpersonateStore } from '@/shared/stores/global/useImpersonateStore';
 import { QRCodeGenerator } from '@/shared/components/common/QRCodeGenerator';
 import { Label } from '@/shared/components/ui/label';
+
+// ... (fontOptions and presetColors remain the same)
 
 const fontOptions = [
   { value: 'inter', label: 'Inter', family: 'Inter, sans-serif' },
@@ -33,8 +35,7 @@ export default function Branding() {
   const [slug, setSlug] = useState('');
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [logoFile, setLogoFile] = useState<File | null>(null);
-  const [bannerPreview, setBannerPreview] = useState<string | null>(null);
-  const [bannerFile, setBannerFile] = useState<File | null>(null);
+  const [banners, setBanners] = useState<{ id: string, url: string, file: File | null }[]>([]);
   const [fontStyle, setFontStyle] = useState('inter');
   const [themeMode, setThemeMode] = useState('auto');
   const [menuLayout, setMenuLayout] = useState('classic');
@@ -63,7 +64,20 @@ export default function Branding() {
         setThemeMode((profile as any).theme_mode || 'auto');
         setMenuLayout((profile as any).menu_layout || 'classic');
         if (profile.logo_url) setLogoPreview(profile.logo_url);
-        if ((profile as any).banner_url) setBannerPreview((profile as any).banner_url);
+        
+        // Load existing banners
+        const existingBanners: { id: string, url: string, file: File | null }[] = [];
+        const bannerUrls = (profile as any).banner_urls as string[] || [];
+        
+        if (bannerUrls.length > 0) {
+          bannerUrls.forEach((url, index) => {
+            existingBanners.push({ id: `existing-${index}`, url, file: null });
+          });
+        } else if (profile.banner_url) {
+          // Fallback to legacy single banner
+          existingBanners.push({ id: 'legacy', url: profile.banner_url, file: null });
+        }
+        setBanners(existingBanners);
       }
       setLoading(false);
     }
@@ -84,16 +98,33 @@ export default function Branding() {
   };
 
   const handleBannerUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (file.size > 3 * 1024 * 1024) {
-      toast.error('O banner deve ter no máximo 3MB');
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    
+    if (banners.length + files.length > 5) {
+      toast.error('O carrossel suporta no máximo 5 banners');
       return;
     }
-    setBannerFile(file);
-    const reader = new FileReader();
-    reader.onload = () => setBannerPreview(reader.result as string);
-    reader.readAsDataURL(file);
+
+    const newBanners = [...banners];
+    
+    Array.from(files).forEach(file => {
+      if (file.size > 3 * 1024 * 1024) {
+        toast.error(`O arquivo ${file.name} excede 3MB`);
+        return;
+      }
+      
+      const reader = new FileReader();
+      const id = `new-${Math.random().toString(36).substr(2, 9)}`;
+      reader.onload = () => {
+        setBanners(prev => [...prev, { id, url: reader.result as string, file }]);
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const removeBanner = (id: string) => {
+    setBanners(prev => prev.filter(b => b.id !== id));
   };
 
   const handleSave = async () => {
@@ -106,7 +137,7 @@ export default function Branding() {
     }
 
     let logoUrl = logoPreview;
-    let bannerUrl = bannerPreview;
+    const finalBannerUrls: string[] = [];
 
     if (logoFile) {
       const ext = logoFile.name.split('.').pop();
@@ -117,13 +148,21 @@ export default function Branding() {
       logoUrl = data.publicUrl;
     }
 
-    if (bannerFile) {
-      const ext = bannerFile.name.split('.').pop();
-      const path = `${userId}/banner-${Date.now()}.${ext}`;
-      const { error: uploadErr } = await supabase.storage.from('product-images').upload(path, bannerFile);
-      if (uploadErr) { toast.error('Erro no upload do banner'); setSaving(false); return; }
-      const { data } = supabase.storage.from('product-images').getPublicUrl(path);
-      bannerUrl = data.publicUrl;
+    // Process all banners
+    for (const banner of banners) {
+      if (banner.file) {
+        const ext = banner.file.name.split('.').pop();
+        const path = `${userId}/banner-${Date.now()}-${banner.id}.${ext}`;
+        const { error: uploadErr } = await supabase.storage.from('product-images').upload(path, banner.file);
+        if (uploadErr) {
+          toast.error(`Erro no upload de um dos banners`);
+          continue;
+        }
+        const { data } = supabase.storage.from('product-images').getPublicUrl(path);
+        finalBannerUrls.push(data.publicUrl);
+      } else {
+        finalBannerUrls.push(banner.url); // Keep existing URL
+      }
     }
 
     const { error } = await (supabase as any).from('profiles').update({
@@ -135,7 +174,8 @@ export default function Branding() {
       theme_mode: themeMode,
       menu_layout: menuLayout,
       logo_url: logoUrl || '',
-      banner_url: bannerUrl || '',
+      banner_url: finalBannerUrls[0] || '', // Maintain legacy for single-image systems
+      banner_urls: finalBannerUrls, // New carrossel field
     }).eq('user_id', userId);
 
     if (error) { toast.error('Erro ao salvar'); } else { toast.success('Identidade visual salva!'); }
@@ -224,39 +264,58 @@ export default function Branding() {
           </motion.section>
 
           <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="glass-sm p-6 space-y-4">
-            <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-primary">
-              <Paintbrush className="w-4 h-4" /> Banner da Capa
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-primary">
+                <Paintbrush className="w-4 h-4" /> Carrossel de Banners (3:2)
+              </div>
+              <span className="text-[10px] font-bold text-muted-foreground uppercase bg-muted px-2 py-1 rounded-md">
+                {banners.length} / 5
+              </span>
             </div>
-            <div className="space-y-4">
-              <label className="flex flex-col items-center justify-center w-full h-40 rounded-2xl border-2 border-dashed border-border hover:border-primary/50 cursor-pointer transition-colors bg-muted/30 relative overflow-hidden group">
-                {bannerPreview ? (
-                  <>
-                    <img src={bannerPreview} alt="Banner" className="w-full h-full object-cover transition-transform group-hover:scale-105" />
-                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                      <span className="text-white text-xs font-semibold">Alterar Capa</span>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {banners.map((banner) => (
+                <div key={banner.id} className="relative group aspect-[3/2] rounded-xl overflow-hidden border border-border bg-muted/30">
+                  <img src={banner.url} alt="Banner" className="w-full h-full object-cover" />
+                  <button
+                    onClick={() => removeBanner(banner.id)}
+                    className="absolute top-2 right-2 w-8 h-8 rounded-full bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                  {banner.id.startsWith('existing') && (
+                    <div className="absolute bottom-2 left-2 px-2 py-0.5 rounded bg-black/50 text-[8px] text-white uppercase font-bold backdrop-blur-sm">
+                      Salvo
                     </div>
-                  </>
-                ) : (
+                  )}
+                </div>
+              ))}
+              
+              {banners.length < 5 && (
+                <label className="flex flex-col items-center justify-center aspect-[3/2] rounded-xl border-2 border-dashed border-border hover:border-primary/50 cursor-pointer transition-colors bg-muted/20 group">
                   <div className="flex flex-col items-center gap-2">
-                    <Upload className="w-6 h-6 text-muted-foreground" />
-                    <span className="text-xs text-muted-foreground">Enviar imagem de capa profissional</span>
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <Plus className="w-5 h-5 text-primary" />
+                    </div>
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase">Adicionar Banner</span>
                   </div>
-                )}
-                <input type="file" accept="image/*" className="hidden" onChange={handleBannerUpload} />
-              </label>
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-primary/5 p-4 rounded-xl border border-primary/10">
-                <div>
-                  <p className="text-xs font-black text-primary uppercase tracking-widest flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                    Resolução Ideal: 1024x683px (3:2)
-                  </p>
-                  <p className="text-[10px] text-muted-foreground mt-1 font-medium">
-                    Esta proporção garante que seu banner não seja cortado nos celulares dos clientes.
-                  </p>
-                </div>
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-[10px] font-black uppercase tracking-tighter shrink-0 animate-in fade-in zoom-in duration-500">
-                  Mobile Ready
-                </div>
+                  <input type="file" accept="image/*" multiple className="hidden" onChange={handleBannerUpload} />
+                </label>
+              )}
+            </div>
+
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-primary/5 p-4 rounded-xl border border-primary/10">
+              <div>
+                <p className="text-xs font-black text-primary uppercase tracking-widest flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                  Resolução Ideal: 1024x683px (3:2)
+                </p>
+                <p className="text-[10px] text-muted-foreground mt-1 font-medium">
+                  Esta proporção garante que seu carrossel fique perfeito em todos os celulares.
+                </p>
+              </div>
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-[10px] font-black uppercase tracking-tighter shrink-0 animate-in fade-in zoom-in duration-500">
+                Mobile Ready
               </div>
             </div>
           </motion.section>
@@ -373,8 +432,8 @@ export default function Branding() {
               style={{ fontFamily: fontOptions.find(f => f.value === fontStyle)?.family }}
             >
               <div className="relative h-40 w-full bg-slate-200">
-                {bannerPreview ? (
-                  <img src={bannerPreview} alt="Banner prev" className="w-full h-full object-cover" />
+                {banners.length > 0 ? (
+                  <img src={banners[0].url} alt="Banner prev" className="w-full h-full object-cover" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-slate-300">
                     <Paintbrush className="w-8 h-8 text-slate-400" />
