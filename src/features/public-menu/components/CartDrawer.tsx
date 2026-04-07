@@ -160,6 +160,13 @@ export function CartDrawer({ accentColor = '#16a34a' }: CartDrawerProps) {
       toast.error('Preencha o endereço completo (Rua, Nº e Bairro)'); 
       return; 
     }
+
+    const cleanPhone = (restaurantWhatsapp || '').replace(/\D/g, '');
+    if (!cleanPhone) { 
+      toast.error('O WhatsApp deste restaurante não está configurado.'); 
+      return; 
+    }
+
     setLoading(true);
 
     try {
@@ -213,9 +220,6 @@ export function CartDrawer({ accentColor = '#16a34a' }: CartDrawerProps) {
       }))
     );
 
-    const cleanPhone     = (restaurantWhatsapp || '').replace(/\D/g, '');
-    if (!cleanPhone) { toast.error('WhatsApp do restaurante não configurado.'); setLoading(false); return; }
-    
     const whatsappPhone  = cleanPhone.startsWith('55') ? cleanPhone : `55${cleanPhone}`;
     const fullAddress    = deliveryType === 'delivery' ? `${street.trim()}, ${number.trim()} - ${neighborhood.trim()}` : '';
     const message        = buildWhatsAppMessage(restaurantName || restaurantSlug.replace(/-/g, ' '), items, subtotalValue, effectiveFee, totalValue, name, phone, fullAddress, deliveryType, paymentMethod, obs);
