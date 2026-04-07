@@ -214,8 +214,13 @@ Retorne APENAS um JSON válido seguindo este esquema:
           .select('id, name');
 
         if (batchError) {
-          console.error('Erro ao criar categorias em lote:', batchError);
-        } else if (createdCats) {
+          console.error('Erro detalhado ao criar categorias em lote:', batchError);
+          toast.error(`Erro ao criar categorias: ${batchError.message}`);
+          throw new Error(`Falha na criação de categorias: ${batchError.message}`);
+        }
+
+        if (createdCats) {
+          console.log('Categorias criadas com sucesso:', createdCats.length);
           createdCats.forEach(cat => {
             categoryMap[cat.name.toLowerCase()] = cat.id;
           });
