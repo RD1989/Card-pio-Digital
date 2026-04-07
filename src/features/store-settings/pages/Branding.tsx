@@ -285,7 +285,7 @@ export default function Branding() {
             <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-primary">
               <Upload className="w-4 h-4" /> Banner da Capa (Fundo do Cabeçalho)
             </div>
-            <div className="relative group aspect-[16/6] rounded-[24px] overflow-hidden border-2 border-dashed border-border hover:border-primary/50 transition-all bg-muted/20">
+            <div className="relative group aspect-[16/9] rounded-[24px] overflow-hidden border-2 border-dashed border-border hover:border-primary/50 transition-all bg-muted/20">
               {headerBannerPreview ? (
                 <>
                   <img src={headerBannerPreview} alt="Header" className="w-full h-full object-cover opacity-80" />
@@ -305,7 +305,7 @@ export default function Branding() {
               )}
             </div>
             <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-tighter">
-              Essa imagem servirá de fundo para o cabeçalho. Proporção recomendada: 16:6.
+              Essa imagem servirá de fundo para o cabeçalho. Proporção recomendada: 16:9 (1280x720px).
             </p>
           </motion.section>
 
