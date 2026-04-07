@@ -223,13 +223,13 @@ function StoreHeader({ profile, isOpen, accentColor }: { profile: Profile, isOpe
       </div>
 
       <div className="relative z-20 -mt-12 px-5 max-w-3xl mx-auto">
-        <div className="bg-white dark:bg-[#1a1a1a] rounded-[28px] p-5 shadow-2xl border border-black/[0.04] dark:border-white/5 flex flex-col items-center text-center">
+        <div className="bg-white/50 dark:bg-black/40 backdrop-blur-md rounded-[28px] p-5 shadow-[0_8px_32px_0_rgba(0,0,0,0.1)] border border-white/30 dark:border-white/10 flex flex-col items-center text-center">
            <div className="relative -mt-14 mb-3">
-              <div className="w-20 h-20 rounded-2xl overflow-hidden bg-white dark:bg-slate-800 p-1 shadow-xl border-4 border-white dark:border-[#1a1a1a]">
+              <div className="w-20 h-20 rounded-2xl overflow-hidden bg-white/50 dark:bg-black/40 backdrop-blur-md p-1 shadow-xl border-2 border-white/40 dark:border-white/10">
                 {profile.logo_url ? (
                   <img src={profile.logo_url} alt={profile.restaurant_name} className="w-full h-full object-cover rounded-xl" />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-primary/10 text-primary font-black text-xl">{profile.restaurant_name[0]}</div>
+                  <div className="w-full h-full flex items-center justify-center bg-primary/20 text-primary font-black text-xl">{profile.restaurant_name[0]}</div>
                 )}
               </div>
               {isOpen !== null && (
