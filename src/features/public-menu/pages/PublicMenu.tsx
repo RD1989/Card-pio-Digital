@@ -222,38 +222,38 @@ function StoreHeader({ profile, isOpen, accentColor }: { profile: Profile, isOpe
         <div className="absolute inset-0 bg-black/30" />
       </div>
 
-      <div className="relative z-20 -mt-20 px-5 max-w-3xl mx-auto">
-        <div className="bg-white dark:bg-[#1a1a1a] rounded-[32px] p-6 shadow-2xl border border-black/[0.04] dark:border-white/5 flex flex-col items-center text-center">
-           <div className="relative -mt-16 mb-4">
-              <div className="w-24 h-24 rounded-3xl overflow-hidden bg-white dark:bg-slate-800 p-1 shadow-xl border-4 border-white dark:border-[#1a1a1a]">
+      <div className="relative z-20 -mt-12 px-5 max-w-3xl mx-auto">
+        <div className="bg-white dark:bg-[#1a1a1a] rounded-[28px] p-5 shadow-2xl border border-black/[0.04] dark:border-white/5 flex flex-col items-center text-center">
+           <div className="relative -mt-14 mb-3">
+              <div className="w-20 h-20 rounded-2xl overflow-hidden bg-white dark:bg-slate-800 p-1 shadow-xl border-4 border-white dark:border-[#1a1a1a]">
                 {profile.logo_url ? (
-                  <img src={profile.logo_url} alt={profile.restaurant_name} className="w-full h-full object-cover rounded-2xl" />
+                  <img src={profile.logo_url} alt={profile.restaurant_name} className="w-full h-full object-cover rounded-xl" />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-primary/10 text-primary font-black text-2xl">{profile.restaurant_name[0]}</div>
+                  <div className="w-full h-full flex items-center justify-center bg-primary/10 text-primary font-black text-xl">{profile.restaurant_name[0]}</div>
                 )}
               </div>
               {isOpen !== null && (
-                <div className={`absolute -right-2 -bottom-1 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter shadow-lg border-2 border-white dark:border-[#1a1a1a] ${isOpen ? 'bg-emerald-500 text-white' : 'bg-red-500 text-white'}`}>
+                <div className={`absolute -right-2 -bottom-1 px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-tighter shadow-lg border-2 border-white dark:border-[#1a1a1a] ${isOpen ? 'bg-emerald-500 text-white' : 'bg-red-500 text-white'}`}>
                   {isOpen ? 'Aberto' : 'Fechado'}
                 </div>
               )}
            </div>
 
-           <h1 className="text-2xl sm:text-3xl font-black text-foreground tracking-tight mb-2">{profile.restaurant_name}</h1>
+           <h1 className="text-xl sm:text-2xl font-black text-foreground tracking-tight mb-2">{profile.restaurant_name}</h1>
            
-           <div className="flex items-center gap-2 mb-4 flex-wrap justify-center">
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-white/5 text-[11px] font-bold text-muted-foreground">
-                <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+           <div className="flex items-center gap-1.5 mb-2 flex-wrap justify-center">
+              <div className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-white/5 text-[10px] font-bold text-muted-foreground">
+                <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
                 <span className="text-foreground">4.9</span>
                 <span className="opacity-60">(120+)</span>
               </div>
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-white/5 text-[11px] font-bold text-muted-foreground">
-                <Clock className="w-3.5 h-3.5" />
+              <div className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-white/5 text-[10px] font-bold text-muted-foreground">
+                <Clock className="w-3 h-3" />
                 <span className="text-foreground">30-45 min</span>
               </div>
               {(profile.show_delivery_info ?? true) && (
-                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-white/5 text-[11px] font-bold text-muted-foreground">
-                  <Truck className="w-3.5 h-3.5" />
+                <div className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-white/5 text-[10px] font-bold text-muted-foreground">
+                  <Truck className="w-3 h-3" />
                   <span className="text-foreground">{profile.custom_delivery_label || (profile.delivery_fee === 0 ? 'Grátis' : formatCurrency(profile.delivery_fee))}</span>
                 </div>
               )}
@@ -263,6 +263,7 @@ function StoreHeader({ profile, isOpen, accentColor }: { profile: Profile, isOpe
     </div>
   );
 }
+
 
 /* ════════════════════════════════════════════════════════════════
    MAIN COMPONENT
