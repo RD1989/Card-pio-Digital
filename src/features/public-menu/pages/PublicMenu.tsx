@@ -222,43 +222,49 @@ function StoreHeader({ profile, isOpen, accentColor }: { profile: Profile, isOpe
         <div className="absolute inset-0 bg-black/30" />
       </div>
 
-      <div className="relative z-20 -mt-12 px-5 max-w-3xl mx-auto">
-        <div className="bg-transparent rounded-[28px] p-5 shadow-[0_8px_32px_0_rgba(0,0,0,0.15)] border border-white/40 dark:border-white/20 flex flex-col items-center text-center">
-           <div className="relative -mt-14 mb-3">
-              <div className="w-20 h-20 rounded-2xl overflow-hidden bg-transparent p-1 shadow-xl border-2 border-white/50 dark:border-white/20">
-                {profile.logo_url ? (
-                  <img src={profile.logo_url} alt={profile.restaurant_name} className="w-full h-full object-cover rounded-xl" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-primary/20 text-primary font-black text-xl">{profile.restaurant_name[0]}</div>
-                )}
-              </div>
-              {isOpen !== null && (
-                <div className={`absolute -right-2 -bottom-1 px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-tighter shadow-lg border-2 border-white dark:border-[#1a1a1a] ${isOpen ? 'bg-emerald-500 text-white' : 'bg-red-500 text-white'}`}>
-                  {isOpen ? 'Aberto' : 'Fechado'}
-                </div>
+      <div className="relative z-20 px-5 max-w-3xl mx-auto -mt-10 mb-8 flex items-end gap-4 sm:gap-5">
+         
+         {/* Logo Flutuante */}
+         <div className="relative flex-shrink-0">
+            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-[22px] overflow-hidden bg-white dark:bg-[#1a1a1a] p-1 shadow-2xl border border-black/5 dark:border-white/10">
+              {profile.logo_url ? (
+                <img src={profile.logo_url} alt={profile.restaurant_name} className="w-full h-full object-cover rounded-[18px]" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-primary/10 text-primary font-black text-xl rounded-[18px]">{profile.restaurant_name[0]}</div>
               )}
-           </div>
-
-           <h1 className="text-xl sm:text-2xl font-black text-foreground tracking-tight mb-2">{profile.restaurant_name}</h1>
-           
-           <div className="flex items-center gap-1.5 mb-2 flex-wrap justify-center">
-              <div className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-white/5 text-[10px] font-bold text-muted-foreground">
-                <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
-                <span className="text-foreground">4.9</span>
-                <span className="opacity-60">(120+)</span>
+            </div>
+            {isOpen !== null && (
+              <div className={`absolute -right-1 -bottom-2 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-tighter shadow-xl border border-white/20 dark:border-black/50 ${isOpen ? 'bg-emerald-500 text-white' : 'bg-red-500 text-white'}`}>
+                {isOpen ? 'Aberto' : 'Fechado'}
               </div>
-              <div className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-white/5 text-[10px] font-bold text-muted-foreground">
-                <Clock className="w-3 h-3" />
+            )}
+         </div>
+
+         {/* Informações Estratégicas */}
+         <div className="flex flex-col pb-1">
+            <h1 className="text-xl sm:text-2xl font-black text-foreground tracking-tight mb-2">
+              {profile.restaurant_name}
+            </h1>
+            
+            <div className="flex items-center gap-2 flex-wrap">
+              <div className="flex items-center gap-1 px-2.5 py-1.5 rounded-[10px] bg-slate-100 dark:bg-white/5 border border-black/5 dark:border-white/5 text-[10px] font-bold text-foreground shadow-sm">
+                <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                <span>4.9</span>
+                <span className="opacity-50">(120+)</span>
+              </div>
+              <div className="flex items-center gap-1 px-2.5 py-1.5 rounded-[10px] bg-slate-100 dark:bg-white/5 border border-black/5 dark:border-white/5 text-[10px] font-bold text-muted-foreground shadow-sm">
+                <Clock className="w-3 h-3 opacity-70" />
                 <span className="text-foreground">30-45 min</span>
               </div>
               {(profile.show_delivery_info ?? true) && (
-                <div className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-white/5 text-[10px] font-bold text-muted-foreground">
-                  <Truck className="w-3 h-3" />
+                <div className="flex items-center gap-1 px-2.5 py-1.5 rounded-[10px] bg-slate-100 dark:bg-white/5 border border-black/5 dark:border-white/5 text-[10px] font-bold text-muted-foreground shadow-sm">
+                  <Truck className="w-3 h-3 opacity-70" />
                   <span className="text-foreground">{profile.custom_delivery_label || (profile.delivery_fee === 0 ? 'Grátis' : formatCurrency(profile.delivery_fee))}</span>
                 </div>
               )}
-           </div>
-        </div>
+            </div>
+         </div>
+
       </div>
     </div>
   );
