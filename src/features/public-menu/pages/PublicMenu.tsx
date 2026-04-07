@@ -223,9 +223,9 @@ function StoreHeader({ profile, isOpen, accentColor }: { profile: Profile, isOpe
       </div>
 
       <div className="relative z-20 -mt-12 px-5 max-w-3xl mx-auto">
-        <div className="bg-white/50 dark:bg-black/40 backdrop-blur-md rounded-[28px] p-5 shadow-[0_8px_32px_0_rgba(0,0,0,0.1)] border border-white/30 dark:border-white/10 flex flex-col items-center text-center">
+        <div className="bg-transparent rounded-[28px] p-5 shadow-[0_8px_32px_0_rgba(0,0,0,0.15)] border border-white/40 dark:border-white/20 flex flex-col items-center text-center">
            <div className="relative -mt-14 mb-3">
-              <div className="w-20 h-20 rounded-2xl overflow-hidden bg-white/50 dark:bg-black/40 backdrop-blur-md p-1 shadow-xl border-2 border-white/40 dark:border-white/10">
+              <div className="w-20 h-20 rounded-2xl overflow-hidden bg-transparent p-1 shadow-xl border-2 border-white/50 dark:border-white/20">
                 {profile.logo_url ? (
                   <img src={profile.logo_url} alt={profile.restaurant_name} className="w-full h-full object-cover rounded-xl" />
                 ) : (
