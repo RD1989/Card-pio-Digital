@@ -181,6 +181,7 @@ export default function Products() {
       is_upsell: productIsUpsell,
       image_url: imageUrl,
       user_id: userId,
+      restaurant_id: userId,
     };
 
     let finalProductId = editingProduct?.id;
