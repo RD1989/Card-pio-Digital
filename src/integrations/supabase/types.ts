@@ -259,6 +259,7 @@ export type Database = {
           product_name: string
           quantity: number
           unit_price: number
+          restaurant_id: string | null
         }
         Insert: {
           created_at?: string
@@ -268,6 +269,7 @@ export type Database = {
           product_name: string
           quantity?: number
           unit_price: number
+          restaurant_id: string | null
         }
         Update: {
           created_at?: string
@@ -277,6 +279,7 @@ export type Database = {
           product_name?: string
           quantity?: number
           unit_price?: number
+          restaurant_id?: string | null
         }
         Relationships: [
           {
@@ -303,6 +306,7 @@ export type Database = {
           id: string
           notes: string | null
           restaurant_user_id: string
+          restaurant_id: string | null
           status: string
           total: number
           updated_at: string
@@ -314,6 +318,7 @@ export type Database = {
           id?: string
           notes?: string | null
           restaurant_user_id: string
+          restaurant_id: string | null
           status?: string
           total?: number
           updated_at?: string
@@ -325,6 +330,7 @@ export type Database = {
           id?: string
           notes?: string | null
           restaurant_user_id?: string
+          restaurant_id?: string | null
           status?: string
           total?: number
           updated_at?: string

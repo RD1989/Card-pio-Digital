@@ -175,6 +175,7 @@ export function CartDrawer({ accentColor = '#16a34a' }: CartDrawerProps) {
 
     const { data: order, error } = await supabase.from('orders').insert({
       restaurant_user_id: restaurantUserId,
+      restaurant_id: restaurantUserId,
       customer_name: name,
       customer_phone: phone,
       notes: obs || null,
@@ -185,7 +186,14 @@ export function CartDrawer({ accentColor = '#16a34a' }: CartDrawerProps) {
     if (error || !order) { toast.error('Erro ao salvar pedido.'); setLoading(false); return; }
 
     await supabase.from('order_items').insert(
-      items.map(item => ({ order_id: order.id, product_id: item.id, product_name: item.name, quantity: item.quantity, unit_price: item.price }))
+      items.map(item => ({ 
+        order_id: order.id, 
+        product_id: item.id, 
+        product_name: item.name, 
+        quantity: item.quantity, 
+        unit_price: item.price,
+        restaurant_id: restaurantUserId
+      }))
     );
 
     const cleanPhone     = (restaurantWhatsapp || '').replace(/\D/g, '');
