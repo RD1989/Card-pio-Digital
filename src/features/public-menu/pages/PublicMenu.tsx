@@ -236,28 +236,28 @@ function StoreHeader({ profile, isOpen, accentColor }: { profile: Profile, isOpe
          </div>
 
          {/* Informações Estratégicas (Encaixadas no vazio abaixo do banner) */}
-         <div className="flex flex-col pt-2 pb-1 justify-center overflow-hidden">
+         <div className="flex flex-col pt-2 pb-1 justify-center overflow-hidden w-full">
             <h1 className="text-xl sm:text-2xl font-black text-foreground tracking-tight mb-2 truncate">
               {profile.restaurant_name}
             </h1>
             
-            <div className="flex items-center gap-1.5 flex-wrap">
+            <div className="flex items-center gap-1.5 flex-nowrap overflow-x-auto no-scrollbar w-full pb-1">
               {isOpen !== null && (
-                <div className={`flex items-center px-2 py-1 rounded-md text-[10px] font-black uppercase tracking-tighter shadow-sm border border-transparent ${isOpen ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-red-500/10 text-red-600 dark:text-red-400'}`}>
+                <div className={`flex items-center px-2 py-1 rounded-md text-[10px] font-black uppercase tracking-tighter shadow-sm border border-transparent whitespace-nowrap flex-shrink-0 ${isOpen ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-red-500/10 text-red-600 dark:text-red-400'}`}>
                   {isOpen ? 'Aberto' : 'Fechado'}
                 </div>
               )}
-              <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-white dark:bg-white/5 border border-black/5 dark:border-white/5 text-[10px] font-bold text-foreground shadow-sm">
+              <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-white dark:bg-white/5 border border-black/5 dark:border-white/5 text-[10px] font-bold text-foreground shadow-sm whitespace-nowrap flex-shrink-0">
                 <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
                 <span>4.9</span>
                 <span className="opacity-50 font-normal">(120+)</span>
               </div>
-              <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-white dark:bg-white/5 border border-black/5 dark:border-white/5 text-[10px] font-bold text-muted-foreground shadow-sm">
+              <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-white dark:bg-white/5 border border-black/5 dark:border-white/5 text-[10px] font-bold text-muted-foreground shadow-sm whitespace-nowrap flex-shrink-0">
                 <Clock className="w-3 h-3 opacity-70" />
                 <span className="text-foreground">30-45 min</span>
               </div>
               {(profile.show_delivery_info ?? true) && (
-                <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-white dark:bg-white/5 border border-black/5 dark:border-white/5 text-[10px] font-bold text-muted-foreground shadow-sm">
+                <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-white dark:bg-white/5 border border-black/5 dark:border-white/5 text-[10px] font-bold text-muted-foreground shadow-sm whitespace-nowrap flex-shrink-0">
                   <Truck className="w-3 h-3 opacity-70" />
                   <span className="text-foreground">{profile.custom_delivery_label || (profile.delivery_fee === 0 ? 'Grátis' : formatCurrency(profile.delivery_fee))}</span>
                 </div>
