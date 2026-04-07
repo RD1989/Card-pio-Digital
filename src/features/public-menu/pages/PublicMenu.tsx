@@ -222,31 +222,38 @@ function StoreHeader({ profile, isOpen, accentColor }: { profile: Profile, isOpe
         <div className="absolute inset-0 bg-black/30" />
       </div>
 
-      <div className="relative z-20 px-5 max-w-3xl mx-auto mb-8 flex gap-4 sm:gap-5">
+      <div className="relative z-20 px-5 max-w-3xl mx-auto mb-8 flex flex-col">
          
-         {/* Logo Flutuante (único elemento que sobrepõe a capa) */}
-         <div className="relative flex-shrink-0 -mt-10">
-            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-[22px] overflow-hidden bg-white dark:bg-[#1a1a1a] p-1 shadow-2xl border border-black/5 dark:border-white/10">
-              {profile.logo_url ? (
-                <img src={profile.logo_url} alt={profile.restaurant_name} className="w-full h-full object-cover rounded-[18px]" />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center bg-primary/10 text-primary font-black text-xl rounded-[18px]">{profile.restaurant_name[0]}</div>
-              )}
+         <div className="flex items-end gap-3">
+            {/* Logo Flutuante (único elemento que sobrepõe a capa) */}
+            <div className="relative flex-shrink-0 -mt-10 self-start">
+               <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-[22px] overflow-hidden bg-white dark:bg-[#1a1a1a] p-1 shadow-2xl border border-black/5 dark:border-white/10">
+                 {profile.logo_url ? (
+                   <img src={profile.logo_url} alt={profile.restaurant_name} className="w-full h-full object-cover rounded-[18px]" />
+                 ) : (
+                   <div className="w-full h-full flex items-center justify-center bg-primary/10 text-primary font-black text-xl rounded-[18px]">{profile.restaurant_name[0]}</div>
+                 )}
+               </div>
             </div>
+
+            {/* Informação Aberto/Fechado (Abaixo do banner, à direita do logo, acima do nome) */}
+            {isOpen !== null && (
+              <div className="pb-1 animate-in fade-in slide-in-from-left-4 duration-500">
+                <div className={`flex items-center px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-tighter shadow-sm border border-transparent whitespace-nowrap flex-shrink-0 ${isOpen ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-red-500/10 text-red-600 dark:text-red-400'}`}>
+                  <span className={`w-1.5 h-1.5 rounded-full mr-1.5 animate-pulse ${isOpen ? 'bg-emerald-500' : 'bg-red-500'}`} />
+                  {isOpen ? 'Aberto' : 'Fechado'}
+                </div>
+              </div>
+            )}
          </div>
 
-         {/* Informações Estratégicas (Encaixadas no vazio abaixo do banner) */}
-         <div className="flex flex-col pt-2 pb-1 justify-center overflow-hidden w-full">
-            <h1 className="text-xl sm:text-2xl font-black text-foreground tracking-tight mb-2 truncate">
+         {/* Informações Estratégicas (Alinhadas à esquerda abaixo do conjunto logo+aberto) */}
+         <div className="flex flex-col pt-3 w-full">
+            <h1 className="text-xl sm:text-2xl font-black text-foreground tracking-tight mb-2">
               {profile.restaurant_name}
             </h1>
             
             <div className="flex items-center gap-1.5 flex-nowrap overflow-x-auto no-scrollbar w-full pb-1">
-              {isOpen !== null && (
-                <div className={`flex items-center px-2 py-1 rounded-md text-[10px] font-black uppercase tracking-tighter shadow-sm border border-transparent whitespace-nowrap flex-shrink-0 ${isOpen ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-red-500/10 text-red-600 dark:text-red-400'}`}>
-                  {isOpen ? 'Aberto' : 'Fechado'}
-                </div>
-              )}
               <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-white dark:bg-white/5 border border-black/5 dark:border-white/5 text-[10px] font-bold text-foreground shadow-sm whitespace-nowrap flex-shrink-0">
                 <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
                 <span>4.9</span>
@@ -259,7 +266,7 @@ function StoreHeader({ profile, isOpen, accentColor }: { profile: Profile, isOpe
               {(profile.show_delivery_info ?? true) && (
                 <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-white dark:bg-white/5 border border-black/5 dark:border-white/5 text-[10px] font-bold text-muted-foreground shadow-sm whitespace-nowrap flex-shrink-0">
                   <Truck className="w-3 h-3 opacity-70" />
-                  <span className="text-foreground">{profile.custom_delivery_label || (profile.delivery_fee === 0 ? 'Grátis' : formatCurrency(profile.delivery_fee))}</span>
+                  <span className="text-foreground">{profile.custom_delivery_label || (profile.delivery_fee === 0 ? 'Frete Grátis' : formatCurrency(profile.delivery_fee))}</span>
                 </div>
               )}
             </div>
