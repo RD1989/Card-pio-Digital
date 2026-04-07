@@ -308,7 +308,12 @@ export default function PublicMenu() {
     if (!slug) return;
     async function fetchData() {
       setLoading(true);
-      const { data: prof } = await supabase.from('profiles').select('*').or(`slug.ilike.${slug},user_id.ilike.${slug}`).single();
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug || '');
+      const { data: prof } = await supabase
+        .from('profiles')
+        .select('*')
+        .or(isUUID ? `slug.ilike.${slug},user_id.eq.${slug}` : `slug.ilike.${slug}`)
+        .single();
       if (!prof) { setNotFound(true); setLoading(false); return; }
       
       setProfile(prof as any);
