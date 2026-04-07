@@ -208,6 +208,7 @@ Retorne APENAS um JSON válido seguindo este esquema:
           .insert(newCategoryNames.map((name, i) => ({
             name,
             user_id: userId,
+            restaurant_id: userId,
             sort_order: (existingCats?.length || 0) + i
           })))
           .select('id, name');

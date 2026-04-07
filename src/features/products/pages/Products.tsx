@@ -88,6 +88,7 @@ export default function Products() {
     const { error } = await supabase.from('categories').insert({
       name: categoryName.trim(),
       user_id: userId,
+      restaurant_id: userId,
       sort_order: categories.length,
     });
 
