@@ -224,6 +224,7 @@ export default function Products() {
   }
 
   async function handleDeleteProduct(id: string) {
+    if (!window.confirm('Tem certeza que deseja excluir este produto?')) return;
     const { error } = await supabase.from('products').delete().eq('id', id);
     if (error) { toast.error('Erro ao excluir'); return; }
     toast.success('Produto excluído');
@@ -432,6 +433,9 @@ export default function Products() {
                       </Button>
                       <Button variant="ghost" size="sm" onClick={() => openProductModal(product)} className="flex-1 gap-1 h-8 text-xs">
                         <Edit2 className="w-3 h-3" /> Editar
+                      </Button>
+                      <Button variant="ghost" size="sm" onClick={() => handleDeleteProduct(product.id)} className="flex-1 gap-1 h-8 text-xs text-red-500 hover:text-red-600 hover:bg-red-50">
+                        <Trash2 className="w-3 h-3" /> Excluir
                       </Button>
                       <Button variant="ghost" size="sm" onClick={() => { setModifiersProductId(product.id); setModifiersUserId(product.user_id); }} className="flex-1 gap-1 h-8 text-xs text-primary">
                         <Settings2 className="w-3 h-3" /> Adicionais
