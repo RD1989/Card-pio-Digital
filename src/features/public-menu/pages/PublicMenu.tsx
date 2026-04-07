@@ -135,6 +135,77 @@ const fadeUp = {
 };
 
 /* ════════════════════════════════════════════════════════════════
+   HERO SLIDER
+ ════════════════════════════════════════════════════════════════ */
+function HeroSlider({ profile, menuCategories, accentColor }: { profile: Profile, menuCategories: MenuCategory[], accentColor: string }) {
+  const slides = useMemo(() => {
+    const list = [];
+    if (profile.banner_url) {
+      list.push({ id: 'main', image: profile.banner_url, title: profile.restaurant_name });
+    }
+    if (menuCategories && menuCategories.length > 0) {
+      const allProducts = menuCategories.flatMap(c => c.items);
+      const withImages = allProducts.filter(p => !!p.image_url);
+      withImages.slice(0, 3).forEach(p => {
+        list.push({ id: p.id, image: p.image_url!, title: p.name });
+      });
+    }
+    if (list.length === 0) {
+      list.push({ id: 'default', image: '', title: profile.restaurant_name });
+    }
+    return list;
+  }, [profile, menuCategories]);
+
+  const [current, setCurrent] = useState(0);
+
+  useEffect(() => {
+    if (slides.length <= 1) return;
+    const interval = setInterval(() => {
+      setCurrent(prev => (prev + 1) % slides.length);
+    }, 4500);
+    return () => clearInterval(interval);
+  }, [slides.length]);
+
+  return (
+    <div className="absolute inset-0 w-full h-full overflow-hidden">
+      <AnimatePresence mode="popLayout" initial={false}>
+        <motion.div
+          key={current}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.8, ease: "easeInOut" }}
+          className="absolute inset-0 w-full h-full"
+        >
+          {slides[current].image ? (
+            <img src={slides[current].image} alt={slides[current].title} className="w-full h-full object-cover scale-[1.02]" />
+          ) : (
+            <div className="w-full h-full" style={{ background: `linear-gradient(135deg, #0d0d0d 0%, color-mix(in srgb, ${accentColor} 25%, #0d0d0d) 100%)` }} />
+          )}
+        </motion.div>
+      </AnimatePresence>
+
+      {/* Pill Dots (Indicators) */}
+      {slides.length > 1 && (
+        <div className="absolute bottom-[35%] sm:bottom-[30%] left-0 right-0 z-10 flex justify-center gap-1.5 pointer-events-none">
+           <div className="flex bg-black/20 backdrop-blur-md px-2 py-1 rounded-full border border-white/10 pointer-events-auto">
+             {slides.map((_, idx) => (
+                <button
+                   key={idx}
+                   onClick={(e) => { e.preventDefault(); setCurrent(idx); }}
+                   className={`h-1.5 rounded-full transition-all duration-300 shadow-sm mx-0.5 ${
+                      current === idx ? 'w-6 bg-white opacity-100' : 'w-1.5 bg-white/50 opacity-60 hover:bg-white/80'
+                   }`}
+                />
+             ))}
+           </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ════════════════════════════════════════════════════════════════
    MAIN COMPONENT
  ════════════════════════════════════════════════════════════════ */
 export default function PublicMenu() {
@@ -453,11 +524,8 @@ export default function PublicMenu() {
         <motion.header initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="relative w-full">
           {/* Banner */}
           <div className="relative h-[300px] sm:h-[380px] md:h-[420px] w-full overflow-hidden">
-            {profile.banner_url ? (
-              <img src={profile.banner_url} alt="Banner" className="w-full h-full object-cover scale-[1.04] hover:scale-100 transition-transform duration-[2s]" />
-            ) : (
-              <div className="w-full h-full" style={{ background: `linear-gradient(135deg, #0d0d0d 0%, color-mix(in srgb, ${accentColor} 25%, #0d0d0d) 100%)` }} />
-            )}
+            {/* Animated Hero Slider */}
+            <HeroSlider profile={profile} menuCategories={menuCategories} accentColor={accentColor} />
 
             {/* Dark gradient overlay */}
             <div className="absolute inset-0 pm-hero-gradient" />

@@ -1,5 +1,5 @@
 import { Home, List, ShoppingCart, Search } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useCartStore } from '../stores/useCartStore';
 
 interface BottomNavProps {
@@ -13,14 +13,47 @@ interface BottomNavProps {
 export function BottomNav({ onHomeClick, onCategoriesClick, onSearchClick, onCartClick, accentColor = '#16a34a' }: BottomNavProps) {
   const { items } = useCartStore();
   const cartCount = items.reduce((acc, item) => acc + item.quantity, 0);
+  const total = items.reduce((sum, item) => {
+    const addonsTotal = item.addons?.reduce((s, a) => s + a.price, 0) || 0;
+    return sum + ((item.price + addonsTotal) * item.quantity);
+  }, 0);
 
   return (
-    <motion.div
-      initial={{ y: 100 }}
-      animate={{ y: 0 }}
-      transition={{ type: 'spring', stiffness: 260, damping: 28 }}
-      className="fixed bottom-0 left-0 z-50 w-full"
-    >
+    <>
+      <AnimatePresence>
+        {cartCount > 0 && (
+          <motion.div
+            initial={{ y: 20, opacity: 0, scale: 0.95 }}
+            animate={{ y: 0, opacity: 1, scale: 1 }}
+            exit={{ y: 20, opacity: 0, scale: 0.95 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 28 }}
+            className="fixed bottom-[88px] left-0 right-0 z-50 flex justify-center px-4 pointer-events-none"
+          >
+            <button
+               onClick={onCartClick}
+               className="pointer-events-auto w-full max-w-sm rounded-[24px] shadow-2xl flex items-center justify-between p-1.5 pl-4 transition-transform active:scale-[0.98] text-white border border-white/20"
+               style={{ backgroundColor: accentColor, boxShadow: `0 12px 30px -8px ${accentColor}99` }}
+            >
+               <div className="flex items-center gap-2">
+                 <div className="bg-white/20 backdrop-blur-md px-2.5 py-1 rounded-full text-xs font-black ring-2 ring-white/10">
+                   {cartCount}
+                 </div>
+               </div>
+               <span className="font-extrabold text-sm tracking-wide ml-2">VER SACOLA</span>
+               <div className="bg-white text-gray-900 rounded-[18px] px-4 py-2.5 font-black text-sm">
+                 {total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+               </div>
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <motion.div
+        initial={{ y: 100 }}
+        animate={{ y: 0 }}
+        transition={{ type: 'spring', stiffness: 260, damping: 28 }}
+        className="fixed bottom-0 left-0 z-[40] w-full"
+      >
       <div
         className="flex items-center justify-around px-2 py-2 rounded-t-[24px] border-t border-black/[0.06] dark:border-white/[0.08]"
         style={{
@@ -73,6 +106,7 @@ export function BottomNav({ onHomeClick, onCategoriesClick, onSearchClick, onCar
         <NavBtn icon={Search} label="Buscar" onClick={onSearchClick} />
       </div>
     </motion.div>
+    </>
   );
 }
 

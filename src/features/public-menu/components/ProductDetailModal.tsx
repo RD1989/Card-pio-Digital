@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Plus, Minus, Check, Star, Clock } from 'lucide-react';
+import { X, Plus, Minus, Check, Star, Clock, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -48,6 +48,7 @@ export function ProductDetailModal({ product, open, onClose, onAdd, accentColor 
   const [selected, setSelected]   = useState<Record<string, string[]>>({});
   const [quantity, setQuantity]   = useState(1);
   const [loading, setLoading]     = useState(true);
+  const [isAdding, setIsAdding]   = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -98,12 +99,16 @@ export function ProductDetailModal({ product, open, onClose, onAdd, accentColor 
   const handleAdd = () => {
     for (const mod of modifiers) {
       if (mod.is_required && (!selected[mod.id] || selected[mod.id].length === 0)) {
-        toast.error(`Selecione pelo menos uma opção em "${mod.name}"`);
+        toast.error(`Atenção: A opção "${mod.name}" é obrigatória.`);
         return;
       }
     }
-    onAdd({ id: product.id, name: product.name, price: product.price, addons: getAddons() });
-    onClose();
+    setIsAdding(true);
+    setTimeout(() => {
+      onAdd({ id: product.id, name: product.name, price: product.price, addons: getAddons() });
+      setIsAdding(false);
+      onClose();
+    }, 400); // feedback visual de "Adicionando..." antes de fechar o modal
   };
 
   if (!open) return null;
@@ -182,12 +187,32 @@ export function ProductDetailModal({ product, open, onClose, onAdd, accentColor 
                   <div key={mod.id} className="space-y-2">
                     <div className="flex items-center justify-between">
                       <h3 className="font-bold text-sm">{mod.name}</h3>
-                      <span className={`text-[10px] px-2.5 py-1 rounded-full font-bold ${mod.is_required ? 'text-white' : 'bg-gray-100 dark:bg-white/10 text-gray-500'}`}
-                        style={mod.is_required ? { backgroundColor: accentColor } : undefined}
-                      >
-                        {mod.is_required ? 'Obrigatório' : 'Opcional'}
-                        {mod.max_selections > 1 && ` • Até ${mod.max_selections}`}
-                      </span>
+                      {(() => {
+                        const currentSelectedCount = (selected[mod.id] || []).length;
+                        const isSatisfied = (!mod.is_required) || (mod.is_required && currentSelectedCount >= 1);
+                        
+                        let reqText = '';
+                        if (mod.is_required) {
+                          reqText = `${currentSelectedCount} / ${mod.max_selections} Obrigatório`;
+                        } else {
+                          reqText = `Opcional • Até ${mod.max_selections}`;
+                        }
+
+                        return (
+                          <span className={`text-[10px] px-2.5 py-1 rounded-full font-bold transition-colors flex items-center gap-1 ${
+                            !mod.is_required
+                              ? 'bg-gray-100 dark:bg-white/10 text-gray-500'
+                              : isSatisfied
+                                ? 'text-white'
+                                : 'bg-gray-200 dark:bg-gray-800 text-gray-600 dark:text-gray-400'
+                          }`}
+                            style={isSatisfied && mod.is_required ? { backgroundColor: accentColor } : undefined}
+                          >
+                            {isSatisfied && mod.is_required && <Check className="w-3 h-3" />}
+                            {reqText}
+                          </span>
+                        );
+                      })()}
                     </div>
 
                     <div className="space-y-2">
@@ -248,14 +273,17 @@ export function ProductDetailModal({ product, open, onClose, onAdd, accentColor 
               {/* Add to cart button */}
               <button
                 onClick={handleAdd}
-                disabled={!product.is_available}
+                disabled={!product.is_available || isAdding}
                 className="w-full py-4 rounded-2xl font-black text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed text-white"
                 style={product.is_available ? { backgroundColor: accentColor, boxShadow: `0 8px 20px -4px ${accentColor}55` } : { backgroundColor: '#9ca3af' }}
               >
-                {product.is_available
-                  ? <><Plus className="w-4 h-4 stroke-[2.5px]" /> Adicionar — {formatCurrency(itemTotal)}</>
-                  : 'PRODUTO ESGOTADO'
-                }
+                {isAdding ? (
+                   <><Loader2 className="w-4 h-4 animate-spin" /> Adicionando...</>
+                ) : product.is_available ? (
+                   <><Plus className="w-4 h-4 stroke-[2.5px]" /> Adicionar — {formatCurrency(itemTotal)}</>
+                ) : (
+                   'PRODUTO ESGOTADO'
+                )}
               </button>
             </div>
           </motion.div>
