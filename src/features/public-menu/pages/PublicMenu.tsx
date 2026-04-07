@@ -222,10 +222,10 @@ function StoreHeader({ profile, isOpen, accentColor }: { profile: Profile, isOpe
         <div className="absolute inset-0 bg-black/30" />
       </div>
 
-      <div className="relative z-20 px-5 max-w-3xl mx-auto -mt-10 mb-8 flex items-end gap-4 sm:gap-5">
+      <div className="relative z-20 px-5 max-w-3xl mx-auto mb-8 flex gap-4 sm:gap-5">
          
-         {/* Logo Flutuante */}
-         <div className="relative flex-shrink-0">
+         {/* Logo Flutuante (único elemento que sobrepõe a capa) */}
+         <div className="relative flex-shrink-0 -mt-10">
             <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-[22px] overflow-hidden bg-white dark:bg-[#1a1a1a] p-1 shadow-2xl border border-black/5 dark:border-white/10">
               {profile.logo_url ? (
                 <img src={profile.logo_url} alt={profile.restaurant_name} className="w-full h-full object-cover rounded-[18px]" />
@@ -240,24 +240,24 @@ function StoreHeader({ profile, isOpen, accentColor }: { profile: Profile, isOpe
             )}
          </div>
 
-         {/* Informações Estratégicas */}
-         <div className="flex flex-col pb-1">
-            <h1 className="text-xl sm:text-2xl font-black text-foreground tracking-tight mb-2">
+         {/* Informações Estratégicas (Encaixadas no vazio abaixo do banner) */}
+         <div className="flex flex-col pt-2 pb-1 justify-center overflow-hidden">
+            <h1 className="text-xl sm:text-2xl font-black text-foreground tracking-tight mb-2 truncate">
               {profile.restaurant_name}
             </h1>
             
             <div className="flex items-center gap-2 flex-wrap">
-              <div className="flex items-center gap-1 px-2.5 py-1.5 rounded-[10px] bg-slate-100 dark:bg-white/5 border border-black/5 dark:border-white/5 text-[10px] font-bold text-foreground shadow-sm">
+              <div className="flex items-center gap-1 px-2.5 py-1.5 rounded-[10px] bg-white dark:bg-white/5 border border-black/5 dark:border-white/5 text-[10px] font-bold text-foreground shadow-sm">
                 <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
                 <span>4.9</span>
                 <span className="opacity-50">(120+)</span>
               </div>
-              <div className="flex items-center gap-1 px-2.5 py-1.5 rounded-[10px] bg-slate-100 dark:bg-white/5 border border-black/5 dark:border-white/5 text-[10px] font-bold text-muted-foreground shadow-sm">
+              <div className="flex items-center gap-1 px-2.5 py-1.5 rounded-[10px] bg-white dark:bg-white/5 border border-black/5 dark:border-white/5 text-[10px] font-bold text-muted-foreground shadow-sm">
                 <Clock className="w-3 h-3 opacity-70" />
                 <span className="text-foreground">30-45 min</span>
               </div>
               {(profile.show_delivery_info ?? true) && (
-                <div className="flex items-center gap-1 px-2.5 py-1.5 rounded-[10px] bg-slate-100 dark:bg-white/5 border border-black/5 dark:border-white/5 text-[10px] font-bold text-muted-foreground shadow-sm">
+                <div className="flex items-center gap-1 px-2.5 py-1.5 rounded-[10px] bg-white dark:bg-white/5 border border-black/5 dark:border-white/5 text-[10px] font-bold text-muted-foreground shadow-sm">
                   <Truck className="w-3 h-3 opacity-70" />
                   <span className="text-foreground">{profile.custom_delivery_label || (profile.delivery_fee === 0 ? 'Grátis' : formatCurrency(profile.delivery_fee))}</span>
                 </div>
