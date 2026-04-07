@@ -136,37 +136,27 @@ export function PlanBanner({ status }: Props) {
   // Se expirar o trial, não mostra o banner porque existe um bloqueio de tela inteira
   if (planStatus === 'trial' && isTrialExpired) return null;
 
-  const currentSlide = slides[currentSlideIndex];
-
   return (
-    <div className="relative overflow-hidden rounded-xl border border-amber-500/30 bg-amber-500/10 backdrop-blur-sm min-w-[240px] md:min-w-[320px] shadow-sm">
-      <AnimatePresence mode="popLayout">
-        <motion.div
-          key={currentSlide.id}
-          initial={{ y: 30, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          exit={{ y: -30, opacity: 0 }}
-          transition={{ type: "spring", stiffness: 300, damping: 30 }}
-          className="flex items-center gap-2 md:gap-4 p-2 md:p-3"
-        >
-          <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg bg-amber-500/20 flex items-center justify-center shrink-0">
-            {currentSlide.icon}
-          </div>
-          
-          <div className="flex-1 min-w-0 flex flex-col justify-center">
-            <p className="text-[10px] md:text-xs font-bold tracking-tight truncate text-amber-700 dark:text-amber-400">
-              {currentSlide.title}
-            </p>
-            <p className="hidden md:block text-[10px] text-amber-600/80 dark:text-amber-300/80 line-clamp-1">
-              {currentSlide.subtitle}
-            </p>
-          </div>
-          
-          <div className={`hidden xs:flex px-2 py-0.5 ${currentSlide.tagColor} text-[8px] font-black italic rounded shadow-sm shrink-0 items-center justify-center h-fit`}>
-            {currentSlide.tag}
-          </div>
-        </motion.div>
-      </AnimatePresence>
+    <div className="absolute inset-0 w-full h-full overflow-hidden flex items-center bg-black/50 border-x border-amber-500/20 shadow-[0_0_15px_rgba(245,158,11,0.15)_inset]">
+      <motion.div
+        animate={{ x: ["100%", "-100%"] }}
+        transition={{ repeat: Infinity, duration: 30, ease: "linear" }}
+        className="flex items-center gap-16 whitespace-nowrap px-4 tracking-widest text-lg font-black uppercase text-amber-500 drop-shadow-[0_0_12px_rgba(245,158,11,0.8)]"
+      >
+        <span className="flex items-center gap-3">
+          {planStatus === 'trial' ? <Clock className="w-6 h-6" /> : (plan === 'pro' ? <Crown className="w-6 h-6" /> : <Zap className="w-6 h-6" />)}
+          {planStatus === 'trial' ? `${daysRemaining} DIAS RESTANTES • PLANO TRIAL` : `PLANO PREMIUM • ATIVO`}
+        </span>
+        <span className="flex items-center gap-3">
+          <Star className="w-6 h-6" /> IMPORTAÇÃO POR PDF: EXPERIMENTE AGORA
+        </span>
+        <span className="flex items-center gap-3">
+          <Rocket className="w-6 h-6" /> CAMPANHAS: ENVIE PARA SEUS CLIENTES
+        </span>
+        <span className="flex items-center gap-3">
+          <Info className="w-6 h-6" /> DASHBOARD EM TEMPO REAL: GERENCIE TUDO
+        </span>
+      </motion.div>
     </div>
   );
 }

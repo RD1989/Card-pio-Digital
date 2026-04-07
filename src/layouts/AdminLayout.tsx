@@ -127,15 +127,15 @@ export function AdminLayout() {
               </div>
             )}
 
-            <header className="h-14 flex items-center px-4 border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-30">
-              <div className="md:hidden mr-3">
+            <header className="h-14 flex items-center px-4 border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-30 gap-4">
+              <div className="md:hidden">
                 <SidebarTrigger className="text-muted-foreground hover:text-foreground">
                   <Menu className="w-5 h-5" />
                 </SidebarTrigger>
               </div>
-              <span className="text-gradient font-black text-lg md:hidden tracking-tight">Menu Pro</span>
-              <div className="flex-1" />
-              {planStatus && <PlanBanner status={planStatus} />}
+              <div className="flex-1 h-full overflow-hidden flex items-center relative">
+                {planStatus && <PlanBanner status={planStatus} />}
+              </div>
             </header>
             
             <main className="flex-1 p-4 md:p-8 overflow-y-auto pb-safe">
