@@ -320,6 +320,8 @@ export default function PublicMenu() {
 
   useEffect(() => {
     if (!slug) return;
+    let channel: any;
+
     async function fetchData() {
       setLoading(true);
       const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug || '');
@@ -328,27 +330,75 @@ export default function PublicMenu() {
         .select('*')
         .or(isUUID ? `slug.ilike.${slug},user_id.eq.${slug}` : `slug.ilike.${slug}`)
         .single();
-      if (!prof) { setNotFound(true); setLoading(false); return; }
+      
+      if (!prof) { 
+        setNotFound(true); 
+        setLoading(false); 
+        return; 
+      }
       
       setProfile(prof as any);
       setRestaurant(slug!, prof.user_id, prof.restaurant_name, prof.whatsapp || '', prof.delivery_fee || 0);
 
-      const [catRes, prodRes, storyRes] = await Promise.all([
-        supabase.from('categories').select('*').eq('user_id', prof.user_id).order('sort_order'),
-        supabase.from('products').select('*').eq('user_id', prof.user_id).eq('is_active', true).order('sort_order'),
-        (supabase as any).from('menu_stories').select('*').eq('user_id', prof.user_id).eq('is_active', true).order('sort_order')
-      ]);
+      // Função interna para buscar dados e atualizar estado
+      const updateMenuData = async () => {
+        const [catRes, prodRes, storyRes] = await Promise.all([
+          supabase.from('categories')
+            .select('*')
+            .or(`user_id.eq.${prof.user_id},restaurant_id.eq.${prof.user_id}`)
+            .order('sort_order'),
+          supabase.from('products')
+            .select('*')
+            .or(`user_id.eq.${prof.user_id},restaurant_id.eq.${prof.user_id}`)
+            .eq('is_active', true)
+            .order('sort_order'),
+          (supabase as any).from('menu_stories')
+            .select('*')
+            .eq('user_id', prof.user_id)
+            .eq('is_active', true)
+            .order('sort_order')
+        ]);
 
-      const cats = (catRes.data || []) as Category[];
-      const prods = (prodRes.data || []) as Product[];
-      const grouped: MenuCategory[] = cats.map(c => ({ name: c.name, items: prods.filter(p => p.category_id === c.id) })).filter(g => g.items.length > 0);
-      
-      setMenuCategories(grouped);
-      setStories(storyRes.data || []);
-      setIsOpen(true);
+        const cats = (catRes.data || []) as Category[];
+        const prods = (prodRes.data || []) as Product[];
+        const grouped: MenuCategory[] = cats.map(c => ({ 
+          name: c.name, 
+          items: prods.filter(p => p.category_id === c.id) 
+        })).filter(g => g.items.length > 0);
+        
+        setMenuCategories(grouped);
+        setStories(storyRes.data || []);
+        setIsOpen(true);
+      };
+
+      await updateMenuData();
       setLoading(false);
+
+      // Iniciar Real-time
+      channel = supabase
+        .channel(`menu-${prof.user_id}`)
+        .on('postgres_changes', { 
+          event: '*', 
+          schema: 'public', 
+          table: 'products',
+          filter: `user_id=eq.${prof.user_id}`
+        }, () => updateMenuData())
+        .on('postgres_changes', { 
+          event: '*', 
+          schema: 'public', 
+          table: 'categories',
+          filter: `user_id=eq.${prof.user_id}`
+        }, () => updateMenuData())
+        .subscribe();
     }
+
     fetchData();
+
+    return () => {
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
+    };
   }, [slug]);
 
   useEffect(() => {
