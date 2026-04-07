@@ -209,8 +209,7 @@ export function CartDrawer({ accentColor = '#16a34a' }: CartDrawerProps) {
         product_id: item.id, 
         product_name: item.name, 
         quantity: item.quantity, 
-        unit_price: item.price,
-        restaurant_id: restaurantUserId
+        unit_price: item.price
       }))
     );
 
