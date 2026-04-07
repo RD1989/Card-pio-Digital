@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence, Reorder } from 'framer-motion';
-import { Plus, GripVertical, Edit2, Trash2, Wand2, Upload, X, Package, Settings2, Info, FileText } from 'lucide-react';
+import { Plus, GripVertical, Edit2, Trash2, Wand2, Upload, X, Package, Settings2, Info, FileText, Sparkles } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Tables } from '@/integrations/supabase/types';
 import { toast } from 'sonner';
@@ -39,6 +39,8 @@ export default function Products() {
   const [productImageUrl, setProductImageUrl] = useState('');
   const [saving, setSaving] = useState(false);
   const [generatingAI, setGeneratingAI] = useState(false);
+  const [selectedUpsellIds, setSelectedUpsellIds] = useState<string[]>([]);
+  const [upsellSearch, setUpsellSearch] = useState('');
 
 
   // Category form
@@ -108,7 +110,7 @@ export default function Products() {
     await Promise.all(updates);
   }
 
-  function openProductModal(product?: Product) {
+  async function openProductModal(product?: Product) {
     if (product) {
       setEditingProduct(product);
       setProductName(product.name);
@@ -117,6 +119,13 @@ export default function Products() {
       setProductCategoryId(product.category_id || '');
       setProductIsUpsell(product.is_upsell);
       setProductImageUrl(product.image_url || '');
+      
+      // Fetch current upsells
+      const { data } = await (supabase as any)
+        .from('product_upsells')
+        .select('upsell_product_id')
+        .eq('product_id', product.id);
+      setSelectedUpsellIds(data?.map((u: any) => u.upsell_product_id) || []);
     } else {
       setEditingProduct(null);
       setProductName('');
@@ -125,6 +134,7 @@ export default function Products() {
       setProductCategoryId('');
       setProductIsUpsell(false);
       setProductImageUrl('');
+      setSelectedUpsellIds([]);
     }
     setProductImage(null);
     setShowProductModal(true);
@@ -168,17 +178,32 @@ export default function Products() {
       is_upsell: productIsUpsell,
       image_url: imageUrl,
       user_id: userId,
-      restaurant_id: userId,
     };
 
+    let finalProductId = editingProduct?.id;
     if (editingProduct) {
       const { error } = await supabase.from('products').update(payload).eq('id', editingProduct.id);
       if (error) { toast.error('Erro ao atualizar'); setSaving(false); return; }
       toast.success('Produto atualizado!');
     } else {
-      const { error } = await supabase.from('products').insert({ ...payload, sort_order: products.length });
+      const { data, error } = await supabase.from('products').insert({ ...payload, sort_order: products.length }).select('id').single();
       if (error) { toast.error('Erro ao criar'); setSaving(false); return; }
+      finalProductId = data.id;
       toast.success('Produto criado!');
+    }
+
+    // Update upsells
+    if (finalProductId) {
+      await (supabase as any).from('product_upsells').delete().eq('product_id', finalProductId);
+      if (selectedUpsellIds.length > 0) {
+        await (supabase as any).from('product_upsells').insert(
+          selectedUpsellIds.map(upsellId => ({
+            product_id: finalProductId,
+            upsell_product_id: upsellId,
+            user_id: userId
+          }))
+        );
+      }
     }
 
     setSaving(false);
@@ -480,7 +505,35 @@ export default function Products() {
             </div>
             <div className="flex items-center gap-3">
               <Switch checked={productIsUpsell} onCheckedChange={setProductIsUpsell} />
-              <Label className="cursor-pointer">É Produto Upsell?</Label>
+              <Label className="cursor-pointer">Destaque do Chef? (Aparece no topo)</Label>
+            </div>
+
+            <div className="space-y-3 pt-4 border-t border-border">
+              <div className="flex items-center gap-2 text-primary font-bold text-sm">
+                <Sparkles className="w-4 h-4" />
+                <span>Sugerir acompanhamentos (Up-sell)</span>
+              </div>
+              <p className="text-[10px] text-muted-foreground leading-tight">
+                Estes produtos aparecerão como sugestão quando o cliente abrir este item.
+              </p>
+              
+              <div className="space-y-2 max-h-40 overflow-y-auto no-scrollbar border rounded-xl p-2 bg-muted/20">
+                {products
+                  .filter(p => p.id !== editingProduct?.id) // Don't suggest self
+                  .map(p => (
+                    <div key={p.id} className="flex items-center gap-3 p-2 hover:bg-muted/40 rounded-lg transition-colors cursor-pointer" onClick={() => {
+                        setSelectedUpsellIds(prev => 
+                          prev.includes(p.id) ? prev.filter(id => id !== p.id) : [...prev, p.id]
+                        );
+                    }}>
+                      <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${selectedUpsellIds.includes(p.id) ? 'bg-primary border-primary' : 'border-border'}`}>
+                        {selectedUpsellIds.includes(p.id) && <div className="w-2 h-2 bg-white rounded-full" />}
+                      </div>
+                      <span className="text-xs font-medium">{p.name}</span>
+                      <span className="text-[10px] text-muted-foreground ml-auto">R$ {Number(p.price).toFixed(2)}</span>
+                    </div>
+                  ))}
+              </div>
             </div>
             <Button onClick={handleSaveProduct} disabled={saving} className="w-full">
               {saving ? 'Salvando...' : editingProduct ? 'Atualizar' : 'Criar Produto'}

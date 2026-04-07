@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { DashboardSkeleton } from '@/shared/components/common/Skeletons';
-import { BarChart3, Users, BookOpen, TrendingUp, Package, ShoppingCart, Check, Sparkles, ExternalLink, Loader2, ChevronRight, ChefHat } from 'lucide-react';
+import { BarChart3, Users, BookOpen, TrendingUp, Package, ShoppingCart, Check, Sparkles, ExternalLink, Loader2, ChevronRight, ChefHat, Eye } from 'lucide-react';
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useImpersonateStore } from '@/shared/stores/global/useImpersonateStore';
@@ -23,6 +23,7 @@ export default function Dashboard() {
     todayOrders: 0,
     totalRevenue: 0,
     todayRevenue: 0,
+    todayViews: 0,
   });
   const [recentOrders, setRecentOrders] = useState<{ customer_name: string | null; total: number; created_at: string; status: string }[]>([]);
   const [loading, setLoading] = useState(true);
@@ -44,15 +45,15 @@ export default function Dashboard() {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
-      const [prodRes, ordersRes, profRes] = await Promise.all([
+      const [prodRes, ordersRes, profRes, viewsRes] = await Promise.all([
         supabase.from('products').select('id, is_active').eq('user_id', userId),
         supabase.from('orders').select('id, total, created_at, status, customer_name').eq('restaurant_user_id', userId).order('created_at', { ascending: false }).limit(100),
         supabase.from('profiles').select('slug').eq('user_id', userId).single(),
+        (supabase as any).from('menu_views').select('id', { count: 'exact', head: true }).eq('restaurant_user_id', userId).gte('viewed_at', today.toISOString()),
       ]);
 
       if (prodRes.error) throw prodRes.error;
       if (ordersRes.error) throw ordersRes.error;
-
       if (profRes.error && (profRes.error as any).code !== 'PGRST116') throw profRes.error;
 
       const products = prodRes.data || [];
@@ -67,6 +68,7 @@ export default function Dashboard() {
         todayOrders: todayOrders.length,
         totalRevenue: orders.reduce((sum, o) => sum + Number(o.total || 0), 0),
         todayRevenue: todayOrders.reduce((sum, o) => sum + Number(o.total || 0), 0),
+        todayViews: (viewsRes as any).count || 0,
       });
 
       setRecentOrders(orders.slice(0, 8));
@@ -122,6 +124,7 @@ export default function Dashboard() {
   };
 
   const cards = [
+    { label: 'Visitas Hoje', value: String(stats.todayViews), icon: Eye },
     { label: 'Pedidos Hoje', value: String(stats.todayOrders), icon: ShoppingCart },
     { label: 'Receita Hoje', value: `R$ ${stats.todayRevenue.toFixed(2)}`, icon: TrendingUp },
     { label: 'Produtos Ativos', value: `${stats.activeProducts}`, icon: Package },
@@ -129,7 +132,7 @@ export default function Dashboard() {
   ];
 
   const { status: planStatus, loading: planLoading } = usePlanStatus();
-  const { isSuperAdmin } = useSuperAdmin();
+  const { isSuperAdmin: isSuperAdminUser } = useSuperAdmin();
 
   if (loading || planLoading) return <DashboardSkeleton />;
 
@@ -156,7 +159,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
         {cards.map((stat, i) => (
           <motion.div
             key={stat.label}
@@ -297,6 +300,3 @@ export default function Dashboard() {
     </div>
   );
 }
-
-
-

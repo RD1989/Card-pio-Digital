@@ -37,6 +37,7 @@ const OrderTracking = lazy(() => import("./features/orders/pages/OrderTracking")
 const Analytics = lazy(() => import("./features/dashboard/pages/Analytics"));
 const BioLinks = lazy(() => import("./features/bio-link/pages/BioLinks"));
 const BioLinkPage = lazy(() => import("./features/bio-link/pages/BioLinkPage"));
+const Marketing = lazy(() => import("./features/marketing/pages/Marketing"));
 const NotFound = lazy(() => import("./shared/components/common/NotFound"));
 
 import { AdminLayout } from "./layouts/AdminLayout";
@@ -93,6 +94,7 @@ const App = () => (
                   <Route path="menu-import" element={<MenuImport />} />
                   <Route path="coupons" element={<Coupons />} />
                   <Route path="hours" element={<BusinessHours />} />
+                  <Route path="marketing" element={<Marketing />} />
                 </Route>
 
                 {/* Super Admin */}

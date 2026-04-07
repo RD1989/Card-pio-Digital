@@ -47,35 +47,59 @@ function buildWhatsAppMessage(
   notes: string,
 ) {
   const orderId = generateOrderId();
-  let msg = `*PEDIDO ${orderId} - ${restaurantName.toUpperCase()}*\n\n`;
+  const sep = "──────────────────";
+  
+  let msg = `*🛍️ NOVO PEDIDO - ${restaurantName.toUpperCase()}*\n`;
+  msg += `*ID:* #${orderId}\n\n`;
 
+  msg += `*🛒 ITENS DO PEDIDO:*\n`;
   items.forEach((item) => {
     const addonSum = (item.addons || []).reduce((s, a) => s + a.price, 0);
     const unitTotal = item.price + addonSum;
     const itemTotal = unitTotal * item.quantity;
-    msg += `${item.quantity}x ${item.name} (${formatCurrency(item.price)})\n`;
+    
+    msg += `• *${item.quantity}x ${item.name}*\n`;
     if (item.addons && item.addons.length > 0) {
-      item.addons.forEach(a => { msg += `   + ${a.name} (${formatCurrency(a.price)})\n`; });
+      item.addons.forEach(a => { 
+        msg += `   └ _+ ${a.name}_ (${formatCurrency(a.price)})\n`; 
+      });
     }
-    msg += `Subtotal: ${formatCurrency(itemTotal)}\n\n`;
+    msg += `   *Subtotal:* ${formatCurrency(itemTotal)}\n\n`;
   });
 
-  msg += `──────────────────\n`;
-  msg += `🧾 *Subtotal:* ${formatCurrency(subtotal)}\n`;
-  if (deliveryType === 'delivery' && deliveryFee > 0) {
-    msg += `🛵 *Taxa de Entrega:* ${formatCurrency(deliveryFee)}\n`;
+  msg += `${sep}\n`;
+  msg += `🧾 *RESUMO FINANCEIRO*\n`;
+  msg += `*Subtotal:* ${formatCurrency(subtotal)}\n`;
+  
+  if (deliveryType === 'delivery') {
+    msg += `*Entrega:* ${deliveryFee > 0 ? formatCurrency(deliveryFee) : 'Grátis'}\n`;
   }
-  msg += `*TOTAL FINAL: ${formatCurrency(totalFinal)}*\n`;
-  msg += `──────────────────\n\n`;
-  msg += `👤 *Cliente:* ${customerName}\n`;
-  msg += `📱 *WhatsApp:* ${customerPhone}\n`;
-  if (deliveryType === 'delivery' && address) {
-    msg += `📍 ${address}\n`;
+  
+  msg += `*TOTAL GERAL: ${formatCurrency(totalFinal)}*\n`;
+  msg += `${sep}\n\n`;
+
+  msg += `👤 *DADOS DO CLIENTE*\n`;
+  msg += `*Nome:* ${customerName}\n`;
+  msg += `*WhatsApp:* ${customerPhone}\n\n`;
+
+  msg += `📍 *ENTREGA / RETIRADA*\n`;
+  if (deliveryType === 'delivery') {
+    msg += `*Tipo:* 🛵 Entrega\n`;
+    msg += `*Endereço:* ${address}\n`;
   } else {
-    msg += `📍 *RETIRADA NA LOJA*\n`;
+    msg += `*Tipo:* 🏪 Retirada na Loja\n`;
   }
-  msg += `💳 *Pagamento:* ${PAYMENT_LABELS[paymentMethod]}\n`;
-  if (notes) msg += `\n📝 *Obs:* ${notes}`;
+
+  msg += `\n💳 *PAGAMENTO*\n`;
+  msg += `*Forma:* ${PAYMENT_EMOJIS[paymentMethod]} ${PAYMENT_LABELS[paymentMethod]}\n`;
+
+  if (notes) {
+    msg += `\n📝 *OBSERVAÇÕES*\n`;
+    msg += `_${notes}_`;
+  }
+
+  msg += `\n\n_Pedido gerado via Menu Pro_`;
+  
   return encodeURIComponent(msg);
 }
 
@@ -86,7 +110,7 @@ interface CartDrawerProps {
 export function CartDrawer({ accentColor = '#16a34a' }: CartDrawerProps) {
   const store = useCartStore();
   const { items, subtotal, itemCount, updateQuantity, removeItem, clearCart,
-    restaurantSlug, restaurantUserId, restaurantName, restaurantWhatsapp } = store;
+    restaurantSlug, restaurantUserId, restaurantName, restaurantWhatsapp, deliveryFee } = store;
 
   const [open, setOpen]                     = useState(false);
   const [step, setStep]                     = useState<'cart' | 'info'>('cart');
@@ -95,8 +119,7 @@ export function CartDrawer({ accentColor = '#16a34a' }: CartDrawerProps) {
   const [phone, setPhone]                   = useState('');
   const [obs, setObs]                       = useState('');
   const [address, setAddress]               = useState('');
-  const [deliveryType, setDeliveryType]     = useState<DeliveryType>('delivery');
-  const [deliveryFee]                       = useState(4);
+  const [deliveryType, setDeliveryType]     = useState<DeliveryType>(store.deliveryType || 'delivery');
   const [paymentMethod, setPaymentMethod]   = useState<PaymentMethod>('cash');
   const [couponCode, setCouponCode]         = useState('');
   const [couponDiscount, setCouponDiscount] = useState(0);
@@ -165,10 +188,14 @@ export function CartDrawer({ accentColor = '#16a34a' }: CartDrawerProps) {
       items.map(item => ({ order_id: order.id, product_id: item.id, product_name: item.name, quantity: item.quantity, unit_price: item.price }))
     );
 
-    const cleanPhone     = restaurantWhatsapp.replace(/\D/g, '');
+    const cleanPhone     = (restaurantWhatsapp || '').replace(/\D/g, '');
+    if (!cleanPhone) { toast.error('WhatsApp do restaurante não configurado.'); setLoading(false); return; }
+    
     const whatsappPhone  = cleanPhone.startsWith('55') ? cleanPhone : `55${cleanPhone}`;
     const message        = buildWhatsAppMessage(restaurantName || restaurantSlug.replace(/-/g, ' '), items, subtotalValue, effectiveFee, totalValue, name, phone, address, deliveryType, paymentMethod, obs);
-    window.open(`https://wa.me/${whatsappPhone}?text=${message}`, '_blank');
+    
+    // Using location.assign for better mobile compatibility and to avoid popup blockers
+    window.location.assign(`https://wa.me/${whatsappPhone}?text=${message}`);
 
     toast.success('✅ Pedido enviado com sucesso!');
     clearCart(); setStep('cart'); setOpen(false);
@@ -222,19 +249,19 @@ export function CartDrawer({ accentColor = '#16a34a' }: CartDrawerProps) {
               </div>
 
               {/* Header */}
-              <div className="flex items-center gap-3 px-5 py-3 border-b border-black/[0.06] dark:border-white/[0.06]">
+              <div className="flex items-center gap-3 px-6 py-5 border-b border-black/[0.04] dark:border-white/[0.06]">
                 {step === 'info' && (
-                  <button onClick={() => setStep('cart')} className="p-2 -ml-2 rounded-xl hover:bg-gray-100 dark:hover:bg-white/5 transition-colors">
+                  <button onClick={() => setStep('cart')} className="p-2.5 -ml-2 rounded-2xl bg-gray-50 dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/10 transition-all active:scale-90">
                     <ChevronLeft className="w-5 h-5" />
                   </button>
                 )}
                 <div className="flex-1">
-                  <h2 className="font-black text-lg">{step === 'cart' ? '🛒 Seu Pedido' : '📋 Finalizar Pedido'}</h2>
-                  {step === 'cart' && count > 0 && <p className="text-xs text-gray-500">{count} {count === 1 ? 'item' : 'itens'} selecionado{count > 1 ? 's' : ''}</p>}
+                  <h2 className="pm-font-display text-xl sm:text-2xl font-black italic tracking-tight">{step === 'cart' ? 'Sua Sacola' : 'Finalizar Pedido'}</h2>
+                  {step === 'cart' && count > 0 && <p className="text-[10px] font-black uppercase tracking-widest text-primary/60">{count} {count === 1 ? 'item' : 'itens'}</p>}
                 </div>
                 <button
                   onClick={() => { setOpen(false); setStep('cart'); }}
-                  className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
+                  className="p-2.5 bg-gray-50 dark:bg-white/5 rounded-2xl hover:bg-gray-100 dark:hover:bg-white/10 transition-all active:scale-90"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -251,30 +278,32 @@ export function CartDrawer({ accentColor = '#16a34a' }: CartDrawerProps) {
                         <p className="text-gray-300 text-sm mt-1">Adicione itens do cardápio</p>
                       </div>
                     ) : (
-                      <div className="space-y-3">
+                      <div className="space-y-4">
                         {items.map((item) => {
                           const addonSum = (item.addons || []).reduce((s, a) => s + a.price, 0);
                           const addonKeys = (item.addons || []).map(a => a.optionId).sort().join(',');
                           const itemKey = `${item.id}::${addonKeys}`;
                           return (
-                            <motion.div key={itemKey} layout className="flex items-center gap-3 p-3 rounded-2xl bg-gray-50 dark:bg-white/5 border border-black/[0.05] dark:border-white/[0.05]">
+                            <motion.div key={itemKey} layout className="flex items-center gap-4 p-4 rounded-[24px] bg-white dark:bg-white/5 border border-black/[0.04] dark:border-white/[0.06] shadow-sm">
                               <div className="flex-1 min-w-0">
-                                <h3 className="font-bold text-sm truncate">{item.name}</h3>
+                                <h3 className="font-black text-[15px] truncate tracking-tight">{item.name}</h3>
                                 {item.addons && item.addons.length > 0 && (
-                                  <p className="text-xs text-gray-400 mt-0.5 truncate">+ {item.addons.map(a => a.name).join(', ')}</p>
+                                  <p className="text-[10px] uppercase font-black tracking-widest text-muted-foreground/50 mt-1 truncate">
+                                     {item.addons.map(a => a.name).join(' • ')}
+                                  </p>
                                 )}
-                                <p className="font-black text-sm mt-1" style={{ color: accentColor }}>{formatCurrency(item.price + addonSum)}</p>
+                                <p className="font-black text-sm mt-2" style={{ color: accentColor }}>{formatCurrency(item.price + addonSum)}</p>
                               </div>
-                              <div className="flex items-center gap-1.5">
-                                <button onClick={() => updateQuantity(itemKey, item.quantity - 1)} className="w-8 h-8 rounded-xl bg-gray-100 dark:bg-white/10 flex items-center justify-center hover:bg-gray-200 transition-colors">
-                                  <Minus className="w-3.5 h-3.5" />
+                              <div className="flex items-center gap-2">
+                                <button onClick={() => updateQuantity(itemKey, item.quantity - 1)} className="w-9 h-9 rounded-[14px] bg-gray-50 dark:bg-white/10 flex items-center justify-center hover:bg-gray-100 transition-colors active:scale-90">
+                                  <Minus className="w-4 h-4" />
                                 </button>
-                                <span className="w-6 text-center font-black text-sm">{item.quantity}</span>
-                                <button onClick={() => updateQuantity(itemKey, item.quantity + 1)} className="w-8 h-8 rounded-xl flex items-center justify-center text-white" style={{ backgroundColor: accentColor }}>
-                                  <Plus className="w-3.5 h-3.5" />
+                                <span className="w-8 text-center font-black text-base">{item.quantity}</span>
+                                <button onClick={() => updateQuantity(itemKey, item.quantity + 1)} className="w-9 h-9 rounded-[14px] flex items-center justify-center text-white shadow-md active:scale-90" style={{ backgroundColor: accentColor }}>
+                                  <Plus className="w-4 h-4 stroke-[3px]" />
                                 </button>
-                                <button onClick={() => removeItem(itemKey)} className="w-8 h-8 rounded-xl flex items-center justify-center text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors ml-0.5">
-                                  <Trash2 className="w-3.5 h-3.5" />
+                                <button onClick={() => removeItem(itemKey)} className="w-9 h-9 rounded-[14px] flex items-center justify-center text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all active:scale-90 ml-1">
+                                  <Trash2 className="w-4 h-4" />
                                 </button>
                               </div>
                             </motion.div>

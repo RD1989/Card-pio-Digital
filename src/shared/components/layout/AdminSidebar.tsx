@@ -41,6 +41,12 @@ const menuGroups = [
     ]
   },
   {
+    label: "Marketing e Conversão",
+    links: [
+      { title: 'Gestão de Stories', url: '/admin/marketing', icon: Sparkles },
+    ]
+  },
+  {
     label: "Configurações da Loja",
     links: [
       { title: 'Horários de Abrir', url: '/admin/hours', icon: Clock },

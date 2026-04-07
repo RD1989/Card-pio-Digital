@@ -23,6 +23,8 @@ interface Order {
   total: number;
   notes: string | null;
   created_at: string;
+  payment_method: string | null;
+  delivery_type: string | null;
   items: OrderItem[];
 }
 
@@ -242,9 +244,21 @@ export default function Orders() {
                     </div>
                     <div className="text-right">
                       <p className="font-bold text-primary text-sm">{formatCurrency(order.total)}</p>
-                      <span className={`text-xs px-2 py-0.5 rounded-full ${status.color}`}>
-                        {status.label}
-                      </span>
+                      <div className="flex flex-col items-end gap-1 mt-1">
+                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${status.color}`}>
+                          {status.label}
+                        </span>
+                        <div className="flex gap-1">
+                          {order.delivery_type === 'delivery' ? (
+                            <span className="text-[9px] bg-blue-500/10 text-blue-600 px-1.5 py-0.5 rounded font-bold uppercase">🛵 Entrega</span>
+                          ) : (
+                            <span className="text-[9px] bg-orange-500/10 text-orange-600 px-1.5 py-0.5 rounded font-bold uppercase">🏪 Retirada</span>
+                          )}
+                          <span className="text-[9px] bg-muted text-muted-foreground px-1.5 py-0.5 rounded font-bold uppercase">
+                            {order.payment_method === 'pix' ? '💎 PIX' : order.payment_method === 'card' ? '💳 Cartão' : '💵 Dinheiro'}
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   </div>
 

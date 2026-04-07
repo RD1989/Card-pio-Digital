@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useImpersonateStore } from '@/shared/stores/global/useImpersonateStore';
 import { QRCodeGenerator } from '@/shared/components/common/QRCodeGenerator';
+import { Label } from '@/shared/components/ui/label';
 
 const fontOptions = [
   { value: 'inter', label: 'Inter', family: 'Inter, sans-serif' },
@@ -28,6 +29,7 @@ export default function Branding() {
   const { impersonatedUserId } = useImpersonateStore();
   const [selectedColor, setSelectedColor] = useState(presetColors[0].hex);
   const [restaurantName, setRestaurantName] = useState('');
+  const [whatsapp, setWhatsapp] = useState('');
   const [slug, setSlug] = useState('');
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [logoFile, setLogoFile] = useState<File | null>(null);
@@ -54,6 +56,7 @@ export default function Branding() {
         .single();
       if (profile) {
         setRestaurantName(profile.restaurant_name || '');
+        setWhatsapp(profile.whatsapp || '');
         setSlug(profile.slug || '');
         setSelectedColor(profile.primary_color || presetColors[0].hex);
         setFontStyle((profile as any).font_style || 'inter');
@@ -125,6 +128,8 @@ export default function Branding() {
 
     const { error } = await (supabase as any).from('profiles').update({
       restaurant_name: restaurantName.trim(),
+      whatsapp: whatsapp.replace(/\D/g, ''),
+      slug: slug.toLowerCase().trim().replace(/[^a-z0-9-]/g, ''),
       primary_color: selectedColor,
       font_style: fontStyle,
       theme_mode: themeMode,
@@ -157,17 +162,45 @@ export default function Branding() {
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr,380px] gap-8 items-start">
         <div className="space-y-6">
-          <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-sm p-6 space-y-4">
-            <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-primary">
-              <Type className="w-4 h-4" /> Nome do Restaurante
+          <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-sm p-6 space-y-6">
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-primary">
+                <Type className="w-4 h-4" /> Nome do Restaurante
+              </div>
+              <input
+                type="text"
+                value={restaurantName}
+                onChange={(e) => setRestaurantName(e.target.value)}
+                placeholder="Ex: Bistrô da Vila"
+                className="w-full px-4 py-3 rounded-xl bg-muted/50 border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all font-inter"
+              />
             </div>
-            <input
-              type="text"
-              value={restaurantName}
-              onChange={(e) => setRestaurantName(e.target.value)}
-              placeholder="Ex: Bistrô da Vila"
-              className="w-full px-4 py-3 rounded-xl bg-muted/50 border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all font-inter"
-            />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-xs font-bold uppercase opacity-70">Número do WhatsApp (Pedidos)</Label>
+                <input
+                  type="tel"
+                  value={whatsapp}
+                  onChange={(e) => setWhatsapp(e.target.value)}
+                  placeholder="(11) 99999-9999"
+                  className="w-full px-4 py-3 rounded-xl bg-muted/50 border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs font-bold uppercase opacity-70">Link do Cardápio (Slug)</Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">menu/</span>
+                  <input
+                    type="text"
+                    value={slug}
+                    onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                    placeholder="minha-loja"
+                    className="w-full pl-14 pr-4 py-3 rounded-xl bg-muted/50 border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all font-mono"
+                  />
+                </div>
+              </div>
+            </div>
           </motion.section>
 
           <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass-sm p-6 space-y-4">

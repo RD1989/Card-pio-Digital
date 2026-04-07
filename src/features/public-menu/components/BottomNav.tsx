@@ -1,4 +1,4 @@
-import { Home, List, ShoppingCart, Search } from 'lucide-react';
+import { Home, List, ShoppingCart, Search, ShoppingBag } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCartStore } from '../stores/useCartStore';
 
@@ -26,21 +26,22 @@ export function BottomNav({ onHomeClick, onCategoriesClick, onSearchClick, onCar
             initial={{ y: 20, opacity: 0, scale: 0.95 }}
             animate={{ y: 0, opacity: 1, scale: 1 }}
             exit={{ y: 20, opacity: 0, scale: 0.95 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 28 }}
-            className="fixed bottom-[88px] left-0 right-0 z-50 flex justify-center px-4 pointer-events-none"
+            transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+            className="fixed bottom-[100px] left-0 right-0 z-50 flex justify-center px-5 pointer-events-none"
           >
             <button
                onClick={onCartClick}
-               className="pointer-events-auto w-full max-w-sm rounded-[24px] shadow-2xl flex items-center justify-between p-1.5 pl-4 transition-transform active:scale-[0.98] text-white border border-white/20"
-               style={{ backgroundColor: accentColor, boxShadow: `0 12px 30px -8px ${accentColor}99` }}
+               className="pointer-events-auto w-full max-w-sm rounded-[32px] shadow-[0_20px_40px_-10px_rgba(0,0,0,0.3)] flex items-center justify-between p-2 pl-5 transition-all active:scale-[0.96] text-white border border-white/20 hover:scale-[1.02] pm-glass"
+               style={{ backgroundColor: accentColor, boxShadow: `0 15px 35px -8px ${accentColor}90` }}
             >
-               <div className="flex items-center gap-2">
-                 <div className="bg-white/20 backdrop-blur-md px-2.5 py-1 rounded-full text-xs font-black ring-2 ring-white/10">
-                   {cartCount}
+               <div className="flex items-center gap-3">
+                 <div className="bg-white/25 backdrop-blur-xl px-3 py-1.5 rounded-2xl text-[12px] font-black ring-1 ring-white/20 flex items-center gap-2">
+                    <ShoppingBag className="w-3.5 h-3.5" />
+                    {cartCount}
                  </div>
+                 <span className="font-black text-[13px] tracking-[0.1em] uppercase">VER SACOLA</span>
                </div>
-               <span className="font-extrabold text-sm tracking-wide ml-2">VER SACOLA</span>
-               <div className="bg-white text-gray-900 rounded-[18px] px-4 py-2.5 font-black text-sm">
+               <div className="bg-white text-gray-900 rounded-[24px] px-5 py-3 font-black text-sm shadow-inner">
                  {total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                </div>
             </button>
@@ -51,16 +52,14 @@ export function BottomNav({ onHomeClick, onCategoriesClick, onSearchClick, onCar
       <motion.div
         initial={{ y: 100 }}
         animate={{ y: 0 }}
-        transition={{ type: 'spring', stiffness: 260, damping: 28 }}
+        transition={{ type: 'spring', stiffness: 220, damping: 28 }}
         className="fixed bottom-0 left-0 z-[40] w-full"
       >
       <div
-        className="flex items-center justify-around px-2 py-2 rounded-t-[24px] border-t border-black/[0.06] dark:border-white/[0.08]"
+        className="flex items-center justify-around px-2 py-3.5 rounded-t-[32px] border-t border-black/[0.04] dark:border-white/[0.08] pm-glass"
         style={{
-          background: 'rgba(255,255,255,0.98)',
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
-          boxShadow: '0 -2px 15px rgba(0,0,0,0.05)',
+          background: 'rgba(255,255,255,0.85)',
+          boxShadow: '0 -10px 30px rgba(0,0,0,0.04)',
         }}
       >
         <NavBtn icon={Home} label="Início" onClick={onHomeClick} />

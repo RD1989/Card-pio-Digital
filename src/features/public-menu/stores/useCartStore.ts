@@ -31,7 +31,7 @@ interface CartState {
   deliveryType: DeliveryType;
   deliveryFee: number;
   paymentMethod: PaymentMethod;
-  setRestaurant: (slug: string, userId: string, name: string, whatsapp: string) => void;
+  setRestaurant: (slug: string, userId: string, name: string, whatsapp: string, deliveryFee: number) => void;
   setCustomerInfo: (info: {
     name: string;
     phone: string;
@@ -76,8 +76,8 @@ export const useCartStore = create<CartState>()(
       deliveryFee: 0,
       paymentMethod: 'cash',
 
-      setRestaurant: (slug, userId, name, whatsapp) =>
-        set({ restaurantSlug: slug, restaurantUserId: userId, restaurantName: name, restaurantWhatsapp: whatsapp }),
+      setRestaurant: (slug, userId, name, whatsapp, deliveryFee) =>
+        set({ restaurantSlug: slug, restaurantUserId: userId, restaurantName: name, restaurantWhatsapp: whatsapp, deliveryFee }),
 
       setCustomerInfo: (info) =>
         set({

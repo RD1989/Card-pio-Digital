@@ -230,7 +230,6 @@ Retorne APENAS um JSON válido seguindo este esquema:
           price: Number(p.price) || 0,
           category_id: catId,
           user_id: userId,
-          restaurant_id: userId,
           sort_order: i,
           is_active: true,
           is_available: true

@@ -65,6 +65,12 @@ interface Product {
   is_available: boolean;
 }
 
+interface Story {
+  id: string;
+  image_url: string;
+  is_active: boolean;
+}
+
 interface Category {
   id: string;
   name: string;
@@ -127,11 +133,16 @@ function getCategoryConfig(name: string) {
 
 /* ─── Animations ─────────────────────────────────────────────── */
 const fadeUp = {
-  hidden:  { opacity: 0, y: 28 },
+  hidden:  { opacity: 0, y: 32, scale: 0.98 },
   visible: (i: number) => ({
-    opacity: 1, y: 0,
-    transition: { delay: i * 0.06, duration: 0.45, ease: [0.22, 1, 0.36, 1] as const },
+    opacity: 1, y: 0, scale: 1,
+    transition: { delay: i * 0.05, duration: 0.5, ease: [0.22, 1, 0.36, 1] as const },
   }),
+};
+
+const slideIn = {
+  hidden: { opacity: 0, x: -20 },
+  visible: { opacity: 1, x: 0, transition: { duration: 0.4, ease: "easeOut" } }
 };
 
 /* ════════════════════════════════════════════════════════════════
@@ -171,32 +182,39 @@ function HeroSlider({ profile, menuCategories, accentColor }: { profile: Profile
       <AnimatePresence mode="popLayout" initial={false}>
         <motion.div
           key={current}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.8, ease: "easeInOut" }}
+          initial={{ opacity: 0, scale: 1.1 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.95 }}
+          transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
           className="absolute inset-0 w-full h-full"
         >
           {slides[current].image ? (
-            <img src={slides[current].image} alt={slides[current].title} className="w-full h-full object-cover scale-[1.02]" />
+            <img src={slides[current].image} alt={slides[current].title} className="w-full h-full object-cover" />
           ) : (
-            <div className="w-full h-full" style={{ background: `linear-gradient(135deg, #0d0d0d 0%, color-mix(in srgb, ${accentColor} 25%, #0d0d0d) 100%)` }} />
+            <div className="w-full h-full bg-gradient-to-br from-[#0a0a0a] to-[#1a1a1a]" />
           )}
         </motion.div>
       </AnimatePresence>
 
-      {/* Pill Dots (Indicators) */}
+      {/* Better indicators */}
       {slides.length > 1 && (
-        <div className="absolute bottom-[35%] sm:bottom-[30%] left-0 right-0 z-10 flex justify-center gap-1.5 pointer-events-none">
-           <div className="flex bg-black/20 backdrop-blur-md px-2 py-1 rounded-full border border-white/10 pointer-events-auto">
+        <div className="absolute bottom-[35%] left-0 right-0 z-10 flex justify-center gap-1.5 px-6">
+           <div className="flex bg-black/40 backdrop-blur-xl px-2.5 py-1.5 rounded-full border border-white/10">
              {slides.map((_, idx) => (
                 <button
                    key={idx}
                    onClick={(e) => { e.preventDefault(); setCurrent(idx); }}
-                   className={`h-1.5 rounded-full transition-all duration-300 shadow-sm mx-0.5 ${
-                      current === idx ? 'w-6 bg-white opacity-100' : 'w-1.5 bg-white/50 opacity-60 hover:bg-white/80'
-                   }`}
-                />
+                   className="relative h-1.5 mx-0.5 focus:outline-none ring-offset-black"
+                >
+                  <div className={`h-full rounded-full transition-all duration-500 ${current === idx ? 'w-6 bg-white' : 'w-1.5 bg-white/30 hover:bg-white/50'}`} />
+                  {current === idx && (
+                    <motion.div
+                      layoutId="slider-pill"
+                      className="absolute inset-0 bg-white rounded-full z-10"
+                      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                    />
+                  )}
+                </button>
              ))}
            </div>
         </div>
@@ -222,6 +240,7 @@ export default function PublicMenu() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isCartOpen, setIsCartOpen]       = useState(false);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [stories, setStories] = useState<Story[]>([]);
   const searchRef = useRef<HTMLInputElement>(null);
 
   const isSuspended = profile &&
@@ -296,7 +315,7 @@ export default function PublicMenu() {
       }
 
       setProfile(prof as unknown as Profile);
-      setRestaurant(slug!, prof.user_id, prof.restaurant_name, prof.whatsapp || '');
+      setRestaurant(slug!, prof.user_id, prof.restaurant_name, prof.whatsapp || '', prof.delivery_fee || 0);
 
       if (prof.is_active === false || prof.plan_status === 'expired' || prof.plan_status === 'inactive') {
         setLoading(false); return;
@@ -338,9 +357,23 @@ export default function PublicMenu() {
       if (uncategorized.length > 0) grouped.push({ name: 'Outros', items: uncategorized });
 
       setMenuCategories(grouped);
+      
+      const { data: storiesData } = await (supabase as any)
+        .from('menu_stories')
+        .select('*')
+        .eq('user_id', prof.user_id)
+        .eq('is_active', true)
+        .order('sort_order', { ascending: true });
+      setStories(storiesData || []);
+
       setLoading(false);
 
-      (supabase as any).from('menu_views').insert({ restaurant_user_id: prof.user_id, slug });
+      // Deduplication: Only track view if not already tracked in this session for this slug
+      const sessionKey = `viewed_${slug}`;
+      if (!sessionStorage.getItem(sessionKey)) {
+        (supabase as any).from('menu_views').insert({ restaurant_user_id: prof.user_id, slug });
+        sessionStorage.setItem(sessionKey, 'true');
+      }
     }
     fetchMenu();
   }, [slug, setRestaurant]);
@@ -492,17 +525,21 @@ export default function PublicMenu() {
     <>
       {/* ─── GOOGLE FONTS INLINE STYLE TAG ─── */}
       <style>{`
-        :root { --pm-accent: ${accentColor}; }
+        :root { 
+          --pm-accent: ${accentColor};
+          --pm-glass: rgba(255, 255, 255, 0.7);
+          --pm-glass-dark: rgba(20, 20, 20, 0.7);
+        }
         .pm-font-display { font-family: "Playfair Display", Georgia, serif; }
         .pm-font-body   { font-family: "Plus Jakarta Sans", system-ui, sans-serif; }
-        .pm-hero-gradient { background: linear-gradient(to top, #0d0d0d 0%, rgba(0,0,0,0.7) 40%, rgba(0,0,0,0.3) 70%, transparent 100%); }
-        .pm-card-hover { transition: transform 0.28s cubic-bezier(.22,1,.36,1), box-shadow 0.28s cubic-bezier(.22,1,.36,1); }
-        .pm-card-hover:hover { transform: translateY(-4px); box-shadow: 0 20px 40px -8px rgba(0,0,0,0.14); }
-        .pm-add-btn { transition: transform 0.18s ease, opacity 0.18s ease; }
-        .pm-add-btn:active { transform: scale(0.9); }
-        .pm-cat-pill { transition: all 0.22s ease; }
-        .pm-search-bar { transition: box-shadow 0.3s ease; }
-        .pm-search-bar:focus-within { box-shadow: 0 0 0 3px color-mix(in srgb, ${accentColor} 20%, transparent); }
+        .pm-hero-gradient { background: linear-gradient(to top, #0d0d0d 0%, rgba(0,0,0,0.6) 30%, rgba(0,0,0,0.1) 70%, transparent 100%); }
+        .pm-card-hover { transition: all 0.4s cubic-bezier(.22,1,.36,1); }
+        .pm-card-hover:hover { transform: translateY(-6px) scale(1.01); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.15); }
+        .pm-add-btn { transition: all 0.2s cubic-bezier(.22,1,.36,1); }
+        .pm-add-btn:active { transform: scale(0.85); }
+        .pm-cat-pill { transition: all 0.3s cubic-bezier(.22,1,.36,1); }
+        .pm-search-bar { transition: all 0.4s cubic-bezier(.22,1,.36,1); }
+        .pm-search-bar:focus-within { transform: scale(1.02); box-shadow: 0 10px 30px -10px color-mix(in srgb, ${accentColor} 40%, transparent); }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         .pm-open-badge  { background: rgba(34,197,94,0.15); color: #16a34a; }
@@ -572,9 +609,9 @@ export default function PublicMenu() {
               <motion.h1
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.22, duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-                className="pm-font-display text-white font-bold italic text-4xl sm:text-5xl md:text-6xl leading-[1.05] drop-shadow-2xl"
-                style={{ color: '#ffffff', textShadow: '0 2px 20px rgba(0,0,0,0.5)' }}
+                transition={{ delay: 0.22, duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+                className="pm-font-display text-white font-bold italic text-4xl sm:text-5xl md:text-7xl leading-[0.95] drop-shadow-2xl"
+                style={{ color: '#ffffff', textShadow: '0 10px 30px rgba(0,0,0,0.4)' }}
               >
                 {profile.restaurant_name}
               </motion.h1>
@@ -587,24 +624,25 @@ export default function PublicMenu() {
                 className="flex items-center gap-2 mt-3 flex-wrap"
               >
                 {/* Rating */}
-                <div className="flex items-center gap-1 bg-white/10 backdrop-blur-md border border-white/15 px-2.5 py-1 rounded-lg">
-                  <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
-                  <span className="text-white text-[11px] font-bold">4.9</span>
-                  <span className="text-white/50 text-[10px]">• 250+ avaliações</span>
+                <div className="flex items-center gap-1.5 bg-white/10 backdrop-blur-xl border border-white/20 px-3 py-1.5 rounded-xl shadow-lg">
+                  <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                  <span className="text-white text-[12px] font-black tracking-tight">4.9</span>
+                  <div className="w-1 h-1 rounded-full bg-white/30 mx-0.5" />
+                  <span className="text-white/60 text-[11px] font-medium">250+</span>
                 </div>
 
                 {/* Tempo */}
-                <div className="flex items-center gap-1 bg-white/10 backdrop-blur-md border border-white/15 px-2.5 py-1 rounded-lg">
-                  <Clock className="w-3 h-3 text-white/70" />
-                  <span className="text-white text-[11px] font-bold">30-45 min</span>
+                <div className="flex items-center gap-1.5 bg-white/10 backdrop-blur-xl border border-white/20 px-3 py-1.5 rounded-xl shadow-lg">
+                  <Clock className="w-3.5 h-3.5 text-white/80" />
+                  <span className="text-white text-[12px] font-black tracking-tight">30-45m</span>
                 </div>
 
                 {/* Entrega */}
                 {(profile.show_delivery_info ?? true) && (
-                  <div className="flex items-center gap-1 bg-white/10 backdrop-blur-md border border-white/15 px-2.5 py-1 rounded-lg">
-                    <Truck className="w-3 h-3 text-white/70" />
-                    <span className="text-white text-[11px] font-bold">
-                      {profile.custom_delivery_label || (profile.delivery_fee === 0 ? 'Frete Grátis' : formatCurrency(profile.delivery_fee))}
+                  <div className="flex items-center gap-1.5 bg-white/10 backdrop-blur-xl border border-white/20 px-3 py-1.5 rounded-xl shadow-lg">
+                    <Truck className="w-3.5 h-3.5 text-white/80" />
+                    <span className="text-white text-[12px] font-black tracking-tight">
+                      {profile.custom_delivery_label || (profile.delivery_fee === 0 ? 'Grátis' : formatCurrency(profile.delivery_fee))}
                     </span>
                   </div>
                 )}
@@ -613,6 +651,37 @@ export default function PublicMenu() {
           </div>
         </motion.header>
 
+        {/* ─── STORIES SECTION ─── */}
+        <AnimatePresence>
+          {stories.length > 0 && !searchQuery && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              className="relative z-20 px-5 pt-8 overflow-hidden"
+            >
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-1.5 h-4 rounded-full bg-primary" />
+                <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Destaques do Dia</h2>
+              </div>
+              <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2">
+                {stories.map((story, i) => (
+                  <motion.div
+                    key={story.id}
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: i * 0.1 }}
+                    className="flex-shrink-0 w-20 h-20 sm:w-24 sm:h-24 rounded-full p-[3px] border-2 border-primary/30 active:scale-90 transition-transform cursor-pointer"
+                  >
+                    <div className="w-full h-full rounded-full overflow-hidden border-2 border-background shadow-inner">
+                      <img src={story.image_url} alt="Story" className="w-full h-full object-cover" />
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* ══════════════════════════════════════════
             MAIN CONTENT — expanded desktop container
         ══════════════════════════════════════════ */}
@@ -620,27 +689,27 @@ export default function PublicMenu() {
           <div className="w-full max-w-[1400px] mx-auto">
 
             {/* ── SEARCH BAR ── */}
-            <div className="px-5 pt-6 pb-2 flex justify-center">
-              <div className="relative pm-search-bar bg-white dark:bg-[#1e1e1e] rounded-2xl shadow-sm border border-black/[0.06] dark:border-white/[0.06] w-full max-w-xl">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-gray-400" />
+            <div className="px-5 pt-7 pb-3 flex justify-center sticky top-0 z-50 bg-inherit/30 pm-glass group">
+              <div className="relative pm-search-bar bg-white/70 dark:bg-white/5 backdrop-blur-md rounded-2xl shadow-sm border border-black/[0.04] dark:border-white/[0.08] w-full max-w-xl">
+                <Search className="absolute left-4.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-gray-400 group-focus-within:text-primary transition-colors" />
                 <input
                   ref={searchRef}
                   type="text"
-                  placeholder="Buscar pratos, lanches ou sobremesas..."
+                  placeholder="O que você quer comer hoje?"
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
-                  className="w-full pl-12 pr-4 h-12 bg-transparent text-sm font-medium placeholder:text-gray-400 focus:outline-none rounded-2xl"
+                  className="w-full pl-12 pr-4 h-13 bg-transparent text-sm font-semibold placeholder:text-gray-400 placeholder:font-medium focus:outline-none rounded-2xl dark:text-white"
                 />
                 {searchQuery && (
-                  <button onClick={() => setSearchQuery('')} className="absolute right-4 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded-full bg-gray-100 dark:bg-white/10">
-                    <X className="w-3.5 h-3.5 text-gray-500" />
+                  <button onClick={() => setSearchQuery('')} className="absolute right-4 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center rounded-full bg-black/5 dark:bg-white/10 hover:bg-black/10 transition-colors">
+                    <X className="w-4 h-4 text-gray-500" />
                   </button>
                 )}
               </div>
             </div>
 
             {/* ── CATEGORY PILLS ── */}
-            <div className="sticky top-0 z-40 bg-[#f4f4f4]/90 dark:bg-[#111111]/90 backdrop-blur-xl pt-3 pb-3 px-5 border-b border-black/[0.05] dark:border-white/[0.05]">
+            <div className="sticky top-[76px] z-40 bg-inherit/40 pm-glass pt-2 pb-4 px-5 border-b border-black/[0.03] dark:border-white/[0.03]">
               <div className="flex items-center gap-2.5 overflow-x-auto no-scrollbar max-w-[1400px] mx-auto">
                 {filteredCategories.map(cat => {
                   const cfg = getCategoryConfig(cat.name);
@@ -652,14 +721,77 @@ export default function PublicMenu() {
                       active={activeCategory === cat.name}
                       accentColor={accentColor}
                       onClick={() => {
-                        setActiveCategory(cat.name);
-                        document.getElementById(`cat-${cat.name}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        const target = document.getElementById(`cat-${cat.name}`);
+                        if (target) {
+                          const offset = 140;
+                          const bodyRect = document.body.getBoundingClientRect().top;
+                          const elementRect = target.getBoundingClientRect().top;
+                          const elementPosition = elementRect - bodyRect;
+                          const offsetPosition = elementPosition - offset;
+                          window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
+                          setActiveCategory(cat.name);
+                        }
                       }}
                     />
                   );
                 })}
               </div>
             </div>
+
+            {/* ── DESTASQUES DO CHEF ── */}
+            {!searchQuery && menuCategories.some(c => c.items.some(i => i.is_upsell)) && (
+              <div className="px-5 pt-8">
+                <div className="flex items-center justify-between mb-5">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-1.5 h-6 rounded-full" style={{ backgroundColor: accentColor }} />
+                    <h2 className="pm-font-display text-2xl font-black tracking-tight italic">Destaques do Chef</h2>
+                  </div>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-primary bg-primary/10 px-2 py-1 rounded-lg">Popular</span>
+                </div>
+                <div className="flex gap-4 overflow-x-auto no-scrollbar pb-4 -mx-5 px-5">
+                  {menuCategories.flatMap(c => c.items).filter(i => i.is_upsell).map((item, idx) => (
+                    <motion.div
+                      key={item.id}
+                      initial={{ opacity: 0, x: 20 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: idx * 0.1 }}
+                      onClick={() => setSelectedProduct(item)}
+                      className="min-w-[280px] sm:min-w-[320px] bg-white dark:bg-[#1a1a1a] rounded-[28px] overflow-hidden pm-card-hover border border-black/[0.04] dark:border-white/[0.06] relative group"
+                    >
+                       <div className="relative h-48 overflow-hidden">
+                          {item.image_url ? (
+                            <ItemImage src={item.image_url} alt={item.name} />
+                          ) : (
+                            <div className="w-full h-full bg-muted flex items-center justify-center">
+                              <Utensils className="w-10 h-10 text-muted-foreground/20" />
+                            </div>
+                          )}
+                          <div className="absolute top-4 right-4 bg-white/20 backdrop-blur-xl border border-white/20 p-2 rounded-2xl">
+                             <Heart className="w-4 h-4 text-white fill-white" />
+                          </div>
+                          <div className="absolute bottom-4 left-4">
+                            <span className="bg-black/60 backdrop-blur-md text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border border-white/10">✨ Seleção Premium</span>
+                          </div>
+                       </div>
+                       <div className="p-5">
+                          <h3 className="font-bold text-lg mb-1 line-clamp-1">{item.name}</h3>
+                          <p className="text-muted-foreground text-xs line-clamp-1 mb-4">{item.description || 'Sabor inigualável e qualidade premium.'}</p>
+                          <div className="flex items-center justify-between">
+                             <div className="flex flex-col">
+                               <span className="text-[10px] uppercase font-black tracking-widest text-muted-foreground/50 leading-none">A partir de</span>
+                               <span className="text-xl font-black text-primary">{formatCurrency(item.price)}</span>
+                             </div>
+                             <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white shadow-lg shadow-primary/20 transition-transform group-hover:scale-110">
+                                <Plus className="w-5 h-5 stroke-[3px]" />
+                             </div>
+                          </div>
+                       </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* ── PRODUCT SECTIONS ── */}
             <div className="px-5 pb-40 pt-4 space-y-8">
@@ -679,13 +811,17 @@ export default function PublicMenu() {
                   transition={{ delay: catIdx * 0.04 }}
                 >
                   {/* Category header */}
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="flex items-center gap-2">
-                      <span className="text-2xl">{getCategoryConfig(cat.name).emoji}</span>
-                      <h2 className="text-lg font-extrabold tracking-tight">{cat.name}</h2>
+                  <div className="flex items-center justify-between mb-6 group/title">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-2xl bg-white dark:bg-white/5 shadow-sm border border-black/[0.03] dark:border-white/10 flex items-center justify-center text-xl">
+                        {getCategoryConfig(cat.name).emoji}
+                      </div>
+                      <h2 className="pm-font-display text-xl sm:text-2xl font-black italic tracking-tight">{cat.name}</h2>
                     </div>
-                    <div className="h-px flex-1 bg-black/[0.07] dark:bg-white/[0.07]" />
-                    <span className="text-[11px] font-semibold text-gray-400">{cat.items.length} {cat.items.length === 1 ? 'item' : 'itens'}</span>
+                    <div className="flex items-center gap-2">
+                       <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">{cat.items.length} ITENS</span>
+                       <ChevronRight className="w-4 h-4 text-muted-foreground/20 group-hover/title:translate-x-1 transition-transform" />
+                    </div>
                   </div>
 
                   {/* Items */}
@@ -700,36 +836,36 @@ export default function PublicMenu() {
                             variants={fadeUp}
                             initial="hidden"
                             whileInView="visible"
-                            viewport={{ once: true }}
+                            viewport={{ once: true, margin: '-20px' }}
                             onClick={() => setSelectedProduct(item)}
-                            className="pm-dark-card rounded-[22px] overflow-hidden cursor-pointer group pm-card-hover"
+                            className="bg-white dark:bg-[#18191a] rounded-[28px] overflow-hidden cursor-pointer group pm-card-hover border border-black/[0.04] dark:border-white/[0.06] flex flex-col h-full"
                           >
-                            <div className="relative h-40 overflow-hidden bg-muted">
+                            <div className="relative h-44 sm:h-48 overflow-hidden bg-muted">
                               {item.image_url ? (
                                 <ItemImage src={item.image_url} alt={item.name} />
                               ) : (
-                                <div className="w-full h-full bg-[#2a2a2a] flex items-center justify-center">
-                                  <Utensils className="w-8 h-8 text-white/10" />
+                                <div className="w-full h-full bg-gray-100 dark:bg-[#252525] flex items-center justify-center">
+                                  <Utensils className="w-8 h-8 text-gray-300 dark:text-white/10" />
                                 </div>
                               )}
-                              <div className="absolute inset-0 bg-gradient-to-t from-[#111111]/90 via-black/20 to-transparent" />
-                              <div className="absolute top-3 right-3 flex items-center gap-1 bg-black/50 backdrop-blur-md px-2 py-1 rounded-lg border border-white/10">
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                              <div className="absolute top-3 right-3 flex items-center gap-1 bg-white/90 dark:bg-black/60 backdrop-blur-md px-2 py-1 rounded-xl shadow-lg border border-white/20">
                                 <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
-                                <span className="text-white text-[11px] font-bold">{rating.star}</span>
+                                <span className="text-gray-900 dark:text-white text-[11px] font-black">{rating.star}</span>
                               </div>
                             </div>
-                            <div className="p-4">
-                              <h3 className="text-white font-bold text-sm leading-tight line-clamp-1 mb-1">{item.name}</h3>
-                              {item.description && <p className="text-white/40 text-[11px] line-clamp-1 mb-3">{item.description}</p>}
-                              <div className="flex items-center justify-between mt-auto">
-                                <span className="font-extrabold text-base" style={{ color: accentColor }}>{formatCurrency(item.price)}</span>
+                            <div className="p-4 flex flex-col flex-1">
+                              <h3 className="font-bold text-sm leading-tight line-clamp-2 mb-1 group-hover:text-primary transition-colors">{item.name}</h3>
+                              {item.description && <p className="text-muted-foreground text-[11px] line-clamp-2 mb-3 leading-relaxed">{item.description}</p>}
+                              <div className="mt-auto pt-2 flex items-center justify-between">
+                                <span className="font-black text-base text-primary">{formatCurrency(item.price)}</span>
                                 <button
                                   disabled={!item.is_available}
                                   onClick={e => { e.stopPropagation(); handleAdd({ id: item.id, name: item.name, price: item.price }); }}
-                                  className="w-9 h-9 rounded-full flex items-center justify-center pm-add-btn pm-pulse disabled:opacity-40 disabled:cursor-not-allowed"
-                                  style={{ backgroundColor: accentColor }}
+                                  className="w-10 h-10 rounded-2xl flex items-center justify-center pm-add-btn pm-pulse text-white shadow-lg transition-all active:scale-95 disabled:opacity-40"
+                                  style={{ backgroundColor: accentColor, boxShadow: `0 8px 16px -4px ${accentColor}40` }}
                                 >
-                                  <Plus className="w-4 h-4 text-white stroke-[2.5px]" />
+                                  <Plus className="w-5 h-5 stroke-[3px]" />
                                 </button>
                               </div>
                             </div>
@@ -748,50 +884,49 @@ export default function PublicMenu() {
                             variants={fadeUp}
                             initial="hidden"
                             whileInView="visible"
-                            viewport={{ once: true }}
+                            viewport={{ once: true, margin: '-20px' }}
                             onClick={() => setSelectedProduct(item)}
-                            className="bg-white dark:bg-[#1e1e1e] rounded-2xl overflow-hidden cursor-pointer pm-card-hover border border-black/[0.05] dark:border-white/[0.05] flex"
+                            className="bg-white dark:bg-[#1a1a1a] rounded-[24px] overflow-hidden cursor-pointer pm-card-hover border border-black/[0.04] dark:border-white/[0.06] flex group h-32 sm:h-36"
                           >
-                            <div className="relative w-[120px] sm:w-[140px] h-[120px] sm:h-[140px] shrink-0 overflow-hidden bg-muted">
+                            <div className="relative w-32 sm:w-36 h-full shrink-0 overflow-hidden bg-muted">
                               {item.image_url ? (
                                 <ItemImage src={item.image_url} alt={item.name} />
                               ) : (
-                                <div className="w-full h-full bg-gray-100 dark:bg-[#2a2a2a] flex items-center justify-center">
-                                  <Utensils className="w-8 h-8 text-gray-300 dark:text-white/10" />
+                                <div className="w-full h-full bg-gray-50 dark:bg-[#222] flex items-center justify-center">
+                                  <Utensils className="w-8 h-8 text-gray-200 dark:text-white/5" />
                                 </div>
                               )}
                               {!item.is_available && (
-                                <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                                  <span className="text-white text-[10px] font-bold uppercase tracking-wider">Esgotado</span>
+                                <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] flex items-center justify-center">
+                                  <span className="text-white text-[9px] font-black uppercase tracking-widest border border-white/20 px-2 py-0.5 rounded">Esgotado</span>
                                 </div>
                               )}
                             </div>
                             <div className="flex-1 p-3 sm:p-4 flex flex-col justify-between min-w-0">
-                              <div>
-                                <h3 className="font-bold text-sm sm:text-base leading-tight line-clamp-2 mb-1">{item.name}</h3>
-                                {item.description && (
-                                  <p className="text-gray-500 dark:text-gray-400 text-[12px] leading-snug line-clamp-2">{item.description}</p>
+                              <div className="space-y-1">
+                                <h3 className="font-bold text-sm sm:text-base leading-tight line-clamp-1 group-hover:text-primary transition-colors">{item.name}</h3>
+                                {item.description ? (
+                                  <p className="text-muted-foreground text-[11px] leading-relaxed line-clamp-2">{item.description}</p>
+                                ) : (
+                                  <p className="text-muted-foreground/40 text-[10px] italic">Sem descrição disponível.</p>
                                 )}
                               </div>
-                              <div className="flex items-center justify-between mt-2 gap-2">
-                                <div>
-                                  <div className="flex items-center gap-2 mb-1">
-                                    <div className="flex items-center gap-0.5">
-                                      <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
-                                      <span className="text-[11px] font-bold text-gray-700 dark:text-gray-300">{rating.star}</span>
-                                      <span className="text-[10px] text-gray-400 ml-0.5">{rating.count}</span>
-                                    </div>
-                                  </div>
-                                  <span className="font-extrabold text-base text-gray-900 dark:text-white">{formatCurrency(item.price)}</span>
+                              <div className="flex items-center justify-between gap-2">
+                                <div className="flex flex-col">
+                                   <div className="flex items-center gap-1 mb-0.5">
+                                      <Star className="w-2.5 h-2.5 fill-amber-400 text-amber-400" />
+                                      <span className="text-[10px] font-black text-muted-foreground">{rating.star}</span>
+                                   </div>
+                                   <span className="font-black text-base text-foreground">{formatCurrency(item.price)}</span>
                                 </div>
                                 <button
                                   disabled={!item.is_available}
                                   onClick={e => { e.stopPropagation(); handleAdd({ id: item.id, name: item.name, price: item.price }); }}
-                                  className="flex items-center gap-1.5 px-3 h-9 rounded-xl text-white text-xs font-bold pm-add-btn shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
-                                  style={{ backgroundColor: item.is_available ? '#22c55e' : '#9ca3af' }}
+                                  className="flex items-center gap-1.5 px-4 h-9 rounded-[14px] text-white text-[11px] font-black uppercase tracking-wide pm-add-btn shadow-md disabled:opacity-40 transition-all active:scale-95"
+                                  style={{ backgroundColor: item.is_available ? accentColor : '#9ca3af', boxShadow: item.is_available ? `0 4px 12px -2px ${accentColor}40` : 'none' }}
                                 >
-                                  <Plus className="w-3.5 h-3.5 stroke-[2.5px]" />
-                                  Adicionar
+                                  <Plus className="w-3.5 h-3.5 stroke-[3px]" />
+                                  <span>{isPremium ? '' : 'Adicionar'}</span>
                                 </button>
                               </div>
                             </div>
@@ -872,15 +1007,21 @@ function CategoryPill({
     <button
       ref={scrollRef}
       onClick={onClick}
-      className={`pm-cat-pill flex items-center gap-1.5 px-3.5 py-2 rounded-2xl shrink-0 text-sm font-semibold whitespace-nowrap border transition-all ${
+      className={`pm-cat-pill flex items-center gap-2 px-4 py-2.5 rounded-[18px] shrink-0 text-sm font-black tracking-tight whitespace-nowrap border transition-all active:scale-95 ${
         active
-          ? 'text-white shadow-md border-transparent'
-          : 'bg-white dark:bg-[#1e1e1e] text-gray-600 dark:text-gray-300 border-black/[0.07] dark:border-white/[0.07]'
+          ? 'text-white shadow-lg border-transparent'
+          : 'bg-white/70 dark:bg-white/5 pm-glass text-muted-foreground border-black/[0.04] dark:border-white/[0.08] hover:bg-white dark:hover:bg-white/10'
       }`}
-      style={active ? { backgroundColor: accentColor } : undefined}
+      style={active ? { backgroundColor: accentColor, boxShadow: `0 8px 20px -6px ${accentColor}60` } : undefined}
     >
-      <span className="text-base">{emoji}</span>
-      <span>{label}</span>
+      <span className="text-lg leading-none">{emoji}</span>
+      <span className="uppercase text-[10px] tracking-widest">{label}</span>
+      {active && (
+        <motion.div
+           layoutId="cat-indicator"
+           className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-white rounded-full"
+        />
+      )}
     </button>
   );
 }
