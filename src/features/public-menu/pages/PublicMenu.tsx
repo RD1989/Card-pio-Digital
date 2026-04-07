@@ -233,11 +233,6 @@ function StoreHeader({ profile, isOpen, accentColor }: { profile: Profile, isOpe
                 <div className="w-full h-full flex items-center justify-center bg-primary/10 text-primary font-black text-xl rounded-[18px]">{profile.restaurant_name[0]}</div>
               )}
             </div>
-            {isOpen !== null && (
-              <div className={`absolute -right-1 -bottom-2 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-tighter shadow-xl border border-white/20 dark:border-black/50 ${isOpen ? 'bg-emerald-500 text-white' : 'bg-red-500 text-white'}`}>
-                {isOpen ? 'Aberto' : 'Fechado'}
-              </div>
-            )}
          </div>
 
          {/* Informações Estratégicas (Encaixadas no vazio abaixo do banner) */}
@@ -246,18 +241,23 @@ function StoreHeader({ profile, isOpen, accentColor }: { profile: Profile, isOpe
               {profile.restaurant_name}
             </h1>
             
-            <div className="flex items-center gap-2 flex-wrap">
-              <div className="flex items-center gap-1 px-2.5 py-1.5 rounded-[10px] bg-white dark:bg-white/5 border border-black/5 dark:border-white/5 text-[10px] font-bold text-foreground shadow-sm">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {isOpen !== null && (
+                <div className={`flex items-center px-2 py-1 rounded-md text-[10px] font-black uppercase tracking-tighter shadow-sm border border-transparent ${isOpen ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-red-500/10 text-red-600 dark:text-red-400'}`}>
+                  {isOpen ? 'Aberto' : 'Fechado'}
+                </div>
+              )}
+              <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-white dark:bg-white/5 border border-black/5 dark:border-white/5 text-[10px] font-bold text-foreground shadow-sm">
                 <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
                 <span>4.9</span>
-                <span className="opacity-50">(120+)</span>
+                <span className="opacity-50 font-normal">(120+)</span>
               </div>
-              <div className="flex items-center gap-1 px-2.5 py-1.5 rounded-[10px] bg-white dark:bg-white/5 border border-black/5 dark:border-white/5 text-[10px] font-bold text-muted-foreground shadow-sm">
+              <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-white dark:bg-white/5 border border-black/5 dark:border-white/5 text-[10px] font-bold text-muted-foreground shadow-sm">
                 <Clock className="w-3 h-3 opacity-70" />
                 <span className="text-foreground">30-45 min</span>
               </div>
               {(profile.show_delivery_info ?? true) && (
-                <div className="flex items-center gap-1 px-2.5 py-1.5 rounded-[10px] bg-white dark:bg-white/5 border border-black/5 dark:border-white/5 text-[10px] font-bold text-muted-foreground shadow-sm">
+                <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-white dark:bg-white/5 border border-black/5 dark:border-white/5 text-[10px] font-bold text-muted-foreground shadow-sm">
                   <Truck className="w-3 h-3 opacity-70" />
                   <span className="text-foreground">{profile.custom_delivery_label || (profile.delivery_fee === 0 ? 'Grátis' : formatCurrency(profile.delivery_fee))}</span>
                 </div>
