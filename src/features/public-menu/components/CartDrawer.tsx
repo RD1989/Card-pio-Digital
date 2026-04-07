@@ -118,7 +118,9 @@ export function CartDrawer({ accentColor = '#16a34a' }: CartDrawerProps) {
   const [name, setName]                     = useState('');
   const [phone, setPhone]                   = useState('');
   const [obs, setObs]                       = useState('');
-  const [address, setAddress]               = useState('');
+  const [street, setStreet]               = useState('');
+  const [number, setNumber]               = useState('');
+  const [neighborhood, setNeighborhood]   = useState('');
   const [deliveryType, setDeliveryType]     = useState<DeliveryType>(store.deliveryType || 'delivery');
   const [paymentMethod, setPaymentMethod]   = useState<PaymentMethod>('cash');
   const [couponCode, setCouponCode]         = useState('');
@@ -154,7 +156,10 @@ export function CartDrawer({ accentColor = '#16a34a' }: CartDrawerProps) {
   const handleCheckout = async () => {
     if (!name.trim())   { toast.error('Informe seu nome'); return; }
     if (!phone.trim())  { toast.error('Informe seu WhatsApp'); return; }
-    if (deliveryType === 'delivery' && !address.trim()) { toast.error('Informe seu endereço'); return; }
+    if (deliveryType === 'delivery' && (!street.trim() || !number.trim() || !neighborhood.trim())) { 
+      toast.error('Preencha o endereço completo (Rua, Nº e Bairro)'); 
+      return; 
+    }
     setLoading(true);
 
     try {
@@ -200,14 +205,15 @@ export function CartDrawer({ accentColor = '#16a34a' }: CartDrawerProps) {
     if (!cleanPhone) { toast.error('WhatsApp do restaurante não configurado.'); setLoading(false); return; }
     
     const whatsappPhone  = cleanPhone.startsWith('55') ? cleanPhone : `55${cleanPhone}`;
-    const message        = buildWhatsAppMessage(restaurantName || restaurantSlug.replace(/-/g, ' '), items, subtotalValue, effectiveFee, totalValue, name, phone, address, deliveryType, paymentMethod, obs);
+    const fullAddress    = deliveryType === 'delivery' ? `${street.trim()}, ${number.trim()} - ${neighborhood.trim()}` : '';
+    const message        = buildWhatsAppMessage(restaurantName || restaurantSlug.replace(/-/g, ' '), items, subtotalValue, effectiveFee, totalValue, name, phone, fullAddress, deliveryType, paymentMethod, obs);
     
     // Using location.assign for better mobile compatibility and to avoid popup blockers
     window.location.assign(`https://wa.me/${whatsappPhone}?text=${message}`);
 
     toast.success('✅ Pedido enviado com sucesso!');
     clearCart(); setStep('cart'); setOpen(false);
-    setName(''); setPhone(''); setObs(''); setAddress('');
+    setName(''); setPhone(''); setObs(''); setStreet(''); setNumber(''); setNeighborhood('');
     setDeliveryType('delivery'); setPaymentMethod('cash');
     setLoading(false);
   };
@@ -348,11 +354,23 @@ export function CartDrawer({ accentColor = '#16a34a' }: CartDrawerProps) {
                         ))}
                       </div>
                     </div>
-                    {/* Endereço */}
+                    {/* Endereço Estruturado */}
                     {deliveryType === 'delivery' && (
-                      <div>
-                        <label className="text-xs font-bold text-gray-500 mb-2 block uppercase tracking-wide">Endereço *</label>
-                        <input type="text" value={address} onChange={e => setAddress(e.target.value)} placeholder="Rua, número - Bairro" className={inputCls} />
+                      <div className="space-y-3">
+                        <div className="flex gap-2">
+                          <div className="flex-[2]">
+                            <label className="text-[10px] font-black text-gray-400 mb-1.5 block uppercase tracking-widest">Rua *</label>
+                            <input type="text" value={street} onChange={e => setStreet(e.target.value)} placeholder="Ex: Av. Brasil" className={inputCls} />
+                          </div>
+                          <div className="flex-1">
+                            <label className="text-[10px] font-black text-gray-400 mb-1.5 block uppercase tracking-widest">Nº *</label>
+                            <input type="text" value={number} onChange={e => setNumber(e.target.value)} placeholder="123" className={inputCls} />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-black text-gray-400 mb-1.5 block uppercase tracking-widest">Bairro *</label>
+                          <input type="text" value={neighborhood} onChange={e => setNeighborhood(e.target.value)} placeholder="Ex: Centro" className={inputCls} />
+                        </div>
                       </div>
                     )}
                     {/* Pagamento */}
