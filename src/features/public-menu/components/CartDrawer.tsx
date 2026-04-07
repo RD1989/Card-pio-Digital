@@ -183,7 +183,6 @@ export function CartDrawer({ accentColor = '#16a34a' }: CartDrawerProps) {
       restaurant_id: restaurantUserId,
       customer_name: name,
       customer_phone: phone,
-      notes: obs || null,
       total: totalValue,
       status: 'pending',
     });
@@ -193,7 +192,6 @@ export function CartDrawer({ accentColor = '#16a34a' }: CartDrawerProps) {
       restaurant_id: restaurantUserId,
       customer_name: name,
       customer_phone: phone,
-      notes: obs || null,
       total: totalValue,
       status: 'pending',
     }).select('id').single();
