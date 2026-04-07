@@ -31,6 +31,7 @@ export default defineConfig(({ mode }) => ({
           'vendor-ui': ['framer-motion', 'lucide-react', 'clsx', 'tailwind-merge'],
           'vendor-supabase': ['@supabase/supabase-js'],
           'vendor-utils': ['@tanstack/react-query', 'date-fns', 'sonner'],
+          'vendor-charts': ['recharts'],
         }
       }
     },

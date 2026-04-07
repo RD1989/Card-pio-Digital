@@ -40,19 +40,41 @@ const BioLinkPage = lazy(() => import("./features/bio-link/pages/BioLinkPage"));
 const Marketing = lazy(() => import("./features/marketing/pages/Marketing"));
 const NotFound = lazy(() => import("./shared/components/common/NotFound"));
 
-import { AdminLayout } from "./layouts/AdminLayout";
-import { PublicLayout } from "./layouts/PublicLayout";
-import { SuperAdminLayout } from "./layouts/SuperAdminLayout";
+// Layouts - Also lazy loaded for better chunking
+const AdminLayout = lazy(() => import("./layouts/AdminLayout").then(m => ({ default: m.AdminLayout })));
+const PublicLayout = lazy(() => import("./layouts/PublicLayout").then(m => ({ default: m.PublicLayout })));
+const SuperAdminLayout = lazy(() => import("./layouts/SuperAdminLayout").then(m => ({ default: m.SuperAdminLayout })));
 const GlobalLoader = () => (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
-    <div className="flex flex-col items-center gap-4">
-      <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      <span className="text-xs font-bold tracking-widest text-muted-foreground uppercase opacity-50 animate-pulse">Carregando...</span>
+  <div className="fixed inset-0 z-[999] flex items-center justify-center bg-background/60 backdrop-blur-xl">
+    <div className="flex flex-col items-center gap-8 animate-in fade-in zoom-in duration-700">
+      <div className="relative">
+        <div className="absolute inset-0 bg-primary/30 blur-3xl rounded-full animate-pulse" />
+        <div className="w-16 h-16 rounded-2xl bg-card border border-primary/20 shadow-2xl flex items-center justify-center relative z-10 rotate-3 animate-bounce">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </div>
+      <div className="flex flex-col items-center gap-2">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-[1px] bg-gradient-to-r from-transparent to-primary/40" />
+          <span className="text-[11px] font-black tracking-[0.4em] text-primary uppercase">Menu Pro</span>
+          <div className="w-8 h-[1px] bg-gradient-to-l from-transparent to-primary/40" />
+        </div>
+        <span className="text-[9px] font-bold tracking-widest text-muted-foreground uppercase opacity-40">Otimizando sua experiência...</span>
+      </div>
     </div>
   </div>
 );
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      gcTime: 1000 * 60 * 30, // 30 minutes
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>

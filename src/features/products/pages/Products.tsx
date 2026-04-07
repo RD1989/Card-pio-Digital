@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence, Reorder } from 'framer-motion';
-import { Plus, GripVertical, Edit2, Trash2, Wand2, Upload, X, Package, Settings2, Info, FileText, Sparkles } from 'lucide-react';
+import { Plus, GripVertical, Edit2, Trash2, Wand2, Upload, X, Package, Settings2, Info, FileText, Sparkles, Search } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Tables } from '@/integrations/supabase/types';
 import { toast } from 'sonner';
@@ -14,6 +14,7 @@ import { Label } from '@/shared/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/shared/components/ui/dialog';
 import { ModifiersManager } from '@/features/products/components/ModifiersManager';
+import { useDebounce } from '@/shared/hooks/useDebounce';
 
 type Category = Tables<'categories'>;
 type Product = Tables<'products'>;
@@ -41,6 +42,8 @@ export default function Products() {
   const [generatingAI, setGeneratingAI] = useState(false);
   const [selectedUpsellIds, setSelectedUpsellIds] = useState<string[]>([]);
   const [upsellSearch, setUpsellSearch] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const debouncedSearch = useDebounce(searchQuery, 300);
 
 
   // Category form
@@ -268,9 +271,11 @@ export default function Products() {
 
 
 
-  const filteredProducts = selectedCategory
-    ? products.filter(p => p.category_id === selectedCategory)
-    : products;
+  const filteredProducts = products.filter(p => {
+    const matchesCategory = !selectedCategory || p.category_id === selectedCategory;
+    const matchesSearch = !debouncedSearch || p.name.toLowerCase().includes(debouncedSearch.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
 
   if (loading) {
     return (
@@ -294,6 +299,23 @@ export default function Products() {
           <Button onClick={() => openProductModal()} className="gap-2">
             <Plus className="w-4 h-4" /> Novo Produto
           </Button>
+        </div>
+      </div>
+
+      {/* Busca e Filtros */}
+      <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-muted/30 p-4 rounded-2xl border border-border/50">
+        <div className="relative w-full sm:max-w-xs">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input 
+            placeholder="Buscar produto..." 
+            className="pl-10 bg-background border-none shadow-sm focus-visible:ring-1"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+        <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground bg-background px-3 py-2 rounded-xl border border-border/40">
+          <Package className="w-3.5 h-3.5" />
+          {filteredProducts.length} produtos encontrados
         </div>
       </div>
 
