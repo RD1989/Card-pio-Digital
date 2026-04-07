@@ -244,9 +244,19 @@ export default function Branding() {
                 )}
                 <input type="file" accept="image/*" className="hidden" onChange={handleBannerUpload} />
               </label>
-              <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <p className="font-semibold text-primary">Resolução Ideal: 1200x400px (3:1)</p>
-                <p>Máximo 3MB.</p>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-primary/5 p-4 rounded-xl border border-primary/10">
+                <div>
+                  <p className="text-xs font-black text-primary uppercase tracking-widest flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                    Resolução Ideal: 1024x683px (3:2)
+                  </p>
+                  <p className="text-[10px] text-muted-foreground mt-1 font-medium">
+                    Esta proporção garante que seu banner não seja cortado nos celulares dos clientes.
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-[10px] font-black uppercase tracking-tighter shrink-0 animate-in fade-in zoom-in duration-500">
+                  Mobile Ready
+                </div>
               </div>
             </div>
           </motion.section>
