@@ -308,7 +308,7 @@ export default function PublicMenu() {
     if (!slug) return;
     async function fetchData() {
       setLoading(true);
-      const { data: prof } = await supabase.from('profiles').select('*').or(`slug.eq.${slug},user_id.eq.${slug}`).single();
+      const { data: prof } = await supabase.from('profiles').select('*').or(`slug.ilike.${slug},user_id.ilike.${slug}`).single();
       if (!prof) { setNotFound(true); setLoading(false); return; }
       
       setProfile(prof as any);
