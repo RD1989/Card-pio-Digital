@@ -178,6 +178,16 @@ export function CartDrawer({ accentColor = '#16a34a' }: CartDrawerProps) {
       }
     } catch {}
 
+    console.log('Payload do Pedido:', {
+      restaurant_user_id: restaurantUserId,
+      restaurant_id: restaurantUserId,
+      customer_name: name,
+      customer_phone: phone,
+      notes: obs || null,
+      total: totalValue,
+      status: 'pending',
+    });
+
     const { data: order, error } = await supabase.from('orders').insert({
       restaurant_user_id: restaurantUserId,
       restaurant_id: restaurantUserId,
@@ -188,7 +198,12 @@ export function CartDrawer({ accentColor = '#16a34a' }: CartDrawerProps) {
       status: 'pending',
     }).select('id').single();
 
-    if (error || !order) { toast.error('Erro ao salvar pedido.'); setLoading(false); return; }
+    if (error || !order) { 
+      console.error('ERRO DETALHADO SUPABASE ORDERS:', error);
+      toast.error(`Erro ao salvar pedido: ${error?.message || 'Erro desconhecido'}`); 
+      setLoading(false); 
+      return; 
+    }
 
     await supabase.from('order_items').insert(
       items.map(item => ({ 
