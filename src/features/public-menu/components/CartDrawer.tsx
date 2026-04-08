@@ -340,7 +340,7 @@ export function CartDrawer({ accentColor = '#16a34a' }: CartDrawerProps) {
             <motion.div
               initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
               transition={{ type: 'spring', stiffness: 320, damping: 32 }}
-              className="fixed bottom-0 left-0 right-0 z-50 max-h-[88vh] bg-white dark:bg-[#1a1a1a] rounded-t-[28px] flex flex-col shadow-2xl overflow-hidden"
+              className="fixed bottom-0 z-50 inset-x-0 mx-auto max-w-md w-full max-h-[88vh] bg-white dark:bg-[#1a1a1a] rounded-t-[28px] sm:rounded-b-none flex flex-col shadow-[0_0_50px_rgba(0,0,0,0.3)] overflow-hidden"
             >
               {/* Handle */}
               <div className="flex justify-center pt-3 pb-1">

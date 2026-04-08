@@ -150,7 +150,7 @@ export function ProductDetailModal({ product, open, onClose, onAdd, accentColor 
           <motion.div
             initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
             transition={{ type: 'spring', stiffness: 320, damping: 34 }}
-            className="fixed bottom-0 left-0 right-0 z-50 max-h-[90vh] bg-white dark:bg-[#1a1a1a] rounded-t-[28px] flex flex-col overflow-hidden shadow-2xl"
+            className="fixed bottom-0 z-50 inset-x-0 mx-auto max-w-md w-full max-h-[90vh] bg-white dark:bg-[#1a1a1a] rounded-t-[28px] flex flex-col overflow-hidden shadow-2xl"
           >
             {/* Handle bar */}
             <div className="flex justify-center pt-3 pb-0 shrink-0">

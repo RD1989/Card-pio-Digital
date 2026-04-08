@@ -441,7 +441,8 @@ export default function PublicMenu() {
         .dark .pm-glass { background: rgba(20,20,20,0.7); }
       `}</style>
 
-      <div className="min-h-screen bg-[#f4f4f4] dark:bg-[#0d0d0d] pb-20">
+      <div className="min-h-screen w-full bg-stone-100 dark:bg-[#050505] flex justify-center selection:bg-primary/20">
+        <div className="w-full max-w-md relative bg-[#f4f4f4] dark:bg-[#0d0d0d] shadow-[0_0_80px_rgba(0,0,0,0.06)] min-h-screen flex flex-col sm:border-x sm:border-black/5 dark:sm:border-white/5 overflow-x-hidden pb-10">
         
         {/* 1. HEADER */}
         <StoreHeader profile={profile} isOpen={isOpen} accentColor={accentColor} />
@@ -540,6 +541,7 @@ export default function PublicMenu() {
         <CartDrawer accentColor={accentColor} />
         {selectedProduct && <ProductDetailModal product={selectedProduct} open={!!selectedProduct} onClose={() => setSelectedProduct(null)} onAdd={handleAdd} accentColor={accentColor} />}
         <footer className="py-10 text-center opacity-20 uppercase text-[9px] font-black tracking-widest">Powered by Menu Pro</footer>
+        </div>
       </div>
     </>
   );
