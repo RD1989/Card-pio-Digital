@@ -94,9 +94,40 @@ export default function Orders() {
     setLoading(false);
   }, [getUserId]);
 
-  useEffect(() => { fetchOrders(); }, [fetchOrders]);
+  const previousInstanceOrders = useRef<Set<string>>(new Set());
+  const initialLoadDone = useRef<boolean>(false);
 
-  // Realtime order list refresh
+  useEffect(() => {
+    fetchOrders(); 
+    const interval = setInterval(fetchOrders, 25000); // Polling de Segurança (A cada 25s) p garantir
+    return () => clearInterval(interval);
+  }, [fetchOrders]);
+
+  // Detector Infalível de Novos Pedidos baseado na Array vs Memória
+  useEffect(() => {
+    if (orders.length === 0) return;
+    
+    const currentIds = new Set(orders.map(o => o.id));
+    
+    if (!initialLoadDone.current) {
+        previousInstanceOrders.current = currentIds;
+        initialLoadDone.current = true;
+        return;
+    }
+
+    let hasNew = false;
+    currentIds.forEach(id => {
+       if (!previousInstanceOrders.current.has(id)) hasNew = true;
+    });
+
+    if (hasNew) {
+       playNotification(); // Dispara alarme
+    }
+
+    previousInstanceOrders.current = currentIds;
+  }, [orders, playNotification]);
+
+  // Realtime order list refresh (Atua apenas como acelerador para atualizar a lista sem som)
   useEffect(() => {
     let channelRef: any;
     const setup = async () => {
@@ -110,10 +141,7 @@ export default function Orders() {
           schema: 'public', 
           table: 'orders', 
           filter: `restaurant_user_id=eq.${userId}` 
-        }, (payload) => { 
-          if (payload.eventType === 'INSERT') {
-            playNotification();
-          }
+        }, () => { 
           fetchOrders(); 
         })
         .subscribe();
@@ -121,7 +149,7 @@ export default function Orders() {
     };
     setup().then(ch => { channelRef = ch; });
     return () => { if (channelRef) supabase.removeChannel(channelRef); };
-  }, [fetchOrders, getUserId, playNotification]);
+  }, [fetchOrders, getUserId]);
 
   async function updateStatus(orderId: string, newStatus: string) {
     const { error } = await supabase
