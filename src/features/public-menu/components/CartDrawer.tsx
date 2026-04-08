@@ -27,10 +27,10 @@ const PAYMENT_LABELS: Record<PaymentMethod, string> = {
 };
 
 const PAYMENT_EMOJIS: Record<PaymentMethod, string> = {
-  pix: '⚡',
-  credit: '💳',
-  debit: '💳',
-  cash: '💵',
+  pix: '',
+  credit: '',
+  debit: '',
+  cash: '',
 };
 
 function buildWhatsAppMessage(
@@ -65,45 +65,45 @@ function buildWhatsAppMessage(
     msg += `*${item.quantity}x ${item.name}* (${formatCurrency(item.price)})\n`;
     if (item.addons && item.addons.length > 0) {
       item.addons.forEach(a => {
-        msg += `  + ${a.name} (${a.price > 0 ? formatCurrency(a.price) : 'Grátis'})\n`;
+        msg += `  + ${a.name} (${a.price > 0 ? formatCurrency(a.price) : 'Gratis'})\n`;
       });
     }
     msg += `Subtotal: ${formatCurrency(itemTotal)}\n\n`;
   });
 
   msg += `${divider}\n`;
-  msg += `🧾 *Subtotal:* ${formatCurrency(subtotal)}\n`;
+  msg += `Subtotal: ${formatCurrency(subtotal)}\n`;
 
   if (deliveryType === 'delivery') {
-    msg += `🛵 *Taxa de Entrega:* ${deliveryFee > 0 ? formatCurrency(deliveryFee) : 'Grátis'}\n`;
+    msg += `Taxa de Entrega: ${deliveryFee > 0 ? formatCurrency(deliveryFee) : 'Gratis'}\n`;
   }
 
   if (couponDiscount && couponDiscount > 0) {
-    msg += `📉 *Desconto:* -${formatCurrency(couponDiscount)}\n`;
+    msg += `Desconto: -${formatCurrency(couponDiscount)}\n`;
   }
 
   msg += `*TOTAL FINAL: ${formatCurrency(totalFinal)}*\n`;
   msg += `${divider}\n\n`;
 
   // Dados do Cliente
-  msg += `👤 *Cliente:* ${customerName}\n`;
-  msg += `📱 *WhatsApp:* ${customerPhone}\n\n`;
+  msg += `*Cliente:* ${customerName}\n`;
+  msg += `*WhatsApp:* ${customerPhone}\n\n`;
 
   // Logística (Entrega ou Retirada)
   if (deliveryType === 'delivery') {
-    msg += `📍 *Local de Entrega:*\n`;
+    msg += `*Local de Entrega:*\n`;
     msg += `${street.trim()}, ${number.trim()}\n`;
     msg += `Bairro: ${neighborhood.trim()}\n`;
     if (complement.trim()) msg += `Complemento: ${complement.trim()}\n`;
-    if (referencePoint.trim()) msg += `📍 *Referência:* ${referencePoint.trim()}\n`;
+    if (referencePoint.trim()) msg += `*Referencia:* ${referencePoint.trim()}\n`;
   } else {
-    msg += `🏪 *Modalidade:* Retirada na Loja\n`;
+    msg += `*Modalidade:* Retirada na Loja\n`;
   }
 
-  msg += `\n💳 *Pagamento:* ${PAYMENT_LABELS[paymentMethod]} ${PAYMENT_EMOJIS[paymentMethod]}\n`;
+  msg += `\n*Pagamento:* ${PAYMENT_LABELS[paymentMethod]}\n`;
 
   if (notes.trim()) {
-    msg += `\n📝 *Observações:* ${notes.trim()}\n`;
+    msg += `\n*Observacoes:* ${notes.trim()}\n`;
   }
 
   return msg;
