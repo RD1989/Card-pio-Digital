@@ -224,8 +224,8 @@ export function CartDrawer({ accentColor = '#16a34a' }: CartDrawerProps) {
     const fullAddress    = deliveryType === 'delivery' ? `${street.trim()}, ${number.trim()} - ${neighborhood.trim()}` : '';
     const message        = buildWhatsAppMessage(restaurantName || restaurantSlug.replace(/-/g, ' '), items, subtotalValue, effectiveFee, totalValue, name, phone, fullAddress, deliveryType, paymentMethod, obs);
     
-    // Using location.assign for better mobile compatibility and to avoid popup blockers
-    window.location.assign(`https://wa.me/${whatsappPhone}?text=${message}`);
+    // Using window.location.assign with api.whatsapp.com to prevent link truncation and bypass iOS popup blockers
+    window.location.assign(`https://api.whatsapp.com/send?phone=${whatsappPhone}&text=${message}`);
 
     toast.success('✅ Pedido enviado com sucesso!');
     clearCart(); setStep('cart'); setOpen(false);
