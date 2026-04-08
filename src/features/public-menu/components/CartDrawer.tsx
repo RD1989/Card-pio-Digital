@@ -211,6 +211,17 @@ export function CartDrawer({ accentColor = '#16a34a' }: CartDrawerProps) {
       status: 'pending',
     });
 
+    const finalNotes = [
+      obs ? `📝 Obs do Cliente: ${obs}` : '',
+      `📍 ${deliveryType === 'delivery' ? 'Entrega' : 'Retirada da Loja'}`,
+      deliveryType === 'delivery' ? `Endereço: ${street}, ${number} - ${neighborhood}` : '',
+      deliveryType === 'delivery' && complement ? `Complemento: ${complement}` : '',
+      deliveryType === 'delivery' && referencePoint ? `Ref: ${referencePoint}` : '',
+      `💳 Pgmto: ${PAYMENT_LABELS[paymentMethod]}`,
+      couponDiscount > 0 ? `🏷️ Desconto: ${formatCurrency(couponDiscount)}` : '',
+      deliveryType === 'delivery' && effectiveFee > 0 ? `🛵 Taxa Inclusa: ${formatCurrency(effectiveFee)}` : ''
+    ].filter(Boolean).join('\n');
+
     const { data: order, error } = await supabase.from('orders').insert({
       restaurant_user_id: restaurantUserId,
       restaurant_id: restaurantUserId,
@@ -218,6 +229,7 @@ export function CartDrawer({ accentColor = '#16a34a' }: CartDrawerProps) {
       customer_phone: phone,
       total: totalValue,
       status: 'pending',
+      notes: finalNotes
     }).select('id').single();
 
     if (error || !order) { 

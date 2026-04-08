@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Package, Clock, ChefHat, CheckCircle2, Loader2, Search, Filter, ExternalLink, Printer, Bell, BellOff, Sparkles } from 'lucide-react';
+import { Package, Clock, ChefHat, CheckCircle2, Loader2, Search, Filter, ExternalLink, Printer, Bell, BellOff, Sparkles, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useImpersonateStore } from '@/shared/stores/global/useImpersonateStore';
 import { useOrderNotificationSound } from '@/features/orders/hooks/useOrderNotificationSound';
@@ -125,6 +125,14 @@ export default function Orders() {
       .eq('id', orderId);
     if (error) { toast.error('Erro ao atualizar status'); return; }
     toast.success(`Status atualizado para ${STATUS_MAP[newStatus]?.label || newStatus}`);
+    fetchOrders();
+  }
+
+  async function handleDelete(orderId: string, customerName: string | null) {
+    if (!window.confirm(`Tem certeza que deseja excluir permanentemente o pedido de ${customerName || 'Cliente'}?`)) return;
+    const { error } = await supabase.from('orders').delete().eq('id', orderId);
+    if (error) { toast.error('Erro ao excluir pedido'); return; }
+    toast.success('Pedido excluído com sucesso');
     fetchOrders();
   }
 
@@ -303,6 +311,15 @@ export default function Orders() {
                       className="gap-1.5 h-8 text-xs ml-auto"
                     >
                       <Printer className="w-3 h-3" /> Imprimir
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDelete(order.id, order.customer_name)}
+                      className="h-8 w-8 min-w-[32px] p-0 flex items-center justify-center text-red-500 hover:text-red-600 hover:bg-red-50 border-red-100 transition-colors"
+                      title="Excluir pedido"
+                    >
+                      <Trash2 className="w-3 h-3" />
                     </Button>
                   </div>
                 </motion.div>
