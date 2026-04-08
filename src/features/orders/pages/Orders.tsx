@@ -236,12 +236,33 @@ export default function Orders() {
               const status = STATUS_MAP[order.status] || STATUS_MAP.pending;
               const StatusIcon = status.icon;
               
-              // Extração retrocompatível: Tenta buscar da coluna ou varre o item invisível hackeado
-              const logisticaItem = order.items.find(i => i.product_name.includes('📦 LOGÍSTICA'));
-              const isDelivery = logisticaItem ? logisticaItem.product_name.includes('📍 Entrega') : order.delivery_type === 'delivery';
-              const isPickup = logisticaItem ? logisticaItem.product_name.includes('Retirada') : order.delivery_type === 'pickup';
-              const pgmtoLine = logisticaItem ? logisticaItem.product_name.split('\n').find(l => l.includes('💳 Pgmto:')) : null;
-              const paymentName = pgmtoLine ? pgmtoLine.split('💳 Pgmto:')[1].trim() : (order.payment_method || 'Desconhecido');
+              // Extração retrocompatível: lê o item hack de logística se existir
+              const logisticaItem = order.items.find(i => i.product_name?.includes('📦 LOGÍSTICA'));
+              
+              // Se há item hack: detecta pelo texto salvo no CartDrawer
+              // "📍 Entrega" = delivery | "📍 Retirada da Loja" = pickup
+              let isDelivery = false;
+              let isPickup = false;
+              let paymentName = '';
+              
+              if (logisticaItem) {
+                const nota = logisticaItem.product_name;
+                isDelivery = nota.includes('📍 Entrega');
+                isPickup   = nota.includes('Retirada da Loja') || nota.includes('Retirada');
+                const pgmtoLine = nota.split('\n').find((l: string) => l.includes('💳 Pgmto:'));
+                paymentName = pgmtoLine ? pgmtoLine.split('💳 Pgmto:')[1]?.trim() : '';
+              } else {
+                // Fallback para pedidos antigos com colunas nativas
+                isDelivery = order.delivery_type === 'delivery';
+                isPickup   = order.delivery_type === 'pickup';
+                const raw = order.payment_method || '';
+                paymentName = raw === 'pix' ? 'PIX' : raw === 'card' ? 'Cartão' : raw === 'cash' ? 'Dinheiro' : raw;
+              }
+              
+              const paymentIcon = paymentName.includes('PIX') ? '💎 PIX'
+                : paymentName.includes('Cartão') ? '💳 Cartão'
+                : paymentName.includes('Dinheiro') ? '💵 Dinheiro'
+                : paymentName || '—';
 
               return (
                 <motion.div
@@ -276,9 +297,11 @@ export default function Orders() {
                           ) : isPickup ? (
                             <span className="text-[9px] bg-orange-500/10 text-orange-600 px-1.5 py-0.5 rounded font-bold uppercase">🏪 Retirada</span>
                           ) : null}
-                          <span className="text-[9px] bg-muted text-muted-foreground px-1.5 py-0.5 rounded font-bold uppercase max-w-[80px] truncate">
-                            {paymentName.includes('PIX') ? '💎 PIX' : paymentName.includes('Cartão') ? '💳 Cartão' : paymentName.includes('Dinheiro') ? '💵 Dinheiro' : paymentName}
-                          </span>
+                          {paymentIcon && (
+                            <span className="text-[9px] bg-muted text-muted-foreground px-1.5 py-0.5 rounded font-bold uppercase max-w-[90px] truncate">
+                              {paymentIcon}
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>
