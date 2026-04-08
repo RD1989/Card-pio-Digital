@@ -49,18 +49,20 @@ function buildWhatsAppMessage(
   deliveryType: DeliveryType,
   paymentMethod: PaymentMethod,
   notes: string,
+  couponDiscount?: number
 ): string {
   const orderId = generateOrderId();
-  const sep = '\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500';
+  const divider = '──────────────────';
 
-  let msg = `PEDIDO ${orderId} - ${restaurantName.toUpperCase()}\n\n`;
+  let msg = `*PEDIDO #${orderId}* - *${restaurantName.toUpperCase()}*\n\n`;
 
+  // Itens do Pedido
   items.forEach((item) => {
     const addonSum = (item.addons || []).reduce((s, a) => s + a.price, 0);
     const unitTotal = item.price + addonSum;
     const itemTotal = unitTotal * item.quantity;
 
-    msg += `${item.quantity}x ${item.name} (${formatCurrency(item.price)})\n`;
+    msg += `*${item.quantity}x ${item.name}* (${formatCurrency(item.price)})\n`;
     if (item.addons && item.addons.length > 0) {
       item.addons.forEach(a => {
         msg += `  + ${a.name} (${a.price > 0 ? formatCurrency(a.price) : 'Grátis'})\n`;
@@ -69,33 +71,39 @@ function buildWhatsAppMessage(
     msg += `Subtotal: ${formatCurrency(itemTotal)}\n\n`;
   });
 
-  msg += `${sep}\n`;
-  msg += `🧾 Subtotal: ${formatCurrency(subtotal)}\n`;
+  msg += `${divider}\n`;
+  msg += `🧾 *Subtotal:* ${formatCurrency(subtotal)}\n`;
 
   if (deliveryType === 'delivery') {
-    msg += `🛵 Taxa de Entrega: ${deliveryFee > 0 ? formatCurrency(deliveryFee) : 'Grátis'}\n`;
+    msg += `🛵 *Taxa de Entrega:* ${deliveryFee > 0 ? formatCurrency(deliveryFee) : 'Grátis'}\n`;
   }
 
-  msg += `TOTAL FINAL: ${formatCurrency(totalFinal)}\n`;
-  msg += `${sep}\n\n`;
+  if (couponDiscount && couponDiscount > 0) {
+    msg += `📉 *Desconto:* -${formatCurrency(couponDiscount)}\n`;
+  }
 
-  msg += `👤 Cliente: ${customerName}\n`;
-  msg += `📱 WhatsApp: ${customerPhone}\n`;
+  msg += `*TOTAL FINAL: ${formatCurrency(totalFinal)}*\n`;
+  msg += `${divider}\n\n`;
 
+  // Dados do Cliente
+  msg += `👤 *Cliente:* ${customerName}\n`;
+  msg += `📱 *WhatsApp:* ${customerPhone}\n\n`;
+
+  // Logística (Entrega ou Retirada)
   if (deliveryType === 'delivery') {
-    // Formata endereço: Rua, Nº - Bairro Bairro Nome, Complemento
-    let fullAddr = `${street.trim()}, ${number.trim()} - Bairro ${neighborhood.trim()}`;
-    if (complement.trim()) fullAddr += `, ${complement.trim()}`;
-    msg += `📍 ${fullAddr}\n`;
-    if (referencePoint.trim()) msg += `📍 Ref: ${referencePoint.trim()}\n`;
+    msg += `📍 *Endereço de Entrega:*\n`;
+    msg += `${street.trim()}, ${number.trim()}\n`;
+    msg += `Bairro: ${neighborhood.trim()}\n`;
+    if (complement.trim()) msg += `Complemento: ${complement.trim()}\n`;
+    if (referencePoint.trim()) msg += `📍 *Referência:* ${referencePoint.trim()}\n`;
   } else {
-    msg += `🏪 Retirada na Loja\n`;
+    msg += `🏪 *Modalidade:* Retirada na Loja\n`;
   }
 
-  msg += `💳 Pagamento: ${PAYMENT_LABELS[paymentMethod]}\n`;
+  msg += `\n💳 *Pagamento:* ${PAYMENT_LABELS[paymentMethod]} ${PAYMENT_EMOJIS[paymentMethod]}\n`;
 
-  if (notes) {
-    msg += `📝 Obs: ${notes}\n`;
+  if (notes.trim()) {
+    msg += `\n📝 *Observações:* ${notes.trim()}\n`;
   }
 
   return msg;
@@ -229,7 +237,8 @@ export function CartDrawer({ accentColor = '#16a34a' }: CartDrawerProps) {
       items, subtotalValue, effectiveFee, totalValue,
       name, phone,
       street, number, complement, neighborhood, referencePoint,
-      deliveryType, paymentMethod, obs
+      deliveryType, paymentMethod, obs,
+      couponDiscount
     );
 
     // Monta o link usando URLSearchParams para encoding correto e sem truncamento
