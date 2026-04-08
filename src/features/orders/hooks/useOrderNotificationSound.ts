@@ -23,8 +23,8 @@ export function useOrderNotificationSound() {
         oscillator.start(0);
         oscillator.stop(0.1);
         
-        // Play confirming chime
-        setTimeout(() => play(), 100);
+        // Chamada de teste visual e sonoro da ativação
+        setTimeout(() => play(true), 100);
       };
 
       if (ctx.state === 'suspended') {
@@ -49,50 +49,57 @@ export function useOrderNotificationSound() {
     }
   }, [setIsReady]);
 
-  const play = useCallback(() => {
+  const play = useCallback((singleChime = false) => {
     try {
-      if (!useBuzzerStore.getState().isReady) return; // Não toca se a campainha estiver desativada
+      if (!useBuzzerStore.getState().isReady) return; // Não toca se desativada
       if (!audioCtxRef.current) return;
       const ctx = audioCtxRef.current;
       if (ctx.state === 'suspended') ctx.resume();
 
-      const now = ctx.currentTime;
+      const baseTime = ctx.currentTime;
 
-      // "Loud & Clear" Triple Chime
-      const playTone = (freq: number, start: number, duration: number, volume: number) => {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        
-        // Richer sound using Sawtooth instead of Sine for "Buzzer" feel
-        osc.type = 'triangle'; 
-        osc.frequency.setValueAtTime(freq, start);
-        
-        gain.gain.setValueAtTime(0, start);
-        gain.gain.linearRampToValueAtTime(volume, start + 0.02);
-        gain.gain.exponentialRampToValueAtTime(0.001, start + duration);
-        
-        osc.connect(gain).connect(ctx.destination);
-        osc.start(start);
-        osc.stop(start + duration);
-        
-        // Add a second harmonic for richness
-        const osc2 = ctx.createOscillator();
-        const gain2 = ctx.createGain();
-        osc2.type = 'sine';
-        osc2.frequency.setValueAtTime(freq * 1.5, start); // 5th harmonic
-        gain2.gain.setValueAtTime(0, start);
-        gain2.gain.linearRampToValueAtTime(volume / 2, start + 0.02);
-        gain2.gain.exponentialRampToValueAtTime(0.001, start + duration);
-        osc2.connect(gain2).connect(ctx.destination);
-        osc2.start(start);
-        osc2.stop(start + duration);
+      const fireCycle = (delayStart: number) => {
+        const now = baseTime + delayStart;
+        const playTone = (freq: number, start: number, duration: number, volume: number) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          
+          osc.type = 'triangle'; 
+          osc.frequency.setValueAtTime(freq, start);
+          
+          gain.gain.setValueAtTime(0, start);
+          gain.gain.linearRampToValueAtTime(volume, start + 0.05);
+          gain.gain.exponentialRampToValueAtTime(0.001, start + duration);
+          
+          osc.connect(gain).connect(ctx.destination);
+          osc.start(start);
+          osc.stop(start + duration);
+          
+          // Harmonics
+          const osc2 = ctx.createOscillator();
+          const gain2 = ctx.createGain();
+          osc2.type = 'sine';
+          osc2.frequency.setValueAtTime(freq * 1.5, start);
+          gain2.gain.setValueAtTime(0, start);
+          gain2.gain.linearRampToValueAtTime(volume / 2, start + 0.05);
+          gain2.gain.exponentialRampToValueAtTime(0.001, start + duration);
+          osc2.connect(gain2).connect(ctx.destination);
+          osc2.start(start);
+          osc2.stop(start + duration);
+        };
+
+        const vol = 0.8; // Volume bastante nítido
+        playTone(587.33, now, 0.4, vol);
+        playTone(783.99, now + 0.15, 0.4, vol);
+        playTone(880.00, now + 0.3, 0.7, vol);
       };
 
-      // Professional Triple Chime (D-G-D) - Urgent but Pleasant
-      const vol = 0.5; // High volume
-      playTone(587.33, now, 0.6, vol); // D5
-      playTone(783.99, now + 0.15, 0.6, vol); // G5
-      playTone(880, now + 0.3, 0.8, vol); // A5
+      // Se for acionado pelo "Ativar", toca só 1x, se for pedido novo, toca 3x em loop para alerta de delivery real
+      fireCycle(0);
+      if (!singleChime) {
+        fireCycle(1);
+        fireCycle(2);
+      }
       
     } catch (e) {
       console.error('Play sound error:', e);

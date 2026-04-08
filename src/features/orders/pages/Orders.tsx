@@ -110,13 +110,18 @@ export default function Orders() {
           schema: 'public', 
           table: 'orders', 
           filter: `restaurant_user_id=eq.${userId}` 
-        }, () => { fetchOrders(); })
+        }, (payload) => { 
+          if (payload.eventType === 'INSERT') {
+            playNotification();
+          }
+          fetchOrders(); 
+        })
         .subscribe();
       return channel;
     };
     setup().then(ch => { channelRef = ch; });
     return () => { if (channelRef) supabase.removeChannel(channelRef); };
-  }, [fetchOrders, getUserId]);
+  }, [fetchOrders, getUserId, playNotification]);
 
   async function updateStatus(orderId: string, newStatus: string) {
     const { error } = await supabase
