@@ -156,9 +156,11 @@ export function CartDrawer({ accentColor = '#16a34a' }: CartDrawerProps) {
   const handleCheckout = async () => {
     if (!name.trim())   { toast.error('Informe seu nome'); return; }
     if (!phone.trim())  { toast.error('Informe seu WhatsApp'); return; }
-    if (deliveryType === 'delivery' && (!street.trim() || !number.trim() || !neighborhood.trim())) { 
-      toast.error('Preencha o endereço completo (Rua, Nº e Bairro)'); 
-      return; 
+    if (deliveryType === 'delivery') {
+      if (!street.trim() || !number.trim() || !neighborhood.trim() || !referencePoint.trim()) {
+        toast.error('Preencha o endereço completo e o ponto de referência para entrega');
+        return;
+      }
     }
 
     const cleanPhone = (restaurantWhatsapp || '').replace(/\D/g, '');
