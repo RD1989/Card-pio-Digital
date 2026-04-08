@@ -1,20 +1,22 @@
-import { useCallback, useRef } from 'react';
+import { useCallback } from 'react';
 import { useBuzzerStore } from '@/shared/stores/global/useBuzzerStore';
 
+// Instância universal para desvencilhar o som de Componentes Desmontáveis (ex: Ao mudar do Orders pro Dashboard)
+let globalAudioCtx: AudioContext | null = null;
+
 export function useOrderNotificationSound() {
-  const audioCtxRef = useRef<AudioContext | null>(null);
   const { isReady, setIsReady } = useBuzzerStore();
 
   const init = useCallback(() => {
     try {
-      if (!audioCtxRef.current) {
-        audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+      if (!globalAudioCtx) {
+        globalAudioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
       }
-      const ctx = audioCtxRef.current;
+      const ctx = globalAudioCtx;
       
       const initialize = () => {
         setIsReady(true);
-        // Play a silent buffer to "unlock" on some mobile browsers
+        // Play a silent buffer to "unlock" background audio limitations nas tabs 
         const oscillator = ctx.createOscillator();
         const gainNode = ctx.createGain();
         gainNode.gain.value = 0;
@@ -23,7 +25,7 @@ export function useOrderNotificationSound() {
         oscillator.start(0);
         oscillator.stop(0.1);
         
-        // Chamada de teste visual e sonoro da ativação
+        // Feed visual and audio check upon pressing green
         setTimeout(() => play(true), 100);
       };
 
@@ -34,27 +36,31 @@ export function useOrderNotificationSound() {
       }
 
     } catch (e) {
-      console.error('AudioContext error:', e);
+      console.error('AudioContext Global error:', e);
     }
   }, [setIsReady]);
 
   const stop = useCallback(() => {
     try {
-      if (audioCtxRef.current && audioCtxRef.current.state !== 'closed') {
-        audioCtxRef.current.suspend();
+      if (globalAudioCtx && globalAudioCtx.state !== 'closed') {
+        globalAudioCtx.suspend();
       }
       setIsReady(false);
     } catch (e) {
-      console.error('AudioContext stop error:', e);
+      console.error('AudioContext stop global error:', e);
     }
   }, [setIsReady]);
 
   const play = useCallback((singleChime = false) => {
     try {
-      if (!useBuzzerStore.getState().isReady) return; // Não toca se desativada
-      if (!audioCtxRef.current) return;
-      const ctx = audioCtxRef.current;
-      if (ctx.state === 'suspended') ctx.resume();
+      if (!useBuzzerStore.getState().isReady) return; 
+      if (!globalAudioCtx) return;
+      const ctx = globalAudioCtx;
+      
+      // Auto-awake strategy 
+      if (ctx.state === 'suspended') {
+         ctx.resume().catch(() => {});
+      }
 
       const baseTime = ctx.currentTime;
 
@@ -88,13 +94,12 @@ export function useOrderNotificationSound() {
           osc2.stop(start + duration);
         };
 
-        const vol = 0.8; // Volume bastante nítido
+        const vol = 0.8; 
         playTone(587.33, now, 0.4, vol);
         playTone(783.99, now + 0.15, 0.4, vol);
         playTone(880.00, now + 0.3, 0.7, vol);
       };
 
-      // Se for acionado pelo "Ativar", toca só 1x, se for pedido novo, toca 3x em loop para alerta de delivery real
       fireCycle(0);
       if (!singleChime) {
         fireCycle(1);
@@ -102,7 +107,7 @@ export function useOrderNotificationSound() {
       }
       
     } catch (e) {
-      console.error('Play sound error:', e);
+      console.error('Play sound global error:', e);
     }
   }, []);
 

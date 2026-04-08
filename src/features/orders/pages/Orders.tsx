@@ -94,40 +94,13 @@ export default function Orders() {
     setLoading(false);
   }, [getUserId]);
 
-  const previousInstanceOrders = useRef<Set<string>>(new Set());
-  const initialLoadDone = useRef<boolean>(false);
-
   useEffect(() => {
     fetchOrders(); 
-    const interval = setInterval(fetchOrders, 25000); // Polling de Segurança (A cada 25s) p garantir
+    const interval = setInterval(fetchOrders, 20000); // Polling UI Refresher
     return () => clearInterval(interval);
   }, [fetchOrders]);
 
-  // Detector Infalível de Novos Pedidos baseado na Array vs Memória
-  useEffect(() => {
-    if (orders.length === 0) return;
-    
-    const currentIds = new Set(orders.map(o => o.id));
-    
-    if (!initialLoadDone.current) {
-        previousInstanceOrders.current = currentIds;
-        initialLoadDone.current = true;
-        return;
-    }
-
-    let hasNew = false;
-    currentIds.forEach(id => {
-       if (!previousInstanceOrders.current.has(id)) hasNew = true;
-    });
-
-    if (hasNew) {
-       playNotification(); // Dispara alarme
-    }
-
-    previousInstanceOrders.current = currentIds;
-  }, [orders, playNotification]);
-
-  // Realtime order list refresh (Atua apenas como acelerador para atualizar a lista sem som)
+  // UI WebSockets (atualiza os cards em tempo real quando ocorrem sem notificar)
   useEffect(() => {
     let channelRef: any;
     const setup = async () => {
