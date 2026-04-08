@@ -40,12 +40,7 @@ const menuGroups = [
       { title: 'Estilo do Cardápio', url: '/admin/branding', icon: Palette },
     ]
   },
-  {
-    label: "Marketing e Conversão",
-    links: [
-      { title: 'Gestão de Stories', url: '/admin/marketing', icon: Sparkles },
-    ]
-  },
+
   {
     label: "Configurações da Loja",
     links: [

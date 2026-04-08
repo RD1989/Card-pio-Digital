@@ -65,11 +65,6 @@ interface Product {
   is_available: boolean;
 }
 
-interface Story {
-  id: string;
-  image_url: string;
-  is_active: boolean;
-}
 
 interface Category {
   id: string;
@@ -294,7 +289,7 @@ export default function PublicMenu() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isCartOpen, setIsCartOpen]       = useState(false);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
-  const [stories, setStories] = useState<Story[]>([]);
+
   const searchRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -354,7 +349,7 @@ export default function PublicMenu() {
 
       // Função interna para buscar dados e atualizar estado
       const updateMenuData = async () => {
-        const [catRes, prodRes, storyRes] = await Promise.all([
+        const [catRes, prodRes] = await Promise.all([
           supabase.from('categories')
             .select('*')
             .or(`user_id.eq.${prof.user_id},restaurant_id.eq.${prof.user_id}`)
@@ -362,11 +357,6 @@ export default function PublicMenu() {
           supabase.from('products')
             .select('*')
             .or(`user_id.eq.${prof.user_id},restaurant_id.eq.${prof.user_id}`)
-            .eq('is_active', true)
-            .order('sort_order'),
-          (supabase as any).from('menu_stories')
-            .select('*')
-            .eq('user_id', prof.user_id)
             .eq('is_active', true)
             .order('sort_order')
         ]);
@@ -379,7 +369,6 @@ export default function PublicMenu() {
         })).filter(g => g.items.length > 0);
         
         setMenuCategories(grouped);
-        setStories(storyRes.data || []);
         setIsOpen(true);
       };
 
@@ -472,20 +461,6 @@ export default function PublicMenu() {
           </div>
         )}
 
-        {/* 4. STORIES */}
-        <AnimatePresence>
-          {stories.length > 0 && !searchQuery && (
-            <div className="px-5 mb-10">
-              <div className="flex gap-4 overflow-x-auto no-scrollbar">
-                {stories.map(s => (
-                  <div key={s.id} className="w-20 h-20 rounded-full p-1 border-2 border-primary/30 flex-shrink-0">
-                    <img src={s.image_url} className="w-full h-full rounded-full object-cover" />
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </AnimatePresence>
 
         {/* 5. MAIN CONTENT */}
         <div className="relative z-10 -mt-6 bg-[#f4f4f4] dark:bg-[#111111] rounded-t-[32px] min-h-screen">
