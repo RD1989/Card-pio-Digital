@@ -49,10 +49,10 @@ function buildWhatsAppMessage(
   const orderId = generateOrderId();
   const sep = "──────────────────";
   
-  let msg = `*🛍️ NOVO PEDIDO - ${restaurantName.toUpperCase()}*\n`;
+  let msg = `*NOVO PEDIDO - ${restaurantName.toUpperCase()}*\n`;
   msg += `*ID:* #${orderId}\n\n`;
 
-  msg += `*🛒 ITENS DO PEDIDO:*\n`;
+  msg += `*ITENS DO PEDIDO:*\n`;
   items.forEach((item) => {
     const addonSum = (item.addons || []).reduce((s, a) => s + a.price, 0);
     const unitTotal = item.price + addonSum;
@@ -68,7 +68,7 @@ function buildWhatsAppMessage(
   });
 
   msg += `${sep}\n`;
-  msg += `🧾 *RESUMO FINANCEIRO*\n`;
+  msg += `*RESUMO FINANCEIRO*\n`;
   msg += `*Subtotal:* ${formatCurrency(subtotal)}\n`;
   
   if (deliveryType === 'delivery') {
@@ -78,23 +78,23 @@ function buildWhatsAppMessage(
   msg += `*TOTAL GERAL: ${formatCurrency(totalFinal)}*\n`;
   msg += `${sep}\n\n`;
 
-  msg += `👤 *DADOS DO CLIENTE*\n`;
+  msg += `*DADOS DO CLIENTE*\n`;
   msg += `*Nome:* ${customerName}\n`;
   msg += `*WhatsApp:* ${customerPhone}\n\n`;
 
-  msg += `📍 *ENTREGA / RETIRADA*\n`;
+  msg += `*ENTREGA / RETIRADA*\n`;
   if (deliveryType === 'delivery') {
-    msg += `*Tipo:* 🛵 Entrega\n`;
+    msg += `*Tipo:* Entrega\n`;
     msg += `*Endereço:* ${address}\n`;
   } else {
-    msg += `*Tipo:* 🏪 Retirada na Loja\n`;
+    msg += `*Tipo:* Retirada na Loja\n`;
   }
 
-  msg += `\n💳 *PAGAMENTO*\n`;
-  msg += `*Forma:* ${PAYMENT_EMOJIS[paymentMethod]} ${PAYMENT_LABELS[paymentMethod]}\n`;
+  msg += `\n*PAGAMENTO*\n`;
+  msg += `*Forma:* ${PAYMENT_LABELS[paymentMethod]}\n`;
 
   if (notes) {
-    msg += `\n📝 *OBSERVAÇÕES*\n`;
+    msg += `\n*OBSERVAÇÕES*\n`;
     msg += `_${notes}_`;
   }
 
