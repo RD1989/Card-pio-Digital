@@ -52,7 +52,7 @@ function buildWhatsAppMessage(
   couponDiscount?: number
 ): string {
   const orderId = generateOrderId();
-  const divider = '──────────────────';
+  const divider = '------------------';
 
   let msg = `*PEDIDO #${orderId}* - *${restaurantName.toUpperCase()}*\n\n`;
 
