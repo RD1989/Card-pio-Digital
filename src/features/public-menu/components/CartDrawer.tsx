@@ -270,7 +270,7 @@ export function CartDrawer({ accentColor = '#16a34a' }: CartDrawerProps) {
     );
 
     const encodedMessage = encodeURIComponent(rawMessage);
-    window.location.href = `https://wa.me/${whatsappPhone}?text=${encodedMessage}`;
+    window.location.href = `https://api.whatsapp.com/send?phone=${whatsappPhone}&text=${encodedMessage}`;
 
     toast.success('✅ Pedido enviado com sucesso!');
     clearCart(); setStep('cart'); setOpen(false);
