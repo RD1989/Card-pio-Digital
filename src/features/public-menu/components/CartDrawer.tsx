@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingBag, Plus, Minus, Trash2, X, Send, Loader2, MessageCircle, Tag, ChevronLeft } from 'lucide-react';
+import { ShoppingBag, Plus, Minus, Trash2, X, Send, Loader2, MessageCircle, Tag, ChevronLeft, User, Phone, MapPin, Home, Compass, FileText, CreditCard } from 'lucide-react';
 import { useCartStore, DeliveryType, PaymentMethod, CartItem } from '@/features/public-menu/stores/useCartStore';
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -45,6 +45,7 @@ function buildWhatsAppMessage(
   number: string,
   complement: string,
   neighborhood: string,
+  referencePoint: string,
   deliveryType: DeliveryType,
   paymentMethod: PaymentMethod,
   notes: string,
@@ -86,6 +87,7 @@ function buildWhatsAppMessage(
     let fullAddr = `${street.trim()}, ${number.trim()} - Bairro ${neighborhood.trim()}`;
     if (complement.trim()) fullAddr += `, ${complement.trim()}`;
     msg += `📍 ${fullAddr}\n`;
+    if (referencePoint.trim()) msg += `📍 Ref: ${referencePoint.trim()}\n`;
   } else {
     msg += `🏪 Retirada na Loja\n`;
   }
@@ -118,6 +120,7 @@ export function CartDrawer({ accentColor = '#16a34a' }: CartDrawerProps) {
   const [number, setNumber]               = useState('');
   const [complement, setComplement]       = useState('');
   const [neighborhood, setNeighborhood]   = useState('');
+  const [referencePoint, setReferencePoint] = useState('');
   const [deliveryType, setDeliveryType]     = useState<DeliveryType>(store.deliveryType || 'delivery');
   const [paymentMethod, setPaymentMethod]   = useState<PaymentMethod>('cash');
   const [couponCode, setCouponCode]         = useState('');
@@ -223,7 +226,7 @@ export function CartDrawer({ accentColor = '#16a34a' }: CartDrawerProps) {
       restaurantName || restaurantSlug.replace(/-/g, ' '),
       items, subtotalValue, effectiveFee, totalValue,
       name, phone,
-      street, number, complement, neighborhood,
+      street, number, complement, neighborhood, referencePoint,
       deliveryType, paymentMethod, obs
     );
 
@@ -234,7 +237,7 @@ export function CartDrawer({ accentColor = '#16a34a' }: CartDrawerProps) {
     toast.success('✅ Pedido enviado com sucesso!');
     clearCart(); setStep('cart'); setOpen(false);
     setName(''); setPhone(''); setObs('');
-    setStreet(''); setNumber(''); setComplement(''); setNeighborhood('');
+    setStreet(''); setNumber(''); setComplement(''); setNeighborhood(''); setReferencePoint('');
     setDeliveryType('delivery'); setPaymentMethod('cash');
     setLoading(false);
   };
@@ -348,85 +351,173 @@ export function CartDrawer({ accentColor = '#16a34a' }: CartDrawerProps) {
                     )}
                   </>
                 ) : (
-                  <div className="space-y-4">
-                    {/* Nome */}
-                    <div>
-                      <label className="text-xs font-bold text-gray-500 mb-2 block uppercase tracking-wide">Seu Nome *</label>
-                      <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Ex: João Silva" className={inputCls} style={{ ['--tw-ring-color' as any]: accentColor }} />
+                  <div className="space-y-8 pb-4">
+                    {/* Sessão 1: Identificação */}
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2 mb-1">
+                        <div className="p-1.5 rounded-lg bg-primary/10 text-primary">
+                          <User className="w-4 h-4" />
+                        </div>
+                        <h3 className="text-sm font-black uppercase tracking-widest text-gray-500 dark:text-gray-400">Identificação</h3>
+                      </div>
+                      <div className="grid gap-3">
+                        <div className="relative">
+                          <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                          <input 
+                            type="text" 
+                            value={name} 
+                            onChange={e => setName(e.target.value)} 
+                            placeholder="Seu nome completo *" 
+                            className={`${inputCls} pl-11`} 
+                            style={{ ['--tw-ring-color' as any]: accentColor }} 
+                          />
+                        </div>
+                        <div className="relative">
+                          <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                          <input 
+                            type="tel" 
+                            value={phone} 
+                            onChange={e => setPhone(e.target.value)} 
+                            placeholder="Seu WhatsApp (DDD) *" 
+                            className={`${inputCls} pl-11`} 
+                          />
+                        </div>
+                      </div>
                     </div>
-                    {/* WhatsApp */}
-                    <div>
-                      <label className="text-xs font-bold text-gray-500 mb-2 block uppercase tracking-wide">WhatsApp *</label>
-                      <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="(11) 99999-9999" className={inputCls} />
-                    </div>
-                    {/* Tipo Entrega */}
-                    <div>
-                      <label className="text-xs font-bold text-gray-500 mb-2 block uppercase tracking-wide">Tipo de Entrega *</label>
-                      <div className="grid grid-cols-2 gap-2">
+
+                    {/* Sessão 2: Entrega */}
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2 mb-1">
+                        <div className="p-1.5 rounded-lg bg-primary/10 text-primary">
+                          <MapPin className="w-4 h-4" />
+                        </div>
+                        <h3 className="text-sm font-black uppercase tracking-widest text-gray-500 dark:text-gray-400">Como receber</h3>
+                      </div>
+                      
+                      <div className="bg-gray-50 dark:bg-white/5 p-1.5 rounded-[22px] flex gap-1.5">
                         {(['delivery', 'pickup'] as DeliveryType[]).map(type => (
                           <button
                             key={type}
                             onClick={() => setDeliveryType(type)}
-                            className={`py-3 rounded-2xl text-sm font-bold border transition-all ${deliveryType === type ? 'text-white border-transparent' : 'bg-gray-50 dark:bg-white/5 border-black/[0.08] dark:border-white/[0.08]'}`}
+                            className={`flex-1 py-3 rounded-[18px] text-xs font-black uppercase tracking-wider transition-all duration-300 flex items-center justify-center gap-2 ${deliveryType === type ? 'text-white shadow-lg' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'}`}
                             style={deliveryType === type ? { backgroundColor: accentColor } : undefined}
                           >
-                            {type === 'delivery' ? '🛵 Entrega' : '🏪 Retirada'}
+                            {type === 'delivery' ? (
+                              <><MapPin className="w-3.5 h-3.5" /> Entrega</>
+                            ) : (
+                              <><Home className="w-3.5 h-3.5" /> Retirada</>
+                            )}
                           </button>
                         ))}
                       </div>
+
+                      <AnimatePresence mode="wait">
+                        {deliveryType === 'delivery' && (
+                          <motion.div 
+                            initial={{ opacity: 0, y: 10 }} 
+                            animate={{ opacity: 1, y: 0 }} 
+                            exit={{ opacity: 0, y: -10 }}
+                            className="grid gap-3"
+                          >
+                            <div className="flex gap-3">
+                              <div className="relative flex-[2]">
+                                <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                <input type="text" value={street} onChange={e => setStreet(e.target.value)} placeholder="Rua / Avenida *" className={`${inputCls} pl-11`} />
+                              </div>
+                              <div className="relative flex-1">
+                                <input type="text" value={number} onChange={e => setNumber(e.target.value)} placeholder="Nº *" className={inputCls} />
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                              <div className="relative">
+                                <Home className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                <input type="text" value={neighborhood} onChange={e => setNeighborhood(e.target.value)} placeholder="Bairro *" className={`${inputCls} pl-11`} />
+                              </div>
+                              <div className="relative">
+                                <input type="text" value={complement} onChange={e => setComplement(e.target.value)} placeholder="Comp. (Opcional)" className={inputCls} />
+                              </div>
+                            </div>
+                            <div className="relative">
+                              <Compass className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                              <input 
+                                type="text" 
+                                value={referencePoint} 
+                                onChange={e => setReferencePoint(e.target.value)} 
+                                placeholder="Ponto de Referência *" 
+                                className={`${inputCls} pl-11`} 
+                              />
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </div>
-                    {/* Endereço Estruturado */}
-                    {deliveryType === 'delivery' && (
-                      <div className="space-y-3">
-                        <div className="flex gap-2">
-                          <div className="flex-[2]">
-                            <label className="text-[10px] font-black text-gray-400 mb-1.5 block uppercase tracking-widest">Rua *</label>
-                            <input type="text" value={street} onChange={e => setStreet(e.target.value)} placeholder="Ex: Av. Brasil" className={inputCls} />
-                          </div>
-                          <div className="flex-1">
-                            <label className="text-[10px] font-black text-gray-400 mb-1.5 block uppercase tracking-widest">Nº *</label>
-                            <input type="text" value={number} onChange={e => setNumber(e.target.value)} placeholder="123" className={inputCls} />
-                          </div>
+
+                    {/* Sessão 3: Pagamento */}
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2 mb-1">
+                        <div className="p-1.5 rounded-lg bg-primary/10 text-primary">
+                          <CreditCard className="w-4 h-4" />
                         </div>
-                        <div>
-                          <label className="text-[10px] font-black text-gray-400 mb-1.5 block uppercase tracking-widest">Bairro *</label>
-                          <input type="text" value={neighborhood} onChange={e => setNeighborhood(e.target.value)} placeholder="Ex: Centro" className={inputCls} />
-                        </div>
+                        <h3 className="text-sm font-black uppercase tracking-widest text-gray-500 dark:text-gray-400">Pagamento</h3>
                       </div>
-                    )}
-                    {/* Pagamento */}
-                    <div>
-                      <label className="text-xs font-bold text-gray-500 mb-2 block uppercase tracking-wide">Forma de Pagamento *</label>
-                      <div className="grid grid-cols-2 gap-2">
+                      <div className="grid grid-cols-2 gap-3">
                         {(Object.entries(PAYMENT_LABELS) as [PaymentMethod, string][]).map(([key, label]) => (
                           <button
                             key={key}
                             onClick={() => setPaymentMethod(key)}
-                            className={`py-3 rounded-2xl text-sm font-bold border transition-all ${paymentMethod === key ? 'text-white border-transparent' : 'bg-gray-50 dark:bg-white/5 border-black/[0.08] dark:border-white/[0.08]'}`}
+                            className={`p-4 rounded-[24px] text-[13px] font-black border transition-all duration-300 flex flex-col items-center gap-2 ${paymentMethod === key ? 'text-white border-transparent shadow-lg' : 'bg-gray-50 dark:bg-white/5 border-black/[0.08] dark:border-white/[0.08] text-gray-500 hover:border-gray-300'}`}
                             style={paymentMethod === key ? { backgroundColor: accentColor } : undefined}
                           >
-                            {PAYMENT_EMOJIS[key]} {label}
+                            <span className="text-2xl">{PAYMENT_EMOJIS[key]}</span>
+                            <span className="uppercase tracking-tight">{label}</span>
                           </button>
                         ))}
                       </div>
                     </div>
-                    {/* Cupom */}
-                    <div>
-                      <label className="text-xs font-bold text-gray-500 mb-2 block uppercase tracking-wide">Cupom de Desconto</label>
-                      <div className="flex gap-2">
-                        <div className="relative flex-1">
-                          <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                          <input type="text" value={couponCode} onChange={e => { setCouponCode(e.target.value.toUpperCase()); setCouponApplied(false); setCouponDiscount(0); }} placeholder="Ex: PROMO10" disabled={couponApplied} className={`${inputCls} pl-10 font-mono uppercase`} />
+
+                    {/* Sessão 4: Extras */}
+                    <div className="space-y-6 pt-2">
+                      <div className="p-5 rounded-[28px] bg-gray-50 dark:bg-white/5 border border-black/[0.04] dark:border-white/[0.06] space-y-4">
+                        <div>
+                          <label className="text-[10px] font-black text-gray-400 mb-2 block uppercase tracking-[0.2em] px-1">Cupom de Desconto</label>
+                          <div className="flex gap-2">
+                            <div className="relative flex-1">
+                              <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                              <input 
+                                type="text" 
+                                value={couponCode} 
+                                onChange={e => { setCouponCode(e.target.value.toUpperCase()); setCouponApplied(false); setCouponDiscount(0); }} 
+                                placeholder="CUPOM" 
+                                disabled={couponApplied} 
+                                className={`${inputCls.replace('bg-gray-50 dark:bg-white/5', 'bg-white dark:bg-black/20')} pl-10 font-black uppercase tracking-widest text-xs`} 
+                              />
+                            </div>
+                            <button 
+                              type="button" 
+                              onClick={handleApplyCoupon} 
+                              disabled={applyingCoupon || couponApplied || !couponCode.trim()} 
+                              className="px-5 py-3 rounded-2xl text-white text-[10px] font-black uppercase tracking-widest hover:opacity-90 transition-all disabled:opacity-50 shrink-0 shadow-sm grow-0" 
+                              style={{ backgroundColor: accentColor }}
+                            >
+                              {applyingCoupon ? <Loader2 className="w-4 h-4 animate-spin" /> : couponApplied ? '✓' : 'Aplicar'}
+                            </button>
+                          </div>
                         </div>
-                        <button type="button" onClick={handleApplyCoupon} disabled={applyingCoupon || couponApplied || !couponCode.trim()} className="px-4 py-3 rounded-2xl text-white text-xs font-bold hover:opacity-90 transition-all disabled:opacity-50 shrink-0" style={{ backgroundColor: accentColor }}>
-                          {applyingCoupon ? <Loader2 className="w-4 h-4 animate-spin" /> : couponApplied ? '✓' : 'Aplicar'}
-                        </button>
+
+                        <div>
+                          <label className="text-[10px] font-black text-gray-400 mb-2 block uppercase tracking-[0.2em] px-1">Observações do Pedido</label>
+                          <div className="relative">
+                            <FileText className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+                            <textarea 
+                              value={obs} 
+                              onChange={e => setObs(e.target.value)} 
+                              placeholder="Ex: Sem cebola, talheres descartáveis..." 
+                              rows={3} 
+                              className={`${inputCls.replace('bg-gray-50 dark:bg-white/5', 'bg-white dark:bg-black/20')} pl-10 pt-3 resize-none text-xs`} 
+                            />
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                    {/* Obs */}
-                    <div>
-                      <label className="text-xs font-bold text-gray-500 mb-2 block uppercase tracking-wide">Observações</label>
-                      <textarea value={obs} onChange={e => setObs(e.target.value)} placeholder="Ex: Sem cebola, ponto mal passado..." rows={2} className={`${inputCls} resize-none`} />
                     </div>
                   </div>
                 )}
