@@ -33,6 +33,13 @@ const PAYMENT_EMOJIS: Record<PaymentMethod, string> = {
   cash: '',
 };
 
+function sanitizeString(str: string): string {
+  return str
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '') // Remove acentos
+    .replace(/[^\x00-\x7F]/g, '');   // Remove qualquer caracter não-ASCII restante
+}
+
 function buildWhatsAppMessage(
   restaurantName: string,
   items: CartItem[],
@@ -54,7 +61,7 @@ function buildWhatsAppMessage(
   const orderId = generateOrderId();
   const divider = '------------------';
 
-  let msg = `*PEDIDO #${orderId}* - *${restaurantName.toUpperCase()}*\n\n`;
+  let msg = `*PEDIDO #${orderId}* - *${sanitizeString(restaurantName).toUpperCase()}*\n\n`;
 
   // Itens do Pedido
   items.forEach((item) => {
@@ -62,10 +69,10 @@ function buildWhatsAppMessage(
     const unitTotal = item.price + addonSum;
     const itemTotal = unitTotal * item.quantity;
 
-    msg += `*${item.quantity}x ${item.name}* (${formatCurrency(item.price)})\n`;
+    msg += `*${item.quantity}x ${sanitizeString(item.name)}* (${formatCurrency(item.price)})\n`;
     if (item.addons && item.addons.length > 0) {
       item.addons.forEach(a => {
-        msg += `  + ${a.name} (${a.price > 0 ? formatCurrency(a.price) : 'Gratis'})\n`;
+        msg += `  + ${sanitizeString(a.name)} (${a.price > 0 ? formatCurrency(a.price) : 'Gratis'})\n`;
       });
     }
     msg += `Subtotal: ${formatCurrency(itemTotal)}\n\n`;
@@ -86,24 +93,24 @@ function buildWhatsAppMessage(
   msg += `${divider}\n\n`;
 
   // Dados do Cliente
-  msg += `*Cliente:* ${customerName}\n`;
+  msg += `*Cliente:* ${sanitizeString(customerName)}\n`;
   msg += `*WhatsApp:* ${customerPhone}\n\n`;
 
-  // Logística (Entrega ou Retirada)
+  // Logistica (Entrega ou Retirada)
   if (deliveryType === 'delivery') {
     msg += `*Local de Entrega:*\n`;
-    msg += `${street.trim()}, ${number.trim()}\n`;
-    msg += `Bairro: ${neighborhood.trim()}\n`;
-    if (complement.trim()) msg += `Complemento: ${complement.trim()}\n`;
-    if (referencePoint.trim()) msg += `*Referencia:* ${referencePoint.trim()}\n`;
+    msg += `${sanitizeString(street).trim()}, ${sanitizeString(number).trim()}\n`;
+    msg += `Bairro: ${sanitizeString(neighborhood).trim()}\n`;
+    if (complement.trim()) msg += `Complemento: ${sanitizeString(complement).trim()}\n`;
+    if (referencePoint.trim()) msg += `*Referencia:* ${sanitizeString(referencePoint).trim()}\n`;
   } else {
     msg += `*Modalidade:* Retirada na Loja\n`;
   }
 
-  msg += `\n*Pagamento:* ${PAYMENT_LABELS[paymentMethod]}\n`;
+  msg += `\n*Pagamento:* ${sanitizeString(PAYMENT_LABELS[paymentMethod])}\n`;
 
   if (notes.trim()) {
-    msg += `\n*Observacoes:* ${notes.trim()}\n`;
+    msg += `\n*Observacoes:* ${sanitizeString(notes).trim()}\n`;
   }
 
   return msg;
