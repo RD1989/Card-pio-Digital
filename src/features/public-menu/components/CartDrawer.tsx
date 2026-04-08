@@ -41,25 +41,28 @@ function buildWhatsAppMessage(
   totalFinal: number,
   customerName: string,
   customerPhone: string,
-  address: string,
+  street: string,
+  number: string,
+  complement: string,
+  neighborhood: string,
   deliveryType: DeliveryType,
   paymentMethod: PaymentMethod,
   notes: string,
-) {
+): string {
   const orderId = generateOrderId();
-  const sep = "──────────────────";
-  
+  const sep = '\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500';
+
   let msg = `PEDIDO ${orderId} - ${restaurantName.toUpperCase()}\n\n`;
 
   items.forEach((item) => {
     const addonSum = (item.addons || []).reduce((s, a) => s + a.price, 0);
     const unitTotal = item.price + addonSum;
     const itemTotal = unitTotal * item.quantity;
-    
+
     msg += `${item.quantity}x ${item.name} (${formatCurrency(item.price)})\n`;
     if (item.addons && item.addons.length > 0) {
-      item.addons.forEach(a => { 
-        msg += `  + ${a.name} (${a.price > 0 ? formatCurrency(a.price) : 'Grátis'})\n`; 
+      item.addons.forEach(a => {
+        msg += `  + ${a.name} (${a.price > 0 ? formatCurrency(a.price) : 'Grátis'})\n`;
       });
     }
     msg += `Subtotal: ${formatCurrency(itemTotal)}\n\n`;
@@ -67,11 +70,11 @@ function buildWhatsAppMessage(
 
   msg += `${sep}\n`;
   msg += `🧾 Subtotal: ${formatCurrency(subtotal)}\n`;
-  
+
   if (deliveryType === 'delivery') {
     msg += `🛵 Taxa de Entrega: ${deliveryFee > 0 ? formatCurrency(deliveryFee) : 'Grátis'}\n`;
   }
-  
+
   msg += `TOTAL FINAL: ${formatCurrency(totalFinal)}\n`;
   msg += `${sep}\n\n`;
 
@@ -79,7 +82,10 @@ function buildWhatsAppMessage(
   msg += `📱 WhatsApp: ${customerPhone}\n`;
 
   if (deliveryType === 'delivery') {
-    msg += `📍 ${address}\n`;
+    // Formata endereço: Rua, Nº - Bairro Bairro Nome, Complemento
+    let fullAddr = `${street.trim()}, ${number.trim()} - Bairro ${neighborhood.trim()}`;
+    if (complement.trim()) fullAddr += `, ${complement.trim()}`;
+    msg += `📍 ${fullAddr}\n`;
   } else {
     msg += `🏪 Retirada na Loja\n`;
   }
@@ -87,10 +93,10 @@ function buildWhatsAppMessage(
   msg += `💳 Pagamento: ${PAYMENT_LABELS[paymentMethod]}\n`;
 
   if (notes) {
-    msg += `📝 Observação: ${notes}\n`;
+    msg += `📝 Obs: ${notes}\n`;
   }
 
-  return encodeURIComponent(msg);
+  return msg;
 }
 
 interface CartDrawerProps {
@@ -110,6 +116,7 @@ export function CartDrawer({ accentColor = '#16a34a' }: CartDrawerProps) {
   const [obs, setObs]                       = useState('');
   const [street, setStreet]               = useState('');
   const [number, setNumber]               = useState('');
+  const [complement, setComplement]       = useState('');
   const [neighborhood, setNeighborhood]   = useState('');
   const [deliveryType, setDeliveryType]     = useState<DeliveryType>(store.deliveryType || 'delivery');
   const [paymentMethod, setPaymentMethod]   = useState<PaymentMethod>('cash');
@@ -211,16 +218,23 @@ export function CartDrawer({ accentColor = '#16a34a' }: CartDrawerProps) {
       }))
     );
 
-    const whatsappPhone  = cleanPhone.startsWith('55') ? cleanPhone : `55${cleanPhone}`;
-    const fullAddress    = deliveryType === 'delivery' ? `${street.trim()}, ${number.trim()} - ${neighborhood.trim()}` : '';
-    const message        = buildWhatsAppMessage(restaurantName || restaurantSlug.replace(/-/g, ' '), items, subtotalValue, effectiveFee, totalValue, name, phone, fullAddress, deliveryType, paymentMethod, obs);
-    
-    // Using window.location.assign with api.whatsapp.com to prevent link truncation and bypass iOS popup blockers
-    window.location.assign(`https://api.whatsapp.com/send?phone=${whatsappPhone}&text=${message}`);
+    const whatsappPhone = cleanPhone.startsWith('55') ? cleanPhone : `55${cleanPhone}`;
+    const rawMessage = buildWhatsAppMessage(
+      restaurantName || restaurantSlug.replace(/-/g, ' '),
+      items, subtotalValue, effectiveFee, totalValue,
+      name, phone,
+      street, number, complement, neighborhood,
+      deliveryType, paymentMethod, obs
+    );
+
+    // Monta o link usando URLSearchParams para encoding correto e sem truncamento
+    const waParams = new URLSearchParams({ phone: whatsappPhone, text: rawMessage });
+    window.open(`https://api.whatsapp.com/send?${waParams.toString()}`, '_blank');
 
     toast.success('✅ Pedido enviado com sucesso!');
     clearCart(); setStep('cart'); setOpen(false);
-    setName(''); setPhone(''); setObs(''); setStreet(''); setNumber(''); setNeighborhood('');
+    setName(''); setPhone(''); setObs('');
+    setStreet(''); setNumber(''); setComplement(''); setNeighborhood('');
     setDeliveryType('delivery'); setPaymentMethod('cash');
     setLoading(false);
   };
