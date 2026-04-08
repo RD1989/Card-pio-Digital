@@ -9,25 +9,13 @@ import { SuspensionOverlay } from '@/features/billing/components/SuspensionOverl
 import { PlanBanner } from '@/features/billing/components/PlanBanner';
 import { Button } from '@/shared/components/ui/button';
 import { useGlobalOrderTracker } from '@/features/orders/hooks/useGlobalOrderTracker';
-import { useBuzzerStore } from '@/shared/stores/global/useBuzzerStore';
-import { useEffect, useRef } from 'react';
 
 export function AdminLayout() {
   const { impersonatedUserId, impersonatedName, clearImpersonation } = useImpersonateStore();
   const { isSuperAdmin, loading: adminLoading } = useSuperAdmin();
   const { status: planStatus, loading: planLoading } = usePlanStatus();
 
-  // Ativa a antena receptora global do painel de administração (Polling + WebSockets simultâneos)
-  // Toca o alarme instantaneamente em qualquer aba caso chegue algo novo com garantia 100%
-  const audioRef = useRef<HTMLAudioElement>(null);
-  
-  useEffect(() => {
-    // Injeta a referência DOM direto na loja para acesso em tempo real
-    if (audioRef.current) {
-        useBuzzerStore.setState({ audioNode: audioRef.current });
-    }
-  }, []);
-
+  // Antena receptora global: Polling 25s + WebSocket — toca alarme em qualquer aba
   useGlobalOrderTracker();
 
   if (adminLoading || planLoading) {
@@ -114,12 +102,7 @@ export function AdminLayout() {
             </main>
           </div>
         </div>
-        <audio 
-          ref={audioRef} 
-          src="https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg" 
-          preload="auto" 
-          style={{ display: 'none' }} 
-        />
+
       </SidebarProvider>
     );
   } catch (renderError) {
