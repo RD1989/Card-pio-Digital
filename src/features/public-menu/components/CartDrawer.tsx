@@ -91,7 +91,7 @@ function buildWhatsAppMessage(
 
   // Logística (Entrega ou Retirada)
   if (deliveryType === 'delivery') {
-    msg += `📍 *Endereço de Entrega:*\n`;
+    msg += `📍 *Local de Entrega:*\n`;
     msg += `${street.trim()}, ${number.trim()}\n`;
     msg += `Bairro: ${neighborhood.trim()}\n`;
     if (complement.trim()) msg += `Complemento: ${complement.trim()}\n`;
@@ -241,9 +241,8 @@ export function CartDrawer({ accentColor = '#16a34a' }: CartDrawerProps) {
       couponDiscount
     );
 
-    // Monta o link usando URLSearchParams para encoding correto e sem truncamento
-    const waParams = new URLSearchParams({ phone: whatsappPhone, text: rawMessage });
-    window.open(`https://api.whatsapp.com/send?${waParams.toString()}`, '_blank');
+    const encodedMessage = encodeURIComponent(rawMessage);
+    window.open(`https://wa.me/${whatsappPhone}?text=${encodedMessage}`, '_blank');
 
     toast.success('✅ Pedido enviado com sucesso!');
     clearCart(); setStep('cart'); setOpen(false);
