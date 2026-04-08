@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, Reorder } from 'framer-motion';
-import { Link as LinkIcon, Plus, Trash2, GripVertical, Check, X, Loader2, ExternalLink, Eye, Smartphone } from 'lucide-react';
+import { Link as LinkIcon, Plus, Trash2, GripVertical, Check, X, Loader2, ExternalLink, Eye, Smartphone, Copy } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useImpersonateStore } from '@/shared/stores/global/useImpersonateStore';
@@ -27,6 +27,17 @@ export default function BioLinks() {
   const [logoUrl, setLogoUrl] = useState('');
   const [primaryColor, setPrimaryColor] = useState('#f59e0b');
   const [slug, setSlug] = useState('');
+  const [copied, setCopied] = useState(false);
+
+  const bioLinkUrl = slug ? `${window.location.origin}/links/${slug}` : '';
+
+  const handleCopyLink = () => {
+    if (!bioLinkUrl) return;
+    navigator.clipboard.writeText(bioLinkUrl);
+    setCopied(true);
+    toast.success('Link copiado com sucesso!');
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   useEffect(() => {
     fetchData();
@@ -254,8 +265,35 @@ export default function BioLinks() {
              <div className="text-[10px] text-muted-foreground opacity-50 font-medium">Link by Cardápio Digital SaaS</div>
           </div>
         </div>
-        <div className="mt-4 text-center">
-            <p className="text-xs text-muted-foreground">Sua URL será: <br/><strong>seu-site.com.br/links/{slug || 'nome-da-loja'}</strong></p>
+        <div className="mt-6 glass p-4 rounded-2xl border-primary/20 space-y-3">
+            <div className="flex flex-col gap-1.5">
+                <span className="text-[10px] font-black uppercase tracking-widest text-primary/60">Seu Link Personalizado</span>
+                <div className="flex items-center gap-2 bg-muted/30 p-2 rounded-xl border border-border group">
+                    <code className="text-[11px] font-mono text-muted-foreground flex-1 truncate px-1">
+                        {bioLinkUrl || 'Carregando URL...'}
+                    </code>
+                </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-2">
+                <button 
+                    onClick={handleCopyLink}
+                    disabled={!slug}
+                    className="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-primary text-primary-foreground font-bold text-xs hover:opacity-90 transition-all disabled:opacity-50"
+                >
+                    {copied ? <Check className="w-4 h-4" /> : <Copy className="w-3.5 h-3.5" />}
+                    {copied ? 'Copiado!' : 'Copiar Link'}
+                </button>
+                <a 
+                    href={bioLinkUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-muted font-bold text-xs hover:bg-muted/80 transition-all text-muted-foreground"
+                >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                    Abrir Link
+                </a>
+            </div>
         </div>
       </div>
     </div>
