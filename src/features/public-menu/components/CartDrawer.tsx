@@ -251,19 +251,42 @@ export function CartDrawer({ accentColor = '#16a34a' }: CartDrawerProps) {
       {/* ── Floating Cart Pill (when nav is not present) ── */}
       <AnimatePresence>
         {count > 0 && !open && (
-          <motion.button
-            initial={{ scale: 0, y: 50 }}
-            animate={{ scale: 1, y: 0 }}
-            exit={{ scale: 0 }}
-            onClick={() => setOpen(true)}
-            style={{ backgroundColor: accentColor }}
-            className="fixed bottom-28 right-5 z-50 flex items-center gap-2 px-4 py-3 rounded-2xl text-white font-bold text-sm shadow-2xl"
+          <motion.div
+            initial={{ y: 100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 100, opacity: 0 }}
+            className="fixed bottom-24 left-0 right-0 z-50 flex justify-center px-6 pointer-events-none"
           >
-            <ShoppingBag className="w-4 h-4" />
-            <span>{count} {count === 1 ? 'item' : 'itens'}</span>
-            <span className="opacity-70 text-xs">•</span>
-            <span>{formatCurrency(subtotalValue)}</span>
-          </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.02, y: -2 }}
+              whileTap={{ scale: 0.96 }}
+              onClick={() => setOpen(true)}
+              style={{ backgroundColor: accentColor }}
+              className="pointer-events-auto w-full max-w-md flex items-center justify-between p-2 pl-5 rounded-[32px] text-white font-black text-sm shadow-[0_20px_50px_-12px_rgba(0,0,0,0.5)] border border-white/20 backdrop-blur-md relative overflow-hidden group"
+            >
+              {/* Animated background pulse */}
+              <motion.div 
+                animate={{ opacity: [0.1, 0.3, 0.1] }}
+                transition={{ repeat: Infinity, duration: 2 }}
+                className="absolute inset-0 bg-white"
+              />
+              
+              <div className="relative flex items-center gap-3">
+                <div className="bg-white/20 backdrop-blur-md p-2 rounded-2xl ring-1 ring-white/30">
+                  <ShoppingBag className="w-4 h-4" />
+                </div>
+                <div className="flex flex-col items-start leading-none">
+                  <span className="text-[10px] uppercase tracking-widest opacity-70">Sua Sacola</span>
+                  <span className="text-sm">{count} {count === 1 ? 'item' : 'itens'}</span>
+                </div>
+              </div>
+
+              <div className="relative bg-white text-gray-900 px-6 py-3.5 rounded-[24px] font-black text-sm flex items-center gap-2 shadow-xl">
+                {formatCurrency(subtotalValue)}
+                <ChevronLeft className="w-4 h-4 rotate-180" />
+              </div>
+            </motion.button>
+          </motion.div>
         )}
       </AnimatePresence>
 

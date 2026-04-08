@@ -20,34 +20,7 @@ export function BottomNav({ onHomeClick, onCategoriesClick, onSearchClick, onCar
 
   return (
     <>
-      <AnimatePresence>
-        {cartCount > 0 && (
-          <motion.div
-            initial={{ y: 20, opacity: 0, scale: 0.95 }}
-            animate={{ y: 0, opacity: 1, scale: 1 }}
-            exit={{ y: 20, opacity: 0, scale: 0.95 }}
-            transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-            className="fixed bottom-[100px] left-0 right-0 z-50 flex justify-center px-5 pointer-events-none"
-          >
-            <button
-               onClick={onCartClick}
-               className="pointer-events-auto w-full max-w-sm rounded-[32px] shadow-[0_20px_40px_-10px_rgba(0,0,0,0.3)] flex items-center justify-between p-2 pl-5 transition-all active:scale-[0.96] text-white border border-white/20 hover:scale-[1.02] pm-glass"
-               style={{ backgroundColor: accentColor, boxShadow: `0 15px 35px -8px ${accentColor}90` }}
-            >
-               <div className="flex items-center gap-3">
-                 <div className="bg-white/25 backdrop-blur-xl px-3 py-1.5 rounded-2xl text-[12px] font-black ring-1 ring-white/20 flex items-center gap-2">
-                    <ShoppingBag className="w-3.5 h-3.5" />
-                    {cartCount}
-                 </div>
-                 <span className="font-black text-[13px] tracking-[0.1em] uppercase">VER SACOLA</span>
-               </div>
-               <div className="bg-white text-gray-900 rounded-[24px] px-5 py-3 font-black text-sm shadow-inner">
-                 {total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-               </div>
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
+
 
       <motion.div
         initial={{ y: 100 }}
