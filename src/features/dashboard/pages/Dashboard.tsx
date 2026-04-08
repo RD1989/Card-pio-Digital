@@ -149,7 +149,7 @@ export default function Dashboard() {
             <Loader2 className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
             Atualizar
           </Button>
-          <Button className="rounded-2xl h-11 bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20" onClick={() => window.open('/menu/' + (slug || currentUserId))}>
+          <Button className="rounded-2xl h-11 bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20" onClick={() => window.open('/' + (slug || currentUserId))}>
             <ExternalLink className="w-4 h-4 mr-2" />
             Ver Cardápio
           </Button>

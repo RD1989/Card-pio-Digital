@@ -318,18 +318,30 @@ export default function PublicMenu() {
     return menuCategories.map(cat => ({ ...cat, items: cat.items.filter(i => i.name.toLowerCase().includes(q) || (i.description?.toLowerCase() || '').includes(q)) })).filter(cat => cat.items.length > 0);
   }, [menuCategories, searchQuery]);
 
+  // Slugs que são rotas do sistema e não devem acionar o PublicMenu
+  const SYSTEM_ROUTES = [
+    'login', 'register', 'forgot-password', 'reset-password',
+    'onboarding', 'menu', 'links', 'order', 'admin', 'super-admin'
+  ];
+
   useEffect(() => {
     if (!slug) return;
+    // Se for uma rota do sistema, não tentar carregar como cardápio
+    if (SYSTEM_ROUTES.includes(slug.toLowerCase())) return;
     let channel: any;
 
     async function fetchData() {
       setLoading(true);
       const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug || '');
-      const { data: prof } = await supabase
-        .from('profiles')
-        .select('*')
-        .or(isUUID ? `slug.ilike.${slug},user_id.eq.${slug}` : `slug.ilike.${slug}`)
-        .single();
+
+      // Busca por slug primeiro; se for UUID, também tenta por user_id
+      let profQuery = supabase.from('profiles').select('*');
+      if (isUUID) {
+        profQuery = profQuery.or(`slug.eq.${slug},user_id.eq.${slug}`);
+      } else {
+        profQuery = profQuery.ilike('slug', slug);
+      }
+      const { data: prof } = await profQuery.maybeSingle();
       
       if (!prof) { 
         setNotFound(true); 

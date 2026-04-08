@@ -102,6 +102,8 @@ const App = () => (
                   <Route path="/menu/:slug" element={<PublicMenu />} />
                   <Route path="/links/:slug" element={<BioLinkPage />} />
                   <Route path="/order/:orderId" element={<OrderTracking />} />
+                  {/* Rota curta: acesso direto pelo slug na raiz do domínio */}
+                  <Route path="/:slug" element={<PublicMenu />} />
                 </Route>
 
                 {/* Admin (multi-tenant, protected) */}

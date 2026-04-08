@@ -15,7 +15,7 @@ function generateQRSvg(data: string, size: number = 256): string {
 }
 
 export function QRCodeGenerator({ slug, restaurantName }: Props) {
-  const menuUrl = `${window.location.origin}/menu/${slug}`;
+  const menuUrl = `${window.location.origin}/${slug}`;
   const [copied, setCopied] = useState(false);
   const qrUrl = generateQRSvg(menuUrl, 300);
 
