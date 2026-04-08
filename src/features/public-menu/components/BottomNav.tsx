@@ -26,7 +26,7 @@ export function BottomNav({ onHomeClick, onCategoriesClick, onSearchClick, onCar
         initial={{ y: 100 }}
         animate={{ y: 0 }}
         transition={{ type: 'spring', stiffness: 220, damping: 28 }}
-        className="fixed bottom-0 z-[40] inset-x-0 mx-auto max-w-md w-full"
+        className="fixed bottom-0 z-[40] inset-x-0 mx-auto max-w-xl w-full"
       >
       <div
         className="flex items-center justify-around px-2 py-3.5 rounded-t-[32px] border-t border-black/[0.04] dark:border-white/[0.08] pm-glass"

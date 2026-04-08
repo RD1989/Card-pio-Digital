@@ -289,7 +289,12 @@ export default function PublicMenu() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isCartOpen, setIsCartOpen]       = useState(false);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [carouselWidth, setCarouselWidth] = useState(0);
+  const [catsCarouselWidth, setCatsCarouselWidth] = useState(0);
 
+  const carouselRef = useRef<HTMLDivElement>(null);
+  const catsCarouselRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -308,10 +313,20 @@ export default function PublicMenu() {
   }, [menuCategories]);
 
   const filteredCategories = useMemo(() => {
-    if (!searchQuery) return menuCategories;
+    let list = menuCategories;
+    
+    // Filtrar por categoria selecionada
+    if (selectedCategory) {
+      list = menuCategories.filter(cat => cat.name === selectedCategory);
+    }
+
+    if (!searchQuery) return list;
     const q = searchQuery.toLowerCase();
-    return menuCategories.map(cat => ({ ...cat, items: cat.items.filter(i => i.name.toLowerCase().includes(q) || (i.description?.toLowerCase() || '').includes(q)) })).filter(cat => cat.items.length > 0);
-  }, [menuCategories, searchQuery]);
+    return list.map(cat => ({ 
+      ...cat, 
+      items: cat.items.filter(i => i.name.toLowerCase().includes(q) || (i.description?.toLowerCase() || '').includes(q)) 
+    })).filter(cat => cat.items.length > 0);
+  }, [menuCategories, searchQuery, selectedCategory]);
 
   // Slugs que são rotas do sistema e não devem acionar o PublicMenu
   const SYSTEM_ROUTES = [
@@ -411,6 +426,25 @@ export default function PublicMenu() {
     document.documentElement.classList.toggle('dark', theme === 'dark');
   }, [profile]);
 
+  useEffect(() => {
+    if (carouselRef.current) {
+      setCarouselWidth(carouselRef.current.scrollWidth - carouselRef.current.offsetWidth);
+    }
+    if (catsCarouselRef.current) {
+      setCatsCarouselWidth(catsCarouselRef.current.scrollWidth - catsCarouselRef.current.offsetWidth);
+    }
+  }, [menuCategories, loading]);
+
+  const handleSearchClick = () => {
+    searchRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    setTimeout(() => searchRef.current?.focus(), 400);
+  };
+
+  const handleCategoriesClick = () => {
+    setSelectedCategory(null);
+    document.getElementById('cat-pills')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
   const handleAdd = (item: any) => { addItem(item); toast.success(`✓ ${item.name} adicionado!`); };
 
   if (loading) return <MenuSkeleton />;
@@ -431,7 +465,7 @@ export default function PublicMenu() {
       `}</style>
 
       <div className="min-h-screen w-full bg-stone-100 dark:bg-[#050505] flex justify-center selection:bg-primary/20">
-        <div className="w-full max-w-md relative bg-[#f4f4f4] dark:bg-[#0d0d0d] shadow-[0_0_80px_rgba(0,0,0,0.06)] min-h-screen flex flex-col sm:border-x sm:border-black/5 dark:sm:border-white/5 overflow-x-hidden pb-10">
+        <div className="w-full max-w-xl relative bg-[#f4f4f4] dark:bg-[#0d0d0d] shadow-[0_0_80px_rgba(0,0,0,0.06)] min-h-screen flex flex-col sm:border-x sm:border-black/5 dark:sm:border-white/5 overflow-x-hidden pb-10">
         
         {/* 1. HEADER */}
         <StoreHeader profile={profile} isOpen={isOpen} accentColor={accentColor} />
@@ -445,19 +479,34 @@ export default function PublicMenu() {
 
         {/* 3. MAIS PEDIDOS */}
         {!searchQuery && menuCategories.length > 0 && (
-          <div className="px-5 mb-12">
+          <div className="px-5 mb-12 overflow-hidden">
             <h2 className="pm-font-display text-2xl font-black italic mb-6">Mais Pedidos 🔥</h2>
-            <div className="flex gap-4 overflow-x-auto no-scrollbar pb-4 -mx-5 px-5">
-              {menuCategories.flatMap(c => c.items).slice(0,6).map((item) => (
-                <div key={item.id} onClick={() => setSelectedProduct(item)} className="min-w-[160px] bg-white dark:bg-[#1a1a1a] rounded-[28px] p-4 shadow-sm border border-black/5 flex flex-col items-center text-center cursor-pointer active:scale-95 transition-all">
-                  <div className="w-24 h-24 rounded-full overflow-hidden mb-3 border-4 border-slate-50 dark:border-white/5">
-                    {item.image_url ? <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" /> : <Utensils className="w-8 h-8 text-slate-200" />}
-                  </div>
-                  <h3 className="font-bold text-xs line-clamp-1 mb-1">{item.name}</h3>
-                  <span className="font-black text-primary text-sm">{formatCurrency(item.price)}</span>
-                </div>
-              ))}
-            </div>
+            <motion.div 
+              ref={carouselRef}
+              className="cursor-grab active:cursor-grabbing"
+            >
+              <motion.div 
+                drag="x"
+                dragConstraints={{ right: 0, left: -carouselWidth }}
+                dragTransition={{ bounceStiffness: 600, bounceDamping: 20 }}
+                className="flex gap-4 pb-4"
+              >
+                {menuCategories.flatMap(c => c.items).slice(0,10).map((item) => (
+                  <motion.div 
+                    key={item.id} 
+                    onClick={() => setSelectedProduct(item)} 
+                    whileTap={{ scale: 0.95 }}
+                    className="min-w-[160px] bg-white dark:bg-[#1a1a1a] rounded-[28px] p-4 shadow-sm border border-black/5 flex flex-col items-center text-center cursor-pointer transition-shadow hover:shadow-md"
+                  >
+                    <div className="w-24 h-24 rounded-full overflow-hidden mb-3 border-4 border-slate-50 dark:border-white/5 pointer-events-none">
+                      {item.image_url ? <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" /> : <Utensils className="w-8 h-8 text-slate-200" />}
+                    </div>
+                    <h3 className="font-bold text-xs line-clamp-1 mb-1 pointer-events-none">{item.name}</h3>
+                    <span className="font-black text-primary text-sm pointer-events-none">{formatCurrency(item.price)}</span>
+                  </motion.div>
+                ))}
+              </motion.div>
+            </motion.div>
           </div>
         )}
 
@@ -468,51 +517,94 @@ export default function PublicMenu() {
             <div className="sticky top-0 z-50 pm-glass p-5 border-b border-black/5">
               <div className="relative max-w-xl mx-auto">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input type="text" placeholder="Buscar no cardápio..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="w-full pl-12 pr-4 h-12 bg-white/50 dark:bg-white/5 rounded-2xl outline-none font-bold text-sm" />
+                <input 
+                  ref={searchRef}
+                  type="text" 
+                  placeholder="Buscar no cardápio..." 
+                  value={searchQuery} 
+                  onChange={e => setSearchQuery(e.target.value)} 
+                  className="w-full pl-12 pr-4 h-12 bg-white/50 dark:bg-white/5 rounded-2xl outline-none font-bold text-sm" 
+                />
               </div>
             </div>
 
-            {/* Pills */}
-            <div className="sticky top-[89px] z-40 pm-glass px-5 py-4 overflow-x-auto no-scrollbar flex gap-3">
-              {filteredCategories.map(cat => (
-                <button key={cat.name} onClick={() => document.getElementById(`cat-${cat.name}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })} className={`px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${activeCategory === cat.name ? 'bg-primary text-white shadow-lg' : 'bg-white dark:bg-white/5'}`}>
-                  {cat.name}
-                </button>
-              ))}
+            {/* Pills / Categories Slider */}
+            <div id="cat-pills" className="sticky top-[89px] z-40 pm-glass px-5 py-4 overflow-hidden border-b border-black/5">
+              <motion.div ref={catsCarouselRef} className="cursor-grab active:cursor-grabbing">
+                <motion.div 
+                  drag="x"
+                  dragConstraints={{ right: 0, left: -catsCarouselWidth }}
+                  dragTransition={{ bounceStiffness: 600, bounceDamping: 20 }}
+                  className="flex gap-3"
+                >
+                  <motion.button 
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setSelectedCategory(null)} 
+                    className={`px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${!selectedCategory ? 'bg-primary text-white shadow-lg' : 'bg-white dark:bg-white/5'}`}
+                  >
+                    🚀 Todos
+                  </motion.button>
+                  {menuCategories.map(cat => (
+                    <motion.button 
+                      key={cat.name} 
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setSelectedCategory(cat.name)} 
+                      className={`px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${selectedCategory === cat.name ? 'bg-primary text-white shadow-lg' : 'bg-white dark:bg-white/5'}`}
+                    >
+                      {getCategoryConfig(cat.name).emoji} {cat.name}
+                    </motion.button>
+                  ))}
+                </motion.div>
+              </motion.div>
             </div>
 
             {/* Products */}
-            <div className="p-5 space-y-10 pb-40">
-              {filteredCategories.map(cat => (
-                <section key={cat.name} id={`cat-${cat.name}`} className="scroll-mt-40">
-                  <h2 className="pm-font-display text-xl font-black italic mb-6 flex items-center gap-2">
-                    <span className="w-1.5 h-6 bg-primary rounded-full" /> {cat.name}
-                  </h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {cat.items.map(item => (
-                      <div key={item.id} onClick={() => setSelectedProduct(item)} className="bg-white dark:bg-[#1a1a1a] rounded-[24px] p-4 flex gap-4 pm-card-hover border border-black/5 cursor-pointer">
-                        <div className="w-24 h-24 rounded-2xl overflow-hidden flex-shrink-0">
-                          {item.image_url ? <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" /> : <div className="w-full h-full bg-slate-100 flex items-center justify-center"><Utensils className="w-6 h-6 text-slate-300" /></div>}
-                        </div>
-                        <div className="flex-1 flex flex-col justify-between">
-                          <div>
-                            <h3 className="font-bold text-base mb-1">{item.name}</h3>
-                            <p className="text-muted-foreground text-[10px] line-clamp-2">{item.description}</p>
+            <div className="p-5 space-y-10 pb-40 relative">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={selectedCategory || searchQuery || 'all'}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  {filteredCategories.map(cat => (
+                    <section key={cat.name} id={`cat-${cat.name}`} className="scroll-mt-40 mb-10">
+                      <h2 className="pm-font-display text-xl font-black italic mb-6 flex items-center gap-2">
+                        <span className="w-1.5 h-6 bg-primary rounded-full" /> {cat.name}
+                      </h2>
+                      <div className="flex flex-col gap-4">
+                        {cat.items.map(item => (
+                          <div key={item.id} onClick={() => setSelectedProduct(item)} className="bg-white dark:bg-[#1a1a1a] rounded-[24px] p-4 flex gap-4 pm-card-hover border border-black/5 cursor-pointer">
+                            <div className="w-24 h-24 rounded-2xl overflow-hidden flex-shrink-0">
+                              {item.image_url ? <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" /> : <div className="w-full h-full bg-slate-100 flex items-center justify-center"><Utensils className="w-6 h-6 text-slate-300" /></div>}
+                            </div>
+                            <div className="flex-1 flex flex-col justify-between">
+                              <div>
+                                <h3 className="font-bold text-base mb-1">{item.name}</h3>
+                                <p className="text-muted-foreground text-[10px] line-clamp-2">{item.description}</p>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <span className="font-black text-lg text-primary">{formatCurrency(item.price)}</span>
+                                <button onClick={(e) => { e.stopPropagation(); handleAdd(item); }} className="w-8 h-8 rounded-lg bg-primary text-white flex items-center justify-center"><Plus className="w-5 h-5" /></button>
+                              </div>
+                            </div>
                           </div>
-                          <div className="flex items-center justify-between">
-                            <span className="font-black text-lg text-primary">{formatCurrency(item.price)}</span>
-                            <button onClick={(e) => { e.stopPropagation(); handleAdd(item); }} className="w-8 h-8 rounded-lg bg-primary text-white flex items-center justify-center"><Plus className="w-5 h-5" /></button>
-                          </div>
-                        </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                </section>
-              ))}
+                    </section>
+                  ))}
+                  {filteredCategories.length === 0 && (
+                    <div className="py-20 text-center opacity-50 font-bold uppercase text-xs tracking-widest">
+                      Nenhum produto encontrado
+                    </div>
+                  )}
+                </motion.div>
+              </AnimatePresence>
             </div>
         </div>
 
-        <BottomNav accentColor={accentColor} onHomeClick={() => window.scrollTo(0,0)} onCategoriesClick={() => {}} onSearchClick={() => {}} onCartClick={() => setIsCartOpen(true)} />
+        <BottomNav accentColor={accentColor} onHomeClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} onCategoriesClick={handleCategoriesClick} onSearchClick={handleSearchClick} onCartClick={() => setIsCartOpen(true)} />
         <CartDrawer accentColor={accentColor} />
         {selectedProduct && <ProductDetailModal product={selectedProduct} open={!!selectedProduct} onClose={() => setSelectedProduct(null)} onAdd={handleAdd} accentColor={accentColor} />}
         <footer className="py-10 text-center opacity-20 uppercase text-[9px] font-black tracking-widest">Powered by Menu Pro</footer>
