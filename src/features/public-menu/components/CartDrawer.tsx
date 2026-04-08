@@ -228,8 +228,7 @@ export function CartDrawer({ accentColor = '#16a34a' }: CartDrawerProps) {
       customer_name: name,
       customer_phone: phone,
       total: totalValue,
-      status: 'pending',
-      notes: finalNotes
+      status: 'pending'
     }).select('id').single();
 
     if (error || !order) { 
@@ -239,16 +238,26 @@ export function CartDrawer({ accentColor = '#16a34a' }: CartDrawerProps) {
       return; 
     }
 
-    await supabase.from('order_items').insert(
-      items.map(item => ({ 
-        order_id: order.id, 
-        restaurant_id: restaurantUserId,
-        product_id: item.id, 
-        product_name: item.name, 
-        quantity: item.quantity, 
-        unit_price: item.price
-      }))
-    );
+    const orderItemsPayload = items.map(item => ({ 
+      order_id: order.id, 
+      restaurant_id: restaurantUserId,
+      product_id: item.id, 
+      product_name: item.name, 
+      quantity: item.quantity, 
+      unit_price: item.price
+    }));
+
+    // Hack Bypass: Como o Supabase não reconheceu a coluna notes, inserimos a logística como um "Produto de Informação" com valor zero
+    orderItemsPayload.push({
+      order_id: order.id,
+      restaurant_id: restaurantUserId,
+      product_id: null,
+      product_name: `📦 LOGÍSTICA:\n${finalNotes}`,
+      quantity: 1,
+      unit_price: 0
+    });
+
+    await supabase.from('order_items').insert(orderItemsPayload);
 
     const whatsappPhone = cleanPhone.startsWith('55') ? cleanPhone : `55${cleanPhone}`;
     const rawMessage = buildWhatsAppMessage(

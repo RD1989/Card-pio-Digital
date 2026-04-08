@@ -84,13 +84,13 @@ export const OrderPrint = forwardRef<HTMLDivElement, Props>(({ order, restaurant
           <span className="w-16 text-right">Total</span>
         </div>
         {order.items.map((item, i) => (
-          <div key={i} className="flex justify-between items-start py-1">
-            <span className="w-8 font-bold">{item.quantity}x</span>
-            <div className="flex-1 px-1 flex flex-col">
-              <span className="font-semibold uppercase text-[12px]">{item.product_name}</span>
-              <span className="text-[11px] text-gray-700">{formatCurrency(item.unit_price)} unid</span>
+          <div key={i} className={`flex justify-between items-start py-1 ${item.product_name.includes('LOGÍSTICA') ? 'border-t border-dashed border-black mt-2 pt-2 pb-2 block w-full' : ''}`}>
+            {!item.product_name.includes('LOGÍSTICA') && <span className="w-8 font-bold">{item.quantity}x</span>}
+            <div className={`flex-1 px-1 flex flex-col ${item.product_name.includes('LOGÍSTICA') ? 'w-full' : ''}`}>
+              <span className="font-semibold uppercase text-[12px] whitespace-pre-wrap">{item.product_name}</span>
+              {!item.product_name.includes('LOGÍSTICA') && <span className="text-[11px] text-gray-700">{formatCurrency(item.unit_price)} unid</span>}
             </div>
-            <span className="w-16 text-right font-bold">{formatCurrency(item.unit_price * item.quantity)}</span>
+            {!item.product_name.includes('LOGÍSTICA') && <span className="w-16 text-right font-bold">{formatCurrency(item.unit_price * item.quantity)}</span>}
           </div>
         ))}
       </div>
