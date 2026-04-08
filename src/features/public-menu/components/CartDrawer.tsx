@@ -49,57 +49,47 @@ function buildWhatsAppMessage(
   const orderId = generateOrderId();
   const sep = "──────────────────";
   
-  let msg = `*NOVO PEDIDO - ${restaurantName.toUpperCase()}*\n`;
-  msg += `*ID:* #${orderId}\n\n`;
+  let msg = `PEDIDO ${orderId} - ${restaurantName.toUpperCase()}\n\n`;
 
-  msg += `*ITENS DO PEDIDO:*\n`;
   items.forEach((item) => {
     const addonSum = (item.addons || []).reduce((s, a) => s + a.price, 0);
     const unitTotal = item.price + addonSum;
     const itemTotal = unitTotal * item.quantity;
     
-    msg += `• *${item.quantity}x ${item.name}*\n`;
+    msg += `${item.quantity}x ${item.name} (${formatCurrency(item.price)})\n`;
     if (item.addons && item.addons.length > 0) {
       item.addons.forEach(a => { 
-        msg += `   └ _+ ${a.name}_ (${formatCurrency(a.price)})\n`; 
+        msg += `  + ${a.name} (${a.price > 0 ? formatCurrency(a.price) : 'Grátis'})\n`; 
       });
     }
-    msg += `   *Subtotal:* ${formatCurrency(itemTotal)}\n\n`;
+    msg += `Subtotal: ${formatCurrency(itemTotal)}\n\n`;
   });
 
   msg += `${sep}\n`;
-  msg += `*RESUMO FINANCEIRO*\n`;
-  msg += `*Subtotal:* ${formatCurrency(subtotal)}\n`;
+  msg += `🧾 Subtotal: ${formatCurrency(subtotal)}\n`;
   
   if (deliveryType === 'delivery') {
-    msg += `*Entrega:* ${deliveryFee > 0 ? formatCurrency(deliveryFee) : 'Grátis'}\n`;
+    msg += `🛵 Taxa de Entrega: ${deliveryFee > 0 ? formatCurrency(deliveryFee) : 'Grátis'}\n`;
   }
   
-  msg += `*TOTAL GERAL: ${formatCurrency(totalFinal)}*\n`;
+  msg += `TOTAL FINAL: ${formatCurrency(totalFinal)}\n`;
   msg += `${sep}\n\n`;
 
-  msg += `*DADOS DO CLIENTE*\n`;
-  msg += `*Nome:* ${customerName}\n`;
-  msg += `*WhatsApp:* ${customerPhone}\n\n`;
+  msg += `👤 Cliente: ${customerName}\n`;
+  msg += `📱 WhatsApp: ${customerPhone}\n`;
 
-  msg += `*ENTREGA / RETIRADA*\n`;
   if (deliveryType === 'delivery') {
-    msg += `*Tipo:* Entrega\n`;
-    msg += `*Endereço:* ${address}\n`;
+    msg += `📍 ${address}\n`;
   } else {
-    msg += `*Tipo:* Retirada na Loja\n`;
+    msg += `🏪 Retirada na Loja\n`;
   }
 
-  msg += `\n*PAGAMENTO*\n`;
-  msg += `*Forma:* ${PAYMENT_LABELS[paymentMethod]}\n`;
+  msg += `💳 Pagamento: ${PAYMENT_LABELS[paymentMethod]}\n`;
 
   if (notes) {
-    msg += `\n*OBSERVAÇÕES*\n`;
-    msg += `_${notes}_`;
+    msg += `📝 Observação: ${notes}\n`;
   }
 
-  msg += `\n\n_Pedido gerado via Menu Pro_`;
-  
   return encodeURIComponent(msg);
 }
 
@@ -213,6 +203,7 @@ export function CartDrawer({ accentColor = '#16a34a' }: CartDrawerProps) {
     await supabase.from('order_items').insert(
       items.map(item => ({ 
         order_id: order.id, 
+        restaurant_id: restaurantUserId,
         product_id: item.id, 
         product_name: item.name, 
         quantity: item.quantity, 
