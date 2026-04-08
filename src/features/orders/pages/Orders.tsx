@@ -235,6 +235,14 @@ export default function Orders() {
             {filtered.map((order) => {
               const status = STATUS_MAP[order.status] || STATUS_MAP.pending;
               const StatusIcon = status.icon;
+              
+              // Extração retrocompatível: Tenta buscar da coluna ou varre o item invisível hackeado
+              const logisticaItem = order.items.find(i => i.product_name.includes('📦 LOGÍSTICA'));
+              const isDelivery = logisticaItem ? logisticaItem.product_name.includes('📍 Entrega') : order.delivery_type === 'delivery';
+              const isPickup = logisticaItem ? logisticaItem.product_name.includes('Retirada') : order.delivery_type === 'pickup';
+              const pgmtoLine = logisticaItem ? logisticaItem.product_name.split('\n').find(l => l.includes('💳 Pgmto:')) : null;
+              const paymentName = pgmtoLine ? pgmtoLine.split('💳 Pgmto:')[1].trim() : (order.payment_method || 'Desconhecido');
+
               return (
                 <motion.div
                   key={order.id}
@@ -262,14 +270,14 @@ export default function Orders() {
                         <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${status.color}`}>
                           {status.label}
                         </span>
-                        <div className="flex gap-1">
-                          {order.delivery_type === 'delivery' ? (
+                        <div className="flex gap-1 mt-0.5">
+                          {isDelivery ? (
                             <span className="text-[9px] bg-blue-500/10 text-blue-600 px-1.5 py-0.5 rounded font-bold uppercase">🛵 Entrega</span>
-                          ) : (
+                          ) : isPickup ? (
                             <span className="text-[9px] bg-orange-500/10 text-orange-600 px-1.5 py-0.5 rounded font-bold uppercase">🏪 Retirada</span>
-                          )}
-                          <span className="text-[9px] bg-muted text-muted-foreground px-1.5 py-0.5 rounded font-bold uppercase">
-                            {order.payment_method === 'pix' ? '💎 PIX' : order.payment_method === 'card' ? '💳 Cartão' : '💵 Dinheiro'}
+                          ) : null}
+                          <span className="text-[9px] bg-muted text-muted-foreground px-1.5 py-0.5 rounded font-bold uppercase max-w-[80px] truncate">
+                            {paymentName.includes('PIX') ? '💎 PIX' : paymentName.includes('Cartão') ? '💳 Cartão' : paymentName.includes('Dinheiro') ? '💵 Dinheiro' : paymentName}
                           </span>
                         </div>
                       </div>

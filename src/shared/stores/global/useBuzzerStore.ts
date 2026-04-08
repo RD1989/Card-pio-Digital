@@ -4,6 +4,7 @@ import { persist } from 'zustand/middleware';
 interface BuzzerState {
   isReady: boolean;
   realtimeStatus: 'connected' | 'connecting' | 'error';
+  audioNode?: HTMLAudioElement | null;
   setIsReady: (isReady: boolean) => void;
   setRealtimeStatus: (status: 'connected' | 'connecting' | 'error') => void;
 }
