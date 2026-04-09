@@ -352,14 +352,60 @@ export default function Branding() {
             <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-primary">
               <Palette className="w-4 h-4" /> Cor e Tema do Cardápio
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
               {presetColors.map((color) => (
-                <button key={color.hex} onClick={() => setSelectedColor(color.hex)} className={`flex items-center gap-2 p-2 rounded-xl border transition-all ${selectedColor === color.hex ? 'border-primary bg-primary/10' : 'border-border'}`}>
-                  <div className="w-5 h-5 rounded-full" style={{ backgroundColor: color.hex }} />
+                <button 
+                  key={color.hex} 
+                  onClick={() => setSelectedColor(color.hex)} 
+                  className={`flex items-center gap-2 p-2 rounded-xl border transition-all ${selectedColor === color.hex ? 'border-primary bg-primary/10 shadow-sm' : 'border-border hover:border-primary/30'}`}
+                >
+                  <div className="w-5 h-5 rounded-full border border-black/5" style={{ backgroundColor: color.hex }} />
                   <span className="text-[10px] font-bold uppercase">{color.name}</span>
                 </button>
               ))}
+              
+              <div className="relative group col-span-2">
+                <input 
+                  type="color" 
+                  id="custom-color-picker" 
+                  className="absolute opacity-0 pointer-events-none w-0 h-0" 
+                  value={selectedColor}
+                  onChange={(e) => setSelectedColor(e.target.value)}
+                />
+                <button 
+                  onClick={() => document.getElementById('custom-color-picker')?.click()}
+                  className={`w-full flex items-center justify-between gap-2 p-2 rounded-xl border transition-all ${!presetColors.some(c => c.hex === selectedColor) ? 'border-primary bg-primary/10 shadow-sm' : 'border-border hover:border-primary/30'}`}
+                >
+                  <div className="flex items-center gap-2">
+                    <div 
+                      className="w-5 h-5 rounded-full border border-black/5 shadow-sm" 
+                      style={{ backgroundColor: !presetColors.some(c => c.hex === selectedColor) ? selectedColor : '#ffffff' }} 
+                    />
+                    <span className="text-[10px] font-black uppercase tracking-widest">Personalizada</span>
+                  </div>
+                  <Plus className="w-3 h-3 opacity-40 group-hover:rotate-90 transition-transform" />
+                </button>
+              </div>
             </div>
+
+            {!presetColors.some(c => c.hex === selectedColor) && (
+              <motion.div 
+                initial={{ opacity: 0, x: -10 }} 
+                animate={{ opacity: 1, x: 0 }} 
+                className="flex items-center gap-3 bg-muted/30 p-3 rounded-xl border border-dashed border-border mt-2"
+              >
+                <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Código Hex:</div>
+                <input 
+                  type="text" 
+                  value={selectedColor} 
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val.startsWith('#') && val.length <= 7) setSelectedColor(val);
+                  }}
+                  className="bg-transparent border-none p-0 text-xs font-mono font-black uppercase focus:ring-0 w-20"
+                />
+              </motion.div>
+            )}
 
             <div className="pt-6 border-t border-border mt-6">
               <Label className="text-xs font-bold uppercase opacity-70 mb-4 block">Modo do Tema</Label>

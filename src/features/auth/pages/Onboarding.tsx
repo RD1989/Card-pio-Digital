@@ -120,14 +120,40 @@ export default function Onboarding() {
               onClick={() => setPrimaryColor(color.value)}
               className={`flex flex-col items-center gap-2 p-3 rounded-xl border transition-all ${
                 primaryColor === color.value
-                  ? 'border-primary bg-primary/10 scale-105'
+                  ? 'border-primary bg-primary/10 scale-105 shadow-sm'
                   : 'border-border hover:border-primary/30'
               }`}
             >
-              <div className="w-10 h-10 rounded-full shadow-lg" style={{ backgroundColor: color.value }} />
-              <span className="text-xs font-medium">{color.name}</span>
+              <div className="w-10 h-10 rounded-full shadow-lg border-2 border-white/20" style={{ backgroundColor: color.value }} />
+              <span className="text-[10px] font-bold uppercase tracking-wider">{color.name}</span>
             </button>
           ))}
+          
+          <div className="relative group">
+            <input 
+              type="color" 
+              id="onboarding-color-picker" 
+              className="absolute opacity-0 pointer-events-none w-0 h-0" 
+              value={primaryColor}
+              onChange={(e) => setPrimaryColor(e.target.value)}
+            />
+            <button
+              onClick={() => document.getElementById('onboarding-color-picker')?.click()}
+              className={`w-full h-full flex flex-col items-center justify-center gap-2 p-3 rounded-xl border transition-all ${
+                !presetColors.some(c => c.value === primaryColor)
+                  ? 'border-primary bg-primary/10 scale-105 shadow-sm'
+                  : 'border-border hover:border-primary/30'
+              }`}
+            >
+              <div 
+                className="w-10 h-10 rounded-full shadow-lg border-2 border-dashed border-primary/40 flex items-center justify-center" 
+                style={{ backgroundColor: !presetColors.some(c => c.value === primaryColor) ? primaryColor : 'transparent' }} 
+              >
+                {presetColors.some(c => c.value === primaryColor) && <Plus className="w-5 h-5 text-primary/60" />}
+              </div>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-primary">Personalizada</span>
+            </button>
+          </div>
         </div>
       ),
       valid: true,
