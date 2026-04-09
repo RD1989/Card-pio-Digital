@@ -26,51 +26,36 @@ export default function Analytics() {
     const { data: isSuperAdmin } = await supabase.rpc('is_super_admin', { _user_id: user.id });
     const userId = (isSuperAdmin && impersonatedUserId) ? impersonatedUserId : user.id;
 
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    const since = thirtyDaysAgo.toISOString();
+    try {
+      const { data, error } = await supabase.rpc('get_daily_metrics', { 
+        _restaurant_user_id: userId, 
+        _days: 30 
+      });
 
-    const [viewsRes, ordersRes] = await Promise.all([
-      (supabase as any).from('menu_views').select('viewed_at').eq('restaurant_user_id', userId).gte('viewed_at', since),
-      supabase.from('orders').select('created_at').eq('restaurant_user_id', userId).gte('created_at', since),
-    ]);
+      if (error) throw error;
 
-    const views = (viewsRes.data || []) as any[];
-    const orders = (ordersRes.data || []) as any[];
+      const metrics = (data || []) as any[];
+      
+      const viewsTotal = metrics.reduce((sum, d) => sum + Number(d.views), 0);
+      const ordersTotal = metrics.reduce((sum, d) => sum + Number(d.orders), 0);
+      
+      setTotalViews(viewsTotal);
+      setTotalOrders(ordersTotal);
+      setConversionRate(viewsTotal > 0 ? (ordersTotal / viewsTotal) * 100 : 0);
 
-    setTotalViews(views.length);
-    setTotalOrders(orders.length);
-    setConversionRate(views.length > 0 ? (orders.length / views.length) * 100 : 0);
+      const daily = metrics.map(d => ({
+        date: d.metric_date,
+        views: Number(d.views),
+        orders: Number(d.orders),
+        rate: Number(d.views) > 0 ? (Number(d.orders) / Number(d.views)) * 100 : 0,
+      }));
 
-    // Group by day
-    const days: Record<string, { views: number; orders: number }> = {};
-    for (let i = 0; i < 30; i++) {
-      const d = new Date();
-      d.setDate(d.getDate() - i);
-      const key = d.toISOString().slice(0, 10);
-      days[key] = { views: 0, orders: 0 };
+      setDailyData(daily);
+    } catch (err) {
+      console.error("Erro ao carregar analytics:", err);
+    } finally {
+      setLoading(false);
     }
-
-    views.forEach((v: any) => {
-      const key = v.viewed_at.slice(0, 10);
-      if (days[key]) days[key].views++;
-    });
-    orders.forEach((o: any) => {
-      const key = o.created_at.slice(0, 10);
-      if (days[key]) days[key].orders++;
-    });
-
-    const daily = Object.entries(days)
-      .map(([date, d]) => ({
-        date,
-        views: d.views,
-        orders: d.orders,
-        rate: d.views > 0 ? (d.orders / d.views) * 100 : 0,
-      }))
-      .sort((a, b) => a.date.localeCompare(b.date));
-
-    setDailyData(daily);
-    setLoading(false);
   }, [impersonatedUserId]);
 
   useEffect(() => { fetch(); }, [fetch]);

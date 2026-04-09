@@ -15,6 +15,7 @@ import { toast } from 'sonner';
 import { useEffect, useState, useMemo, useRef } from 'react';
 import { Button } from '@/shared/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
+import { useMenuAnalytics } from '@/shared/hooks/useMenuAnalytics';
 
 /* ─── Font maps ─────────────────────────────────────────────── */
 const FONT_MAP: Record<string, string> = {
@@ -279,6 +280,7 @@ function StoreHeader({ profile, isOpen, accentColor }: { profile: Profile, isOpe
 export default function PublicMenu() {
   const { slug } = useParams<{ slug: string }>();
   const { addItem, setRestaurant } = useCartStore();
+  const { recordView } = useMenuAnalytics();
 
   const [profile, setProfile]             = useState<Profile | null>(null);
   const [menuCategories, setMenuCategories] = useState<MenuCategory[]>([]);
@@ -424,7 +426,10 @@ export default function PublicMenu() {
     document.documentElement.style.setProperty('--primary', hsl);
     const theme = profile.theme_mode === 'dark' ? 'dark' : (profile.theme_mode === 'light' ? 'light' : (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
     document.documentElement.classList.toggle('dark', theme === 'dark');
-  }, [profile]);
+    
+    // Registrar visualização
+    recordView(profile.user_id, profile.slug);
+  }, [profile, recordView]);
 
   useEffect(() => {
     if (carouselRef.current) {

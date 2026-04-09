@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2, ExternalLink, Globe, Smartphone, Store, Clock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { useMenuAnalytics } from '@/shared/hooks/useMenuAnalytics';
 
 interface Profile {
   user_id: string;
@@ -46,6 +47,7 @@ export default function BioLinkPage() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [links, setLinks] = useState<BioLink[]>([]);
   const [loading, setLoading] = useState(true);
+  const { recordView } = useMenuAnalytics();
 
   const isSuspended = profile && (profile.is_active === false || profile.plan_status === 'expired' || profile.plan_status === 'inactive');
 
@@ -82,6 +84,12 @@ export default function BioLinkPage() {
     }
     fetchData();
   }, [slug]);
+
+  useEffect(() => {
+    if (profile && !isSuspended) {
+      recordView(profile.user_id, profile.slug || slug || '');
+    }
+  }, [profile, isSuspended, recordView, slug]);
 
   if (loading) {
     return (

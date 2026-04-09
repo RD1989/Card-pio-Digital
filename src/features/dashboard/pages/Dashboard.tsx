@@ -45,30 +45,35 @@ export default function Dashboard() {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
-      const [prodRes, ordersRes, profRes, viewsRes] = await Promise.all([
-        supabase.from('products').select('id, is_active').eq('user_id', userId),
-        supabase.from('orders').select('id, total, created_at, status, customer_name').eq('restaurant_user_id', userId).order('created_at', { ascending: false }).limit(100),
+      const [statsRes, ordersRes, profRes] = await Promise.all([
+        supabase.rpc('get_restaurant_stats', { 
+          _restaurant_user_id: userId, 
+          _today_start: today.toISOString() 
+        }),
+        supabase.from('orders')
+          .select('id, total, created_at, status, customer_name')
+          .eq('restaurant_user_id', userId)
+          .order('created_at', { ascending: false })
+          .limit(100),
         supabase.from('profiles').select('slug').eq('user_id', userId).single(),
-        (supabase as any).from('menu_views').select('id', { count: 'exact', head: true }).eq('restaurant_user_id', userId).gte('viewed_at', today.toISOString()),
       ]);
 
-      if (prodRes.error) throw prodRes.error;
+      if (statsRes.error) throw statsRes.error;
       if (ordersRes.error) throw ordersRes.error;
       if (profRes.error && (profRes.error as any).code !== 'PGRST116') throw profRes.error;
 
-      const products = prodRes.data || [];
+      const statsData = statsRes.data as any;
       const orders = (ordersRes.data || []) as any[];
       if (profRes.data) setSlug(profRes.data.slug);
-      const todayOrders = orders.filter(o => new Date(o.created_at) >= today);
 
       setStats({
-        totalProducts: products.length,
-        activeProducts: products.filter(p => p.is_active).length,
-        totalOrders: orders.length,
-        todayOrders: todayOrders.length,
-        totalRevenue: orders.reduce((sum, o) => sum + Number(o.total || 0), 0),
-        todayRevenue: todayOrders.reduce((sum, o) => sum + Number(o.total || 0), 0),
-        todayViews: (viewsRes as any).count || 0,
+        totalProducts: statsData.total_products || 0,
+        activeProducts: statsData.active_products || 0,
+        totalOrders: statsData.total_orders || 0,
+        todayOrders: statsData.today_orders || 0,
+        totalRevenue: Number(statsData.total_revenue || 0),
+        todayRevenue: Number(statsData.today_revenue || 0),
+        todayViews: statsData.today_views || 0,
       });
 
       setRecentOrders(orders.slice(0, 8));
