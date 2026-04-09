@@ -48,9 +48,9 @@ serve(async (req) => {
       );
     }
 
-    // Usar modelo configurado ou fallback para gratuito
+    // Usar modelo configurado ou fallback para estável
     const model =
-      settings["openrouter_model"]?.trim() || "google/gemini-2.0-flash-exp:free";
+      settings["openrouter_model"]?.trim() || "google/gemini-2.0-flash-001";
 
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
@@ -77,32 +77,27 @@ serve(async (req) => {
         temperature: 0.8,
       }),
     });
-
     if (!response.ok) {
       const errorBody = await response.text();
       console.error(`OpenRouter API error [${response.status}]:`, errorBody);
 
-      if (response.status === 429) {
-        return new Response(
-          JSON.stringify({ error: "Limite de requisições excedido. Tente novamente em alguns instantes." }),
-          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      if (response.status === 402) {
-        return new Response(
-          JSON.stringify({ error: "Créditos insuficientes na conta OpenRouter." }),
-          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      if (response.status === 401) {
-        return new Response(
-          JSON.stringify({ error: "API Key do OpenRouter inválida. Verifique em Super Admin → Configurações." }),
-          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+      let detailedError = "Erro na API de IA";
+      try {
+        const parsedError = JSON.parse(errorBody);
+        if (parsedError.error?.message) {
+          detailedError = parsedError.error.message;
+        } else if (parsedError.error) {
+          detailedError = typeof parsedError.error === 'string' ? parsedError.error : JSON.stringify(parsedError.error);
+        }
+      } catch (e) {
+        detailedError = errorBody || `Erro da API de IA (${response.status})`;
       }
 
       return new Response(
-        JSON.stringify({ error: `Erro da API de IA (${response.status}). Verifique as configurações.` }),
+        JSON.stringify({ 
+          error: `Erro da API de IA (${response.status}): ${detailedError}. Verifique as configurações.`,
+          raw_status: response.status
+        }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }

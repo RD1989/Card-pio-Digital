@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Palette, Upload, Type, Eye, Loader2, Paintbrush, X, Plus } from 'lucide-react';
+import { Palette, Upload, Type, Eye, Loader2, Paintbrush, X, Plus, Moon, Sun, Monitor } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useImpersonateStore } from '@/shared/stores/global/useImpersonateStore';
@@ -359,6 +359,38 @@ export default function Branding() {
                   <span className="text-[10px] font-bold uppercase">{color.name}</span>
                 </button>
               ))}
+            </div>
+
+            <div className="pt-6 border-t border-border mt-6">
+              <Label className="text-xs font-bold uppercase opacity-70 mb-4 block">Modo do Tema</Label>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {[
+                  { value: 'light', label: 'Modo Claro', icon: Sun },
+                  { value: 'dark', label: 'Modo Escuro', icon: Moon },
+                  { value: 'auto', label: 'Automático', icon: Monitor },
+                ].map((option) => (
+                  <button
+                    key={option.value}
+                    onClick={() => setThemeMode(option.value)}
+                    className={`flex items-center justify-between px-4 py-3 rounded-xl border transition-all ${
+                      themeMode === option.value 
+                        ? 'border-primary bg-primary/10 text-primary shadow-sm' 
+                        : 'border-border text-muted-foreground hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <option.icon className={`w-4 h-4 ${themeMode === option.value ? 'text-primary' : ''}`} />
+                      <span className="text-[10px] font-black uppercase tracking-tight">{option.label}</span>
+                    </div>
+                    {themeMode === option.value && <div className="w-1.5 h-1.5 rounded-full bg-primary" />}
+                  </button>
+                ))}
+              </div>
+              <p className="text-[10px] text-muted-foreground mt-3 font-medium uppercase tracking-tighter italic">
+                {themeMode === 'auto' 
+                  ? '• O cardápio seguirá a configuração de luminosidade do celular do cliente.' 
+                  : `• O cardápio ficará fixo no modo ${themeMode === 'dark' ? 'escuro' : 'claro'} para todos os clientes.`}
+              </p>
             </div>
           </motion.section>
 
