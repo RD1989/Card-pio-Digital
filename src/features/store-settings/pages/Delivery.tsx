@@ -15,7 +15,7 @@ export default function Delivery() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [settings, setSettings] = useState({
-    delivery_fee: 0,
+    delivery_fee: '0',
     show_delivery_info: true,
     custom_delivery_label: ''
   });
@@ -43,7 +43,7 @@ export default function Delivery() {
       toast.error('Erro ao carregar configurações');
     } else if (data) {
       setSettings({
-        delivery_fee: data.delivery_fee || 0,
+        delivery_fee: String(data.delivery_fee || 0),
         show_delivery_info: data.show_delivery_info ?? true,
         custom_delivery_label: data.custom_delivery_label || ''
       });
@@ -62,7 +62,7 @@ export default function Delivery() {
     const { error } = await supabase
       .from('profiles')
       .update({
-        delivery_fee: settings.delivery_fee,
+        delivery_fee: parseFloat(settings.delivery_fee) || 0,
         show_delivery_info: settings.show_delivery_info,
         custom_delivery_label: settings.custom_delivery_label
       })
@@ -120,7 +120,7 @@ export default function Delivery() {
                   type="number"
                   step="0.01"
                   value={settings.delivery_fee}
-                  onChange={(e) => setSettings({ ...settings, delivery_fee: parseFloat(e.target.value) || 0 })}
+                  onChange={(e) => setSettings({ ...settings, delivery_fee: e.target.value })}
                   className="pl-12 h-14 bg-muted/20 border-none rounded-2xl font-black text-lg focus:ring-2 focus:ring-primary/20"
                 />
               </div>
