@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Package, Clock, ChefHat, CheckCircle2, Loader2, Search, Filter, ExternalLink, Printer, Bell, BellOff, Sparkles, Trash2 } from 'lucide-react';
+import { Package, Clock, ChefHat, CheckCircle2, Loader2, Search, Filter, ExternalLink, Printer, Bell, BellOff, Sparkles, Trash2, MessageSquare } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useImpersonateStore } from '@/shared/stores/global/useImpersonateStore';
 import { useOrderNotificationSound } from '@/features/orders/hooks/useOrderNotificationSound';
@@ -141,6 +141,17 @@ export default function Orders() {
     toast.success('Pedido excluído com sucesso');
     fetchOrders();
   }
+  const handleWhatsAppNotify = (order: Order) => {
+    if (!order.customer_phone) {
+      toast.error('Cliente sem número de telefone cadastrado');
+      return;
+    }
+    const phone = order.customer_phone.replace(/\D/g, '');
+    const message = `Olá *${order.customer_name || 'Cliente'}*, seu pedido já foi preparado e está indo em direção ao seu endereço. Fique atento para receber o motoboy! 🛵💨`;
+    const encodedMessage = encodeURIComponent(message);
+    const url = `https://wa.me/55${phone}?text=${encodedMessage}`;
+    window.open(url, '_blank');
+  };
 
   const handlePrint = (order: Order) => {
     setPrintingOrder(order);
@@ -341,6 +352,16 @@ export default function Orders() {
                     >
                       <ExternalLink className="w-3 h-3" /> Tracking
                     </a>
+                    {order.status === 'ready' && (
+                       <Button
+                         variant="outline"
+                         size="sm"
+                         onClick={() => handleWhatsAppNotify(order)}
+                         className="gap-1.5 h-8 text-xs border-emerald-500/30 text-emerald-600 bg-emerald-500/5 hover:bg-emerald-500/10 hover:border-emerald-500/50"
+                       >
+                         <MessageSquare className="w-3 h-3" /> Notificar WhatsApp
+                       </Button>
+                    )}
                     <Button
                       variant="outline"
                       size="sm"
