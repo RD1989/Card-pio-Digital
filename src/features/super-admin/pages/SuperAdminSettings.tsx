@@ -174,7 +174,7 @@ export default function SuperAdminSettings() {
     <div className="space-y-6 max-w-3xl">
       <div>
         <h1 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
-          Configurações Globais <span className="text-[10px] bg-primary/20 text-primary px-2 py-0.5 rounded-full font-black tracking-widest uppercase">v2.6 - Checkout Estável</span>
+          Configurações Globais <span className="text-[10px] bg-primary/20 text-primary px-2 py-0.5 rounded-full font-black tracking-widest uppercase">v2.7 - Endpoints Corrigidos</span>
         </h1>
         <p className="text-muted-foreground text-xs sm:text-sm mt-1">APIs, tema e pagamentos (Pix Próprio e Gateway Efí)</p>
       </div>

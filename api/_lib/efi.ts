@@ -14,8 +14,8 @@ export async function getEfiInstance(): Promise<AxiosInstance> {
   }
 
   const apiUrl = isHomolog 
-    ? 'https://pix.api.efipay.com.br' // Homologação Efí (verifique os endpoints adequados para HML na documentação)
-    : 'https://api-pix.efipay.com.br'; // Produção Efí MTLS
+    ? 'https://api-pix-h.gerencianet.com.br' // Homologação Efí (mTLS)
+    : 'https://api-pix.gerencianet.com.br'; // Produção Efí (mTLS)
 
   // Decodifica o Buffer para MTLS
   const certBuffer = Buffer.from(EFI_CERT_BASE64, 'base64');
