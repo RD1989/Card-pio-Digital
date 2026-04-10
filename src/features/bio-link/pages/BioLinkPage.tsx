@@ -14,6 +14,7 @@ interface Profile {
   font_style: string;
   is_active: boolean;
   plan_status: string;
+  bio_link_text: string | null;
 }
 
 interface BioLink {
@@ -206,7 +207,7 @@ export default function BioLinkPage() {
                  style={{ backgroundColor: profile.primary_color }}
                >
                  <Store className="w-6 h-6 mr-2 opacity-50" />
-                 <span className="flex-1 text-center">FAZER PEDIDO NO CARDÁPIO</span>
+                 <span className="flex-1 text-center">{profile.bio_link_text || 'FAZER PEDIDO NO CARDÁPIO'}</span>
                  <ExternalLink className="w-5 h-5 ml-2 opacity-50" />
                </Link>
              </motion.div>

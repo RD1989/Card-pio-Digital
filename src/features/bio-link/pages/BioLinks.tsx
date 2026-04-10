@@ -26,8 +26,10 @@ export default function BioLinks() {
   const [restaurantName, setRestaurantName] = useState('');
   const [logoUrl, setLogoUrl] = useState('');
   const [primaryColor, setPrimaryColor] = useState('#f59e0b');
+  const [bioLinkText, setBioLinkText] = useState('FAZER PEDIDO NO CARDÁPIO');
   const [slug, setSlug] = useState('');
   const [copied, setCopied] = useState(false);
+  const [savingGlobal, setSavingGlobal] = useState(false);
 
   const bioLinkUrl = slug ? `${window.location.origin}/links/${slug}` : '';
 
@@ -62,7 +64,7 @@ export default function BioLinks() {
     // Fetch Profile for Preview
     const { data: profile } = await supabase
       .from('profiles')
-      .select('restaurant_name, logo_url, primary_color, slug')
+      .select('restaurant_name, logo_url, primary_color, slug, bio_link_text')
       .eq('user_id', userId)
       .single();
     if (profile) {
@@ -70,6 +72,7 @@ export default function BioLinks() {
       setLogoUrl(profile.logo_url || '');
       setPrimaryColor(profile.primary_color || '#f59e0b');
       setSlug(profile.slug);
+      setBioLinkText(profile.bio_link_text || 'FAZER PEDIDO NO CARDÁPIO');
     }
     
     setLoading(false);
@@ -124,12 +127,25 @@ export default function BioLinks() {
     }
   };
 
-  const handleReorder = async (newOrder: BioLink[]) => {
-    setLinks(newOrder);
-    // Simple update - in production use a single RPC or debounced updates
-    for (let i = 0; i < newOrder.length; i++) {
-        await (supabase as any).from('bio_links').update({ sort_order: i }).eq('id', newOrder[i].id);
+  const handleSaveGlobal = async () => {
+    setSavingGlobal(true);
+    let userId = impersonatedUserId;
+    if (!userId) {
+      const { data: { user } } = await supabase.auth.getUser();
+      userId = user?.id || '';
     }
+
+    const { error } = await supabase
+      .from('profiles')
+      .update({ bio_link_text: bioLinkText } as any)
+      .eq('user_id', userId);
+
+    if (error) {
+      toast.error('Erro ao salvar configurações');
+    } else {
+      toast.success('Configurações salvas!');
+    }
+    setSavingGlobal(false);
   };
 
   if (loading) return <div className="flex justify-center p-12"><Loader2 className="animate-spin" /></div>;
@@ -140,6 +156,32 @@ export default function BioLinks() {
         <div>
           <h1 className="text-2xl font-bold font-inter">Link na Bio (Instagram)</h1>
           <p className="text-muted-foreground text-sm mt-1">Crie sua central de links personalizada para redes sociais.</p>
+        </div>
+
+        {/* Global Settings */}
+        <div className="glass p-6 space-y-4">
+          <div className="flex items-center gap-2 text-primary font-bold text-xs uppercase tracking-widest mb-2">
+            <Smartphone className="w-4 h-4" /> Configuração Geral
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/70">Texto do Botão do Cardápio</label>
+            <div className="flex gap-2">
+              <input 
+                value={bioLinkText} 
+                onChange={e => setBioLinkText(e.target.value)}
+                placeholder="Ex: ACESSAR NOSSO CARDÁPIO" 
+                className="flex-1 px-4 py-2.5 rounded-xl bg-muted/50 border border-border focus:ring-2 focus:ring-primary/50 outline-none transition-all text-sm font-bold"
+              />
+              <button 
+                onClick={handleSaveGlobal}
+                disabled={savingGlobal}
+                className="px-4 py-2 rounded-xl bg-primary text-primary-foreground font-bold text-xs shadow-lg shadow-primary/20 hover:opacity-90 transition-all disabled:opacity-50"
+              >
+                {savingGlobal ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Salvar'}
+              </button>
+            </div>
+            <p className="text-[10px] text-muted-foreground italic">Este é o botão principal que fica no topo da sua página de links.</p>
+          </div>
         </div>
 
         <button 
@@ -222,7 +264,7 @@ export default function BioLinks() {
       </div>
 
       {/* Mobile Preview */}
-      <div className="sticky top-8 hidden lg:block">
+      <div className="sticky top-8 block">
         <div className="flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-muted-foreground mb-4">
           <Smartphone className="w-4 h-4" /> Prévia Mobile (Instagram/Bio)
         </div>
@@ -246,7 +288,7 @@ export default function BioLinks() {
                   className="block w-full py-3.5 px-4 rounded-xl font-bold text-sm text-center shadow-lg filter saturate-[1.2] transition-all flex items-center justify-center gap-2"
                   style={{ backgroundColor: primaryColor, color: '#fff' }}
                 >
-                  🍔 Acessar Nosso Cardápio
+                  <Store className="w-4 h-4 opacity-50" /> {bioLinkText || 'Acessar Cardápio'}
                 </motion.a>
 
                 {/* Custom Links */}
