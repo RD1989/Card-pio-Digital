@@ -31,6 +31,17 @@ const ownPixFields: SettingField[] = [
   { key: 'pix_sync_token', label: 'Token de Sincronização Gmail', placeholder: 'token-secreto-123', secret: true },
 ];
 
+const efiFields: SettingField[] = [
+  { key: 'efi_client_id', label: 'Client ID (Efí Bank)', placeholder: 'Client_Id_...', secret: true },
+  { key: 'efi_client_secret', label: 'Client Secret (Efí Bank)', placeholder: 'Client_Secret_...', secret: true },
+  { key: 'efi_webhook_token', label: 'Token de Validação do Webhook', placeholder: 'Hash gerado pela Efí', secret: true },
+  { key: 'efi_pix_key', label: 'Chave Pix Oficial da Empresa (Efí)', placeholder: 'Seu CNPJ ou Email cadastrado na Efí' },
+  { key: 'efi_homolog', label: 'Ambiente de Homologação?', placeholder: 'true ou false', type: 'select', options: [
+    { value: 'false', label: 'Produção (Apenas Vendas Reais)' },
+    { value: 'true', label: 'Homologação (Testes Internos)' },
+  ]},
+];
+
 const themeFields: SettingField[] = [
   { key: 'global_primary_color', label: 'Cor primária (hex)', placeholder: '#f59e0b', type: 'color' },
   { key: 'global_font_heading', label: 'Fonte dos títulos', placeholder: 'Playfair Display', type: 'select', options: [
@@ -50,7 +61,7 @@ const themeFields: SettingField[] = [
   ]},
 ];
 
-const ALL_FIELDS = [...openRouterFields, ...ownPixFields, ...themeFields];
+const ALL_FIELDS = [...openRouterFields, ...ownPixFields, ...efiFields, ...themeFields];
 
 export default function SuperAdminSettings() {
   const [values, setValues] = useState<Record<string, string>>({});
@@ -168,10 +179,11 @@ export default function SuperAdminSettings() {
 
       <Tabs defaultValue="apis">
         <div className="w-full overflow-x-auto pb-1">
-          <TabsList className="flex w-max min-w-full sm:grid sm:grid-cols-3">
+          <TabsList className="flex w-max min-w-full sm:grid sm:grid-cols-4">
             <TabsTrigger value="apis" className="flex-1 whitespace-nowrap">IA (OpenRouter)</TabsTrigger>
-            <TabsTrigger value="ownpix" className="flex-1 whitespace-nowrap">Pagamento (Pix)</TabsTrigger>
-            <TabsTrigger value="theme" className="flex-1 whitespace-nowrap">Identidade Visual</TabsTrigger>
+            <TabsTrigger value="ownpix" className="flex-1 whitespace-nowrap">Pix Grátis</TabsTrigger>
+            <TabsTrigger value="efi" className="flex-1 whitespace-nowrap">Gateway (Efí)</TabsTrigger>
+            <TabsTrigger value="theme" className="flex-1 whitespace-nowrap">Visual</TabsTrigger>
           </TabsList>
         </div>
 
@@ -199,6 +211,20 @@ export default function SuperAdminSettings() {
                 <CardDescription className="text-xs sm:text-sm">Chave Pix e Token de sincronização Gmail</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">{renderFields(ownPixFields)}</CardContent>
+            </Card>
+          </motion.div>
+        </TabsContent>
+
+        <TabsContent value="efi" className="space-y-4 mt-4">
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+            <Card className="glass-sm border-border">
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                  <CreditCard className="w-5 h-5 text-emerald-500" /> Gateway Efí Bank
+                </CardTitle>
+                <CardDescription className="text-xs sm:text-sm">Configuração profissional de API PIX e Webhooks</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">{renderFields(efiFields)}</CardContent>
             </Card>
           </motion.div>
         </TabsContent>
