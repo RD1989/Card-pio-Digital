@@ -19,7 +19,11 @@ export default defineConfig(({ mode }) => ({
     mode === "development" && componentTagger(),
     VitePWA({
       registerType: 'autoUpdate',
+      injectRegister: 'auto',
       includeAssets: ['favicon.png', 'apple-touch-icon.png', 'pwa-192x192.png', 'pwa-512x512.png'],
+      devOptions: {
+        enabled: true
+      },
       manifest: {
         name: 'Sistema Menu Pro',
         short_name: 'Menu Pro',

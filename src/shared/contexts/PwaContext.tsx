@@ -27,6 +27,7 @@ export const PwaProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setIsInstalled(isStandalone);
 
     const handler = (e: any) => {
+      console.log('PWA: Evento beforeinstallprompt disparado!');
       // Impedir que o mini-infobar apareça no mobile automaticamente
       e.preventDefault();
       // Salvar o evento para ser usado depois
@@ -36,13 +37,15 @@ export const PwaProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       // Mostrar o banner apenas se não estiver instalado
       if (!isStandalone) {
         setShowInstallBanner(true);
-        console.log('PWA: Prompt de instalação capturado e pronto.');
+        console.log('PWA: Banner de instalação ativado.');
       }
     };
 
+    console.log('PWA: Monitorando evento beforeinstallprompt...');
     window.addEventListener('beforeinstallprompt', handler);
 
     window.addEventListener('appinstalled', () => {
+      console.log('PWA: Aplicativo instalado com sucesso.');
       setIsInstalled(true);
       setIsInstallable(false);
       setShowInstallBanner(false);
