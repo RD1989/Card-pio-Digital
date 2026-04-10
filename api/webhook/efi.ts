@@ -7,14 +7,15 @@ export default async function handler(req: any, res: any) {
   }
 
   try {
-    // 1. TRAVA DE SEGURANÇA: Token Automático
+    // 1. TRAVA DE SEGURANÇA: Token Automático (Opção 1 - Suporte a URL Query)
     // Busca o Token de Webhook previamente cadastrado na sua página de Painel Super Admin
     const efiWebhookToken = await getGlobalSetting('efi_webhook_token');
-    // Para Serverless, se a chamada passar da Cloudflare ou proxy da Vercel sem o token correto, falha imediatamente
-    const receivedToken = req.headers['x-webhook-token'];
+    
+    // Suporte tanto para Header quanto para Query String (mais garantido para Efí)
+    const receivedToken = req.query.token || req.headers['x-webhook-token'];
     
     if (efiWebhookToken && receivedToken !== efiWebhookToken) {
-      console.error('🚨 Tentativa de Webhook não autorizada.');
+      console.error('🚨 Tentativa de Webhook não autorizada. Token inválido ou ausente.');
       return res.status(401).end();
     }
 

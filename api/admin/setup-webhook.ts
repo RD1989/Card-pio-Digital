@@ -36,12 +36,22 @@ export default async function handler(req: any, res: any) {
       return res.status(400).json({ error: 'Chave Pix não encontrada nas configurações em Global Settings.' });
     }
 
+    // BUSCA O TOKEN DE SEGURANÇA (Opção 1)
+    const efiWebhookToken = await getGlobalSetting('efi_webhook_token');
+    let finalWebhookUrl = webhookUrl;
+
+    if (efiWebhookToken) {
+      // Se a URL já tiver query params, adiciona com &, senão com ?
+      const separator = finalWebhookUrl.includes('?') ? '&' : '?';
+      finalWebhookUrl = `${finalWebhookUrl}${separator}token=${efiWebhookToken}`;
+    }
+
     const efiApi = await getEfiInstance();
 
     // REGISTRO DE WEBHOOK PULAR MTLS (REGRA DA SKILL PARA VERCEL)
     const response = await efiApi.put(
       `/v2/webhook/${chavePix}`, 
-      { webhookUrl },
+      { webhookUrl: finalWebhookUrl },
       { headers: { 'x-skip-mtls-checking': 'true' } }
     );
 
