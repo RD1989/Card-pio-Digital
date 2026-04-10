@@ -1,7 +1,7 @@
 import axios, { AxiosInstance } from 'axios';
 import https from 'https';
-import { EFI_CERT_BASE64 } from './cert';
-import { getGlobalSetting } from './supabase';
+import { EFI_CERT_BASE64 } from './cert.js';
+import { getGlobalSetting } from './supabase.js';
 
 export async function getEfiInstance(): Promise<AxiosInstance> {
   // Fetch credentials from DB dynamically

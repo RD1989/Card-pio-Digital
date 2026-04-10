@@ -1,5 +1,5 @@
-import { getEfiInstance } from '../_lib/efi';
-import { supabaseAdmin } from '../_lib/supabase';
+import { getEfiInstance } from '../_lib/efi.js';
+import { supabaseAdmin } from '../_lib/supabase.js';
 
 export default async function handler(req: any, res: any) {
   try {

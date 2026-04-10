@@ -1,4 +1,4 @@
-import { supabaseAdmin, getGlobalSetting } from '../_lib/supabase';
+import { supabaseAdmin, getGlobalSetting } from '../_lib/supabase.js';
 
 export default async function handler(req: any, res: any) {
   // O Webhook é acionado exclusivamente via POST pela Efí

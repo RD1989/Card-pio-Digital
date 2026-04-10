@@ -1,6 +1,6 @@
 import crypto from 'crypto';
-import { getEfiInstance } from '../_lib/efi';
-import { supabaseAdmin, getGlobalSetting } from '../_lib/supabase';
+import { getEfiInstance } from '../_lib/efi.js';
+import { supabaseAdmin, getGlobalSetting } from '../_lib/supabase.js';
 
 export default async function handler(req: any, res: any) {
   // Configurando CORS para Vercel
