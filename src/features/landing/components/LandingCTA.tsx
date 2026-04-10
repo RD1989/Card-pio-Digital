@@ -1,6 +1,5 @@
 import { motion } from 'framer-motion';
-import { ArrowRight, Download } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Download, Smartphone } from 'lucide-react';
 import { usePwa } from '@/shared/contexts/PwaContext';
 
 interface CTAProps {
@@ -9,47 +8,57 @@ interface CTAProps {
 }
 
 export function LandingCTA({ title, subtitle }: CTAProps) {
-  const { installApp, isInstalled, isInstallable } = usePwa();
+  const { installApp, isInstalled } = usePwa();
 
   return (
-    <section className="py-16 px-6">
+    <section className="py-20 px-6">
       <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        whileInView={{ opacity: 1, scale: 1 }}
+        initial={{ opacity: 0, y: 40 }}
+        whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
-        className="max-w-4xl mx-auto rounded-[2rem] p-12 sm:p-16 text-center relative overflow-hidden"
-        style={{ background: 'hsl(var(--cta-bg))' }}
+        className="max-w-4xl mx-auto rounded-[3rem] p-12 sm:p-20 text-center landing-cta-card group"
       >
+        {/* Animated background elements */}
+        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
+        <div className="absolute -top-24 -left-24 w-64 h-64 bg-primary/20 rounded-full blur-[120px] pointer-events-none group-hover:bg-primary/30 transition-all duration-1000" />
+        <div className="absolute -bottom-24 -right-24 w-64 h-64 bg-primary/15 rounded-full blur-[120px] pointer-events-none group-hover:bg-primary/25 transition-all duration-1000" />
+
         <div className="relative z-10">
-          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight" style={{ color: 'hsl(var(--nav-foreground))' }}>
+          <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tighter leading-[1.1]" style={{ color: 'hsl(var(--nav-foreground))' }}>
             {title.includes('DELIVERY') ? (
               <>
-                TRANSFORME SEU{' '}
-                <span className="font-display italic underline decoration-primary/40 underline-offset-4 text-primary">DELIVERY</span>{' '}
-                AGORA
+                VALORIZE SEU{' '}
+                <span className="text-gradient drop-shadow-sm">DELIVERY</span>{' '}
+                HOJE
               </>
             ) : title}
           </h2>
-          <p className="mt-4 text-sm max-w-lg mx-auto" style={{ color: 'hsl(var(--nav-foreground) / 0.7)' }}>
+          <p className="mt-6 text-sm sm:text-base max-w-xl mx-auto opacity-70 leading-relaxed" style={{ color: 'hsl(var(--nav-foreground))' }}>
             {subtitle}
           </p>
-          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link
-              to="/register"
-              className="inline-flex items-center justify-center gap-2 px-8 py-4 w-full sm:w-auto rounded-xl bg-primary text-primary-foreground font-bold text-sm hover:opacity-90 transition-all glow-primary"
-            >
-              CRIAR MINHA CONTA GRÁTIS <ArrowRight className="w-4 h-4" />
-            </Link>
-            
-            {!isInstalled && (
+          
+          <div className="mt-12 flex flex-col items-center justify-center">
+            {!isInstalled ? (
               <button
                 onClick={installApp}
-                className="inline-flex items-center justify-center gap-2 px-8 py-4 w-full sm:w-auto rounded-xl bg-white text-black font-extrabold shadow-2xl shadow-white/10 hover:bg-neutral-100 transition-all border border-white/20 active:scale-95"
+                className="landing-cta-install-btn inline-flex items-center justify-center gap-4 px-12 py-6 w-full sm:w-auto rounded-2xl text-lg shadow-2xl transition-all duration-500 hover:scale-105 active:scale-95"
               >
-                <Download className="w-5 h-5" />
-                INSTALAR SISTEMA E ENTRAR
+                <Download className="w-7 h-7 animate-bounce" />
+                Instalar sistema
               </button>
+            ) : (
+              <a
+                href="/login"
+                className="landing-cta-install-btn inline-flex items-center justify-center gap-4 px-12 py-6 w-full sm:w-auto rounded-2xl text-lg shadow-2xl transition-all duration-500 hover:scale-105 active:scale-95"
+              >
+                <Smartphone className="w-7 h-7" />
+                Entrar no Sistema
+              </a>
             )}
+            
+            <p className="mt-6 text-[10px] uppercase tracking-[0.3em] font-bold opacity-40" style={{ color: 'hsl(var(--nav-foreground))' }}>
+              ⚙️ SETUP EM 2 MINUTOS · 🎁 TESTE GRÁTIS
+            </p>
           </div>
         </div>
       </motion.div>

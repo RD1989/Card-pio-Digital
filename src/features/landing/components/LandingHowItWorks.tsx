@@ -81,7 +81,7 @@ export function LandingHowItWorks({ steps }: HowItWorksProps) {
           >
             <Link
               to="/register"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-primary text-primary-foreground font-bold text-sm hover:opacity-90 transition-all glow-primary"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-primary text-primary-foreground font-bold text-sm shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 hover:scale-[1.02] active:scale-95 transition-all glow-primary"
             >
               CRIAR CONTA GRÁTIS <ArrowRight className="w-4 h-4" />
             </Link>

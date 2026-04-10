@@ -49,7 +49,7 @@ export function LandingPricing({ basicFeatures, proFeatures }: PricingProps) {
                 </div>
               ))}
             </div>
-            <Link to="/register" className="mt-7 block w-full text-center py-3 rounded-xl border-2 border-primary text-primary font-bold text-sm hover:bg-primary/5 transition-all">
+            <Link to="/register" className="mt-7 block w-full text-center py-3.5 rounded-xl border-2 border-primary text-primary font-bold text-sm hover:bg-primary hover:text-primary-foreground shadow-md shadow-primary/10 hover:shadow-lg hover:shadow-primary/30 active:scale-95 transition-all">
               COMEÇAR GRÁTIS
             </Link>
           </motion.div>
@@ -84,7 +84,7 @@ export function LandingPricing({ basicFeatures, proFeatures }: PricingProps) {
               href={`https://wa.me/22996051620?text=${encodeURIComponent("Olá! Quero assinar o plano Pro e ter meu próprio sistema de delivery.")}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-7 block w-full text-center py-3 rounded-xl bg-primary text-primary-foreground font-bold text-sm hover:opacity-90 transition-all glow-primary"
+              className="mt-7 block w-full text-center py-3.5 rounded-xl bg-primary text-primary-foreground font-bold text-sm shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 hover:scale-[1.02] active:scale-95 transition-all glow-primary"
             >
               ASSINAR PLANO PRO →
             </a>

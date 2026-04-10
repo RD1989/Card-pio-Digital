@@ -23,15 +23,14 @@ export function LandingHero({ badge, title, subtitle, onScrollToFeatures }: Hero
           <span className="inline-block px-4 py-1.5 rounded-full text-[11px] font-semibold tracking-wider uppercase bg-primary/10 text-primary border border-primary/20 mb-5">
             {badge}
           </span>
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-[3.5rem] font-extrabold tracking-tight leading-tight sm:leading-[1.08]">
-            {title.includes('Profissional') ? (
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-[4rem] font-black tracking-tighter leading-[1.05]">
+            {title.includes('Cardápio Digital') ? (
               <>
-                Seu Cardápio Digital{' '}
-                <span className="font-display italic text-gradient">Profissional,</span>{' '}
-                Simples e <span className="font-display italic text-gradient">Poderoso</span>
+                Seu <span className="text-gradient">Cardápio Digital</span>{' '}
+                Próprio, Simples e <span className="text-gradient">Poderoso</span>
               </>
             ) : (
-              <>{title}</>
+              <span className="text-gradient">{title}</span>
             )}
           </h1>
           <p className="mt-5 text-sm sm:text-base text-muted-foreground max-w-md mx-auto lg:mx-0 leading-relaxed">
@@ -40,14 +39,14 @@ export function LandingHero({ badge, title, subtitle, onScrollToFeatures }: Hero
           <div className="mt-7 flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
             <Link
               to="/register"
-              className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl bg-primary text-primary-foreground font-bold text-sm hover:opacity-90 transition-all glow-primary"
+              className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl bg-primary text-primary-foreground font-bold text-sm shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 hover:scale-[1.02] active:scale-95 transition-all glow-primary"
             >
               CRIAR CONTA GRÁTIS
             </Link>
             <Button
               onClick={onScrollToFeatures}
               variant="outline"
-              className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl border-2 border-border text-foreground font-semibold text-sm hover:bg-muted transition-all h-auto"
+              className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl border-2 border-foreground/25 dark:border-white/30 text-foreground font-semibold text-sm hover:bg-foreground/5 dark:hover:bg-white/10 hover:border-foreground/40 dark:hover:border-white/50 transition-all h-auto"
             >
               VER RECURSOS
             </Button>

@@ -57,7 +57,7 @@ export function GlassNavbar() {
           </Link>
           <Link
             to="/register"
-            className="px-5 py-2 rounded-xl bg-primary text-primary-foreground text-xs font-bold hover:opacity-90 transition-all"
+            className="px-5 py-2 rounded-xl bg-primary text-primary-foreground text-xs font-bold shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30 hover:scale-[1.02] active:scale-95 transition-all"
           >
             Criar Conta Grátis →
           </Link>
