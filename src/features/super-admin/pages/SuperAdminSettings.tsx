@@ -174,18 +174,16 @@ export default function SuperAdminSettings() {
     <div className="space-y-6 max-w-3xl">
       <div>
         <h1 className="text-xl sm:text-2xl font-bold">Configurações Globais</h1>
-        <p className="text-muted-foreground text-xs sm:text-sm mt-1">APIs, tema e pagamentos (Pix Próprio)</p>
+        <p className="text-muted-foreground text-xs sm:text-sm mt-1">APIs, tema e pagamentos (Pix Próprio e Gateway Efí)</p>
       </div>
 
       <Tabs defaultValue="apis">
-        <div className="w-full overflow-x-auto pb-1">
-          <TabsList className="flex w-max min-w-full sm:grid sm:grid-cols-4">
-            <TabsTrigger value="apis" className="flex-1 whitespace-nowrap">IA (OpenRouter)</TabsTrigger>
-            <TabsTrigger value="ownpix" className="flex-1 whitespace-nowrap">Pix Grátis</TabsTrigger>
-            <TabsTrigger value="efi" className="flex-1 whitespace-nowrap">Gateway (Efí)</TabsTrigger>
-            <TabsTrigger value="theme" className="flex-1 whitespace-nowrap">Visual</TabsTrigger>
-          </TabsList>
-        </div>
+        <TabsList className="grid grid-cols-2 md:grid-cols-4 w-full h-auto p-1 gap-1 bg-muted/50 rounded-xl">
+          <TabsTrigger value="apis" className="py-2.5 font-bold tracking-tight uppercase text-[10px] sm:text-xs">IA (OpenRouter)</TabsTrigger>
+          <TabsTrigger value="ownpix" className="py-2.5 font-bold tracking-tight uppercase text-[10px] sm:text-xs text-orange-500">Pix Grátis</TabsTrigger>
+          <TabsTrigger value="efi" className="py-2.5 font-bold tracking-tight uppercase text-[10px] sm:text-xs text-emerald-500">Gateway (Efí)</TabsTrigger>
+          <TabsTrigger value="theme" className="py-2.5 font-bold tracking-tight uppercase text-[10px] sm:text-xs">Visual</TabsTrigger>
+        </TabsList>
 
         <TabsContent value="apis" className="space-y-4 mt-4">
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
