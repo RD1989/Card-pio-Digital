@@ -74,10 +74,20 @@ export default async function handler(req: any, res: any) {
       ]
     };
 
-    // Gera TxId aleatório de 35 chars usando crypto ESM
-    const txid = crypto.randomBytes(16).toString('hex') + 'abc'; 
+    // Gera TxId aleatório de 35 chars alfanuméricos (requisito Efí: 26-35 chars)
+    const txid = crypto.randomBytes(17).toString('hex').substring(0, 35); 
 
-    const response = await efiApi.put(`/v2/cob/${txid}`, cobPayload);
+    // Sanitiza a solicitação ao pagador (remover acentos e caracteres especiais)
+    const solicitacaoPagador = `Plano ${plano} - ${userProfile.restaurant_name}`
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^\w\s-]/g, '')
+      .substring(0, 140);
+
+    const response = await efiApi.put(`/v2/cob/${txid}`, {
+      ...cobPayload,
+      solicitacaoPagador
+    });
     const chargeData = response.data;
 
     // 2. Gerar o QR Code para exibir
@@ -105,7 +115,15 @@ export default async function handler(req: any, res: any) {
     });
 
   } catch (error: any) {
-    console.error('❌ Erro na geração de cobrança Efí:', error.response?.data || error.message);
-    return res.status(500).json({ error: error.message || 'Falha ao processar pagamento' });
+    const errorData = error.response?.data;
+    console.error('❌ Erro na geração de cobrança Efí:', errorData || error.message);
+    
+    // Extrai mensagem amigável se disponível na resposta da Efí
+    const detailedError = errorData?.mensagem || errorData?.error_description || error.message;
+    
+    return res.status(500).json({ 
+      error: detailedError || 'Falha ao processar pagamento',
+      details: errorData || null
+    });
   }
 }

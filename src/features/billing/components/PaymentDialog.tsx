@@ -124,7 +124,7 @@ export function PaymentDialog({ open, onOpenChange, userId, planId, planName, pr
                   <div className="absolute inset-0 bg-primary/20 blur-2xl rounded-full translate-y-4 group-hover:bg-primary/30 transition-all duration-500" />
                   <div className="relative bg-white p-3 rounded-2xl shadow-xl border border-white/20">
                     <img 
-                      src={paymentData.qrCodeImage} 
+                      src={paymentData.qrCodeImage.startsWith('data:') ? paymentData.qrCodeImage : `data:image/png;base64,${paymentData.qrCodeImage}`} 
                       alt="QR Code PIX" 
                       className="w-full h-full object-contain"
                     />
