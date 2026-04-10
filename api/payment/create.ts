@@ -35,6 +35,13 @@ export default async function handler(req: any, res: any) {
     }
 
     const planosCardapio: any = {
+      // Formato Novo (Landing Page)
+      diy_semestral: { valor: 129.00, tipo: "self_service" },
+      diy_anual: { valor: 229.00, tipo: "self_service" },
+      dfy_semestral: { valor: 197.00, tipo: "vip" },
+      dfy_anual: { valor: 297.00, tipo: "vip" },
+      
+      // Retrocompatibilidade
       semestral: { valor: 129.00, tipo: "self_service" },
       anual: { valor: 229.00, tipo: "self_service" },
       semestral_vip: { valor: 197.00, tipo: "vip" },
