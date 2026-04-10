@@ -1,125 +1,162 @@
 import { motion } from 'framer-motion';
-import { Check, ExternalLink, Sparkles, Rocket, Clock } from 'lucide-react';
+import { useState } from 'react';
+import { Check, Sparkles, AlertTriangle } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 
-interface Plan {
-  id: 'monthly' | 'basic' | 'pro';
-  name: string;
-  subtitle: string;
-  price: string;
-  savings?: string;
-  features: string[];
-  buttonText: string;
-  icon?: any;
-  highlight?: boolean;
-}
-
 export function SuspensionOverlay() {
-  const handleActivatePlan = (planType: 'semestral' | 'anual') => {
-    const messages = {
-      semestral: "Olá! Quero ativar minha Licença Semestral (6 meses).",
-      anual: "Olá! Quero ativar minha Licença Anual (12 meses).",
-    };
-    
-    const whatsapp = "22996051620";
-    const text = encodeURIComponent(messages[planType]);
-    window.open(`https://wa.me/${whatsapp}?text=${text}`, '_blank');
+  const [isAnnual, setIsAnnual] = useState(false);
+
+  const plans = {
+    diy: {
+      name: 'Faça Você Mesmo',
+      desc: 'Licença do sistema para você mesmo configurar',
+      priceSemestral: '129',
+      priceAnnual: '229',
+      features: [
+        'Pedidos ILIMITADOS',
+        'Produtos ILIMITADOS',
+        'Integrado com WhatsApp',
+        'QR Code de Mesa Exclusivo'
+      ],
+      whatsappText: encodeURIComponent('Olá! Minha licença expirou e quero renovar no plano Faça Você Mesmo.'),
+    },
+    dfy: {
+      name: 'Nós Configuramos (VIP)',
+      desc: 'Licença + Setup Completo Feito Por Nossa Equipe',
+      priceSemestral: '197',
+      priceAnnual: '297',
+      features: [
+        'Nós criamos o seu cardápio do zero',
+        'Cadastramos todos os produtos',
+        'Buscamos imagens premium',
+        'Criamos um Banner Exclusivo',
+        'Suporte VIP no WhatsApp'
+      ],
+      whatsappText: encodeURIComponent('Olá! Minha licença expirou e quero renovar no plano VIP (Nós Configuramos).'),
+    }
   };
 
-  const plans: any[] = [
-    {
-      id: 'semestral',
-      name: 'Licença Semestral',
-      subtitle: '6 Meses de Acesso',
-      price: 'R$ 139,00',
-      savings: 'Pagamento Único',
-      features: ['Pedidos ILIMITADOS', 'Gestão Completa', 'QR Code de Mesa', 'Suporte Especializado'],
-      buttonText: 'Ativar Semestral',
-      icon: Clock
-    },
-    {
-      id: 'anual',
-      name: 'Licença Anual',
-      subtitle: '12 Meses de Acesso',
-      price: 'R$ 197,00',
-      savings: 'Melhor Custo-Benefício',
-      features: ['Tudo do Semestral', 'Importação com IA', 'Etiquetas Térmicas', 'Suporte Prioritário VIP'],
-      buttonText: 'Ativar Anual',
-      highlight: true,
-      icon: Sparkles
-    }
-  ];
+  const handleActivatePlan = (whatsappMessage: string) => {
+    const whatsapp = "22996051620";
+    window.open(`https://wa.me/${whatsapp}?text=${whatsappMessage}`, '_blank');
+  };
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center py-10 px-4 max-w-7xl mx-auto space-y-8 animate-in fade-in zoom-in duration-500">
-      <div className="text-center space-y-3 max-w-2xl">
-        <div className="w-20 h-20 bg-primary/10 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-pill animate-pulse">
-          <Sparkles className="w-10 h-10 text-primary" />
+    <div className="flex-1 flex flex-col items-center justify-center py-10 px-4 w-full h-full min-h-screen relative bg-muted/40 animate-in fade-in zoom-in duration-500 overflow-y-auto">
+      {/* Background Blurs */}
+      <div className="absolute top-1/4 -left-32 w-96 h-96 bg-primary/20 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-primary/20 rounded-full blur-[120px] pointer-events-none" />
+
+      <div className="text-center space-y-3 max-w-2xl relative z-10 mx-auto mt-10">
+        <div className="w-16 h-16 bg-red-500/10 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-pill animate-pulse">
+          <AlertTriangle className="w-8 h-8 text-red-500" />
         </div>
-        <h2 className="text-4xl font-black tracking-tighter text-foreground">Seu teste de 10 dias terminou</h2>
-        <p className="text-muted-foreground font-medium text-sm">Escolha sua licença e continue vendendo sem pagar taxas mensais ou por pedido.</p>
+        <h2 className="text-3xl font-black tracking-tighter text-foreground">Sua licença expirou</h2>
+        <p className="text-muted-foreground font-medium text-sm">Escolha sua licença de renovação e retome suas vendas 100% livre de taxas predatórias.</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-4xl">
-        {plans.map((plan, i) => (
+      <div className="max-w-4xl mx-auto w-full relative z-10 mt-8 mb-16">
+        {/* Toggle Semestral / Anual */}
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="flex justify-center mb-8"
+        >
+          <div className="bg-card border border-border p-1.5 rounded-full inline-flex font-semibold text-sm relative shadow-sm">
+            <button
+              onClick={() => setIsAnnual(false)}
+              className={`relative z-10 px-6 py-2.5 rounded-full transition-colors duration-300 ${!isAnnual ? 'text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+            >
+              Semestral
+            </button>
+            <button
+              onClick={() => setIsAnnual(true)}
+              className={`relative z-10 px-6 py-2.5 rounded-full transition-colors duration-300 ${isAnnual ? 'text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+            >
+              Anual <span className="absolute -top-3 -right-2 bg-primary text-primary-foreground text-[10px] font-black px-2 py-0.5 rounded-full animate-bounce shadow-md">+Lucro</span>
+            </button>
+            {/* Indicador Deslizante */}
+            <div 
+              className={`absolute top-1.5 left-1.5 bottom-1.5 w-[105px] bg-primary rounded-full transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${isAnnual ? 'translate-x-[102px]' : 'translate-x-0'}`} 
+            />
+          </div>
+        </motion.div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 w-full">
+          {/* Plano DIY */}
           <motion.div
-            key={plan.id}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.1 }}
-            className={`glass-sm p-6 flex flex-col border-2 relative overflow-hidden transition-all duration-300 ${
-              plan.highlight 
-                ? 'border-primary/40 bg-primary/5 shadow-xl scale-105 z-10' 
-                : 'border-border hover:border-primary/30'
-            }`}
+            className="bg-card border border-border rounded-3xl p-6 lg:p-8 relative overflow-hidden shadow-lg hover:border-primary/30 transition-colors"
           >
-            {plan.highlight && (
-              <div className="absolute top-0 right-0 bg-primary/10 text-primary text-[9px] font-black px-3 py-1 uppercase tracking-wider">
-                Melhor Custo-Benefício
-              </div>
-            )}
-            
-            <div className="mb-6 text-left">
-              <div className="flex items-center gap-2">
-                <h3 className="text-xl font-bold">{plan.name}</h3>
-                {plan.icon && <plan.icon className={`w-4 h-4 ${plan.id === 'pro' ? 'text-amber-500 fill-amber-500' : 'text-primary'}`} />}
-              </div>
-              <p className="text-xs text-muted-foreground font-medium">{plan.subtitle}</p>
-              <div className="mt-4">
-                <p className={`text-3xl font-black ${plan.highlight ? 'text-primary' : 'text-foreground'}`}>{plan.price}</p>
-                {plan.savings && <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">{plan.savings}</p>}
-              </div>
+            <h3 className="font-extrabold text-xl">{plans.diy.name}</h3>
+            <p className="text-sm text-muted-foreground mt-1 min-h-[40px]">{plans.diy.desc}</p>
+            <div className="mt-4 flex items-baseline gap-1">
+              <span className="text-xl font-bold text-muted-foreground">R$</span>
+              <span className="text-4xl font-black tracking-tighter text-foreground">
+                {isAnnual ? plans.diy.priceAnnual : plans.diy.priceSemestral}
+              </span>
             </div>
-
-            <ul className="space-y-3 mb-8 flex-1 text-left">
-              {plan.features.map((feature, idx) => (
-                <li key={idx} className={`text-[13px] flex items-center gap-3 ${idx === 0 ? 'font-bold text-primary italic' : 'font-medium opacity-80'}`}>
-                  <Check className="w-4 h-4 shrink-0 text-primary" />
-                  <span>{feature}</span>
-                </li>
+            <p className="text-[11px] text-muted-foreground mt-1 font-semibold">Uma única vez a cada {isAnnual ? '12 meses' : '6 meses'}</p>
+            <div className="mt-6 space-y-3">
+              {plans.diy.features.map((f, i) => (
+                <div key={i} className="flex items-start gap-3 text-[13px]">
+                  <Check className="w-4 h-4 text-emerald-500 shrink-0" />
+                  <span className="leading-tight opacity-90 font-medium">{f}</span>
+                </div>
               ))}
-            </ul>
-
-            <Button
-              className={`w-full h-11 gap-2 font-bold text-sm ${
-                plan.highlight 
-                  ? 'bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/10' 
-                  : plan.id === 'pro' ? 'bg-foreground hover:bg-foreground/90 text-background' : 'variant-outline'
-              }`}
-              variant={plan.highlight || plan.id === 'pro' ? 'default' : 'outline'}
-              onClick={() => handleActivatePlan(plan.id)}
+            </div>
+            <Button 
+              onClick={() => handleActivatePlan(plans.diy.whatsappText)}
+              variant="outline"
+              className="mt-8 w-full h-12 rounded-xl border-2 border-primary text-primary font-bold hover:bg-primary/5 transition-all"
             >
-              {plan.id === 'basic' ? <Sparkles className="w-4 h-4" /> : <ExternalLink className="w-4 h-4" />}
-              {plan.buttonText}
+              ATIVAR LICENÇA
             </Button>
           </motion.div>
-        ))}
-      </div>
 
-      <div className="text-center space-y-2 opacity-60">
-        <p className="text-xs font-semibold text-muted-foreground">
-          Ativação via WhatsApp • Suporte imediato para renovação de planos
-        </p>
+          {/* Plano DFY (Premium) */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="bg-card border-2 border-primary rounded-3xl p-6 lg:p-8 relative overflow-hidden shadow-2xl scale-[1.02] z-10 bg-primary/5"
+          >
+            <div className="absolute top-0 inset-x-0 h-1 bg-primary" />
+            <div className="absolute top-0 right-0 bg-primary/20 text-primary text-[10px] font-black px-3 py-1 rounded-bl-xl uppercase tracking-widest">
+              Diferencial
+            </div>
+            <h3 className="font-extrabold text-xl text-primary">{plans.dfy.name}</h3>
+            <p className="text-sm text-muted-foreground mt-1 min-h-[40px]">{plans.dfy.desc}</p>
+            <div className="mt-4 flex items-baseline gap-1">
+              <span className="text-xl font-bold text-primary/70">R$</span>
+              <span className="text-4xl font-black tracking-tighter text-primary drop-shadow-sm">
+                {isAnnual ? plans.dfy.priceAnnual : plans.dfy.priceSemestral}
+              </span>
+            </div>
+            <p className="text-[11px] text-muted-foreground mt-1 font-semibold">Renove sua licença + Refizemos tudo se precisar</p>
+            <div className="mt-6 space-y-2 relative z-10">
+              {plans.dfy.features.map((f, i) => (
+                <div key={i} className="flex items-start gap-2 text-[13px] bg-background/50 p-2 rounded border border-border/50">
+                  <Check className="w-4 h-4 text-primary shrink-0" />
+                  <span className="leading-tight font-semibold opacity-90">{f}</span>
+                </div>
+              ))}
+            </div>
+            <Button 
+              onClick={() => handleActivatePlan(plans.dfy.whatsappText)}
+              className="mt-6 w-full h-12 rounded-xl bg-primary text-primary-foreground font-bold shadow-lg shadow-primary/30 hover:shadow-primary/40 transition-all glow-primary gap-2"
+            >
+              <Sparkles className="w-4 h-4" /> ATIVAR RENOVAÇÃO VIP
+            </Button>
+          </motion.div>
+        </div>
+        
+        <div className="text-center mt-6">
+          <p className="text-[11px] font-semibold text-muted-foreground">
+            A ativação é concluída imediatamente via WhatsApp. Sem travamentos.
+          </p>
+        </div>
       </div>
     </div>
   );
