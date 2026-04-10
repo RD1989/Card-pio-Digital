@@ -30,13 +30,25 @@ export function LandingCTA({ title, subtitle }: CTAProps) {
           <p className="mt-4 text-sm max-w-lg mx-auto" style={{ color: 'hsl(var(--nav-foreground) / 0.7)' }}>
             {subtitle}
           </p>
-          <div className="mt-8">
+          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
               to="/register"
-              className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-primary text-primary-foreground font-bold text-sm hover:opacity-90 transition-all glow-primary"
+              className="inline-flex items-center justify-center gap-2 px-8 py-4 w-full sm:w-auto rounded-xl bg-primary text-primary-foreground font-bold text-sm hover:opacity-90 transition-all glow-primary"
             >
               CRIAR MINHA CONTA GRÁTIS <ArrowRight className="w-4 h-4" />
             </Link>
+            
+            <button
+              onClick={() => window.dispatchEvent(new Event('trigger-pwa-install'))}
+              className="inline-flex items-center justify-center gap-2 px-8 py-4 w-full sm:w-auto rounded-xl bg-white text-black font-extrabold shadow-2xl shadow-white/10 hover:bg-neutral-100 transition-all border border-white/20"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-5 h-5">
+                <path d="M12 16L12 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M7 11L12 16L17 11" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M21 21H3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              INSTALAR SISTEMA E ENTRAR
+            </button>
           </div>
         </div>
       </motion.div>
