@@ -31,8 +31,9 @@ export default defineConfig(({ mode }) => ({
         theme_color: '#f59e0b',
         background_color: '#0a0a0a',
         display: 'standalone',
+        id: '/?pwa=true',
         orientation: 'portrait-primary',
-        start_url: '/',
+        start_url: '/register',
         icons: [
           {
             src: 'pwa-192x192.png',

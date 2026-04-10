@@ -26,6 +26,14 @@ export const PwaProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     
     setIsInstalled(isStandalone);
 
+    // Verificar se o evento já foi capturado globalmente no index.html
+    if ((window as any).deferredPWAEvent) {
+      setDeferredPrompt((window as any).deferredPWAEvent);
+      setIsInstallable(true);
+      if (!isStandalone) setShowInstallBanner(true);
+      console.log('PWA: Evento recuperado da captura global.');
+    }
+
     const handler = (e: any) => {
       console.log('PWA: Evento beforeinstallprompt disparado!');
       // Impedir que o mini-infobar apareça no mobile automaticamente
