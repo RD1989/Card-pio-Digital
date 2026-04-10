@@ -13,6 +13,7 @@ import {
 
 // Components
 import { LandingHero } from '../components/LandingHero';
+import { PwaInstallBanner } from '@/shared/components/common/PwaInstallBanner';
 
 // Lazy loaded components for sections below the fold
 const LandingVideo = lazy(() => import('../components/LandingVideo').then(m => ({ default: m.LandingVideo })));
@@ -65,6 +66,7 @@ export default function Landing() {
 
   return (
     <div className="min-h-screen bg-background overflow-hidden relative">
+      <PwaInstallBanner />
       <GlassNavbar />
 
       <LandingHero 

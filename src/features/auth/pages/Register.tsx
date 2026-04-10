@@ -7,6 +7,8 @@ import { Mail, Lock, User, ArrowRight, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
+import { PwaInstallBanner } from '@/shared/components/common/PwaInstallBanner';
+
 export default function Register() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -56,7 +58,8 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background relative">
+      <PwaInstallBanner />
       <GlassNavbar />
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/15 rounded-full blur-[120px] pointer-events-none" />
 
