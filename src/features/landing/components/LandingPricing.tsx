@@ -1,6 +1,10 @@
 import { motion } from 'framer-motion';
 import { Check } from 'lucide-react';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/features/auth/hooks/useAuth';
+import { PaymentDialog } from '@/features/billing/components/PaymentDialog';
+import { Button } from '@/shared/components/ui/button';
 
 interface PricingProps {
   basicFeatures: string[];
@@ -8,23 +12,45 @@ interface PricingProps {
 }
 
 export function LandingPricing({ basicFeatures, proFeatures }: PricingProps) {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [isAnnual, setIsAnnual] = useState(false);
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<{ id: string; name: string; price: string } | null>(null);
 
   const plans = {
     diy: {
+      id: 'diy',
       name: 'Faça Você Mesmo',
       desc: 'Licença do sistema para você mesmo configurar',
       priceSemestral: '129',
       priceAnnual: '229',
-      whatsappText: encodeURIComponent('Olá! Quero a Licença Plan Faça Você Mesmo e montar meu próprio cardápio digital.'),
     },
     dfy: {
+      id: 'dfy',
       name: 'Nós Configuramos (VIP)',
       desc: 'Licença + Setup Completo Feito Por Nossa Equipe',
       priceSemestral: '197',
       priceAnnual: '297',
-      whatsappText: encodeURIComponent('Olá! Quero a Licença VIP com Setup Completo. Quero que vocês montem meu cardápio digital hoje mesmo!'),
     }
+  };
+
+  const handlePlanAction = (id: 'diy' | 'dfy') => {
+    if (!user) {
+      navigate('/register');
+      return;
+    }
+
+    const plan = plans[id];
+    const planId = isAnnual ? `${id}_anual` : `${id}_semestral`;
+    const price = isAnnual ? plan.priceAnnual : plan.priceSemestral;
+
+    setSelectedPlan({
+      id: planId,
+      name: `${plan.name} (${isAnnual ? 'Anual' : 'Semestral'})`,
+      price
+    });
+    setPaymentModalOpen(true);
   };
 
   return (
@@ -95,14 +121,13 @@ export function LandingPricing({ basicFeatures, proFeatures }: PricingProps) {
                 </div>
               ))}
             </div>
-            <a 
-              href={`https://wa.me/22996051620?text=${plans.diy.whatsappText}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-10 flex items-center justify-center w-full py-4 rounded-xl border-2 border-primary text-primary font-bold text-sm tracking-wide hover:bg-primary/5 active:scale-95 transition-all"
+            <Button 
+              onClick={() => handlePlanAction('diy')}
+              variant="outline"
+              className="mt-10 w-full h-14 rounded-xl border-2 border-primary text-primary font-bold text-sm tracking-wide hover:bg-primary/5 active:scale-95 transition-all"
             >
               ASSINAR AGORA
-            </a>
+            </Button>
           </motion.div>
 
           {/* Plano DFY (Premium) */}
@@ -154,18 +179,27 @@ export function LandingPricing({ basicFeatures, proFeatures }: PricingProps) {
                 </div>
               ))}
             </div>
-            <a 
-              href={`https://wa.me/22996051620?text=${plans.dfy.whatsappText}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="relative mt-8 flex items-center justify-center w-full py-4 rounded-xl bg-primary text-primary-foreground font-bold text-sm tracking-wide shadow-xl shadow-primary/30 hover:shadow-2xl hover:shadow-primary/40 hover:-translate-y-1 active:translate-y-0 active:scale-95 transition-all overflow-hidden glow-primary group"
+            <Button 
+              onClick={() => handlePlanAction('dfy')}
+              className="relative mt-8 w-full h-14 rounded-xl bg-primary text-primary-foreground font-bold text-sm tracking-wide shadow-xl shadow-primary/30 hover:shadow-2xl hover:shadow-primary/40 hover:-translate-y-1 active:translate-y-0 active:scale-95 transition-all overflow-hidden glow-primary group"
             >
               <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
               <span className="relative z-10">QUERO O SISTEMA PRONTO →</span>
-            </a>
+            </Button>
           </motion.div>
         </div>
       </div>
+
+      {user && selectedPlan && (
+        <PaymentDialog 
+          open={paymentModalOpen}
+          onOpenChange={setPaymentModalOpen}
+          userId={user.id}
+          planId={selectedPlan.id}
+          planName={selectedPlan.name}
+          price={selectedPlan.price}
+        />
+      )}
     </section>
   );
 }

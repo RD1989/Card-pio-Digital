@@ -2,12 +2,18 @@ import { motion } from 'framer-motion';
 import { useState } from 'react';
 import { Check, Sparkles, AlertTriangle } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
+import { useAuth } from '@/features/auth/hooks/useAuth';
+import { PaymentDialog } from './PaymentDialog';
 
 export function SuspensionOverlay() {
+  const { user } = useAuth();
   const [isAnnual, setIsAnnual] = useState(false);
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<{ id: string; name: string; price: string } | null>(null);
 
   const plans = {
     diy: {
+      id: 'diy',
       name: 'Faça Você Mesmo',
       desc: 'Licença do sistema para você mesmo configurar',
       priceSemestral: '129',
@@ -18,9 +24,9 @@ export function SuspensionOverlay() {
         'Integrado com WhatsApp',
         'QR Code de Mesa Exclusivo'
       ],
-      whatsappText: encodeURIComponent('Olá! Minha licença expirou e quero renovar no plano Faça Você Mesmo.'),
     },
     dfy: {
+      id: 'dfy',
       name: 'Nós Configuramos (VIP)',
       desc: 'Licença + Setup Completo Feito Por Nossa Equipe',
       priceSemestral: '197',
@@ -32,13 +38,20 @@ export function SuspensionOverlay() {
         'Criamos um Banner Exclusivo',
         'Suporte VIP no WhatsApp'
       ],
-      whatsappText: encodeURIComponent('Olá! Minha licença expirou e quero renovar no plano VIP (Nós Configuramos).'),
     }
   };
 
-  const handleActivatePlan = (whatsappMessage: string) => {
-    const whatsapp = "22996051620";
-    window.open(`https://wa.me/${whatsapp}?text=${whatsappMessage}`, '_blank');
+  const handleOpenPayment = (id: 'diy' | 'dfy') => {
+    const plan = plans[id];
+    const planId = isAnnual ? `${id}_anual` : `${id}_semestral`;
+    const price = isAnnual ? plan.priceAnnual : plan.priceSemestral;
+    
+    setSelectedPlan({
+      id: planId,
+      name: `${plan.name} (${isAnnual ? 'Anual' : 'Semestral'})`,
+      price
+    });
+    setPaymentModalOpen(true);
   };
 
   return (
@@ -107,7 +120,7 @@ export function SuspensionOverlay() {
               ))}
             </div>
             <Button 
-              onClick={() => handleActivatePlan(plans.diy.whatsappText)}
+              onClick={() => handleOpenPayment('diy')}
               variant="outline"
               className="mt-8 w-full h-12 rounded-xl border-2 border-primary text-primary font-bold hover:bg-primary/5 transition-all"
             >
@@ -144,7 +157,7 @@ export function SuspensionOverlay() {
               ))}
             </div>
             <Button 
-              onClick={() => handleActivatePlan(plans.dfy.whatsappText)}
+              onClick={() => handleOpenPayment('dfy')}
               className="mt-6 w-full h-12 rounded-xl bg-primary text-primary-foreground font-bold shadow-lg shadow-primary/30 hover:shadow-primary/40 transition-all glow-primary gap-2"
             >
               <Sparkles className="w-4 h-4" /> ATIVAR RENOVAÇÃO VIP
@@ -154,10 +167,22 @@ export function SuspensionOverlay() {
         
         <div className="text-center mt-6">
           <p className="text-[11px] font-semibold text-muted-foreground">
-            A ativação é concluída imediatamente via WhatsApp. Sem travamentos.
+            A ativação é concluída imediatamente após o pagamento PIX.
           </p>
         </div>
       </div>
+
+      {user && selectedPlan && (
+        <PaymentDialog 
+          open={paymentModalOpen}
+          onOpenChange={setPaymentModalOpen}
+          userId={user.id}
+          planId={selectedPlan.id}
+          planName={selectedPlan.name}
+          price={selectedPlan.price}
+        />
+      )}
     </div>
   );
 }
+
