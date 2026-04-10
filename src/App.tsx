@@ -6,6 +6,7 @@ import { Toaster } from "@/shared/components/ui/toaster";
 import { TooltipProvider } from "@/shared/components/ui/tooltip";
 import { ThemeProvider } from "@/shared/components/common/ThemeProvider";
 import { AuthProvider } from "@/features/auth/hooks/useAuth";
+import { PwaProvider } from "@/shared/contexts/PwaContext";
 import { ProtectedRoute } from "@/shared/components/common/ProtectedRoute";
 import { SuperAdminRoute } from "@/shared/components/common/SuperAdminRoute";
 import { Loader2 } from "lucide-react";
@@ -76,14 +77,17 @@ const queryClient = new QueryClient({
   },
 });
 
+import { PwaProvider } from "@/shared/contexts/PwaContext";
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider>
       <AuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <PwaProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
             <Suspense fallback={<GlobalLoader />}>
               <Routes>
                 {/* Public */}
@@ -136,7 +140,8 @@ const App = () => (
             </Suspense>
           </BrowserRouter>
         </TooltipProvider>
-      </AuthProvider>
+      </PwaProvider>
+    </AuthProvider>
     </ThemeProvider>
   </QueryClientProvider>
 );

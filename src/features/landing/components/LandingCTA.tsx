@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Download } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { usePwa } from '@/shared/contexts/PwaContext';
 
 interface CTAProps {
   title: string;
@@ -8,6 +9,8 @@ interface CTAProps {
 }
 
 export function LandingCTA({ title, subtitle }: CTAProps) {
+  const { installApp, isInstalled, isInstallable } = usePwa();
+
   return (
     <section className="py-16 px-6">
       <motion.div
@@ -38,17 +41,15 @@ export function LandingCTA({ title, subtitle }: CTAProps) {
               CRIAR MINHA CONTA GRÁTIS <ArrowRight className="w-4 h-4" />
             </Link>
             
-            <button
-              onClick={() => window.dispatchEvent(new Event('trigger-pwa-install'))}
-              className="inline-flex items-center justify-center gap-2 px-8 py-4 w-full sm:w-auto rounded-xl bg-white text-black font-extrabold shadow-2xl shadow-white/10 hover:bg-neutral-100 transition-all border border-white/20"
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-5 h-5">
-                <path d="M12 16L12 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M7 11L12 16L17 11" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M21 21H3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-              INSTALAR SISTEMA E ENTRAR
-            </button>
+            {!isInstalled && (
+              <button
+                onClick={installApp}
+                className="inline-flex items-center justify-center gap-2 px-8 py-4 w-full sm:w-auto rounded-xl bg-white text-black font-extrabold shadow-2xl shadow-white/10 hover:bg-neutral-100 transition-all border border-white/20 active:scale-95"
+              >
+                <Download className="w-5 h-5" />
+                INSTALAR SISTEMA E ENTRAR
+              </button>
+            )}
           </div>
         </div>
       </motion.div>

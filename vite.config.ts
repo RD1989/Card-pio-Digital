@@ -19,25 +19,22 @@ export default defineConfig(({ mode }) => ({
     mode === "development" && componentTagger(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'pwa-192x192.png', 'pwa-512x512.png'],
+      includeAssets: ['favicon.png', 'apple-touch-icon.png', 'pwa-192x192.png', 'pwa-512x512.png'],
       manifest: {
         name: 'Sistema Menu Pro',
         short_name: 'Menu Pro',
-        description: 'Painel Administrativo do Menu Pro',
-        theme_color: '#000000',
-        background_color: '#000000',
+        description: 'Cardápio Digital para Restaurantes',
+        theme_color: '#f59e0b',
+        background_color: '#0a0a0a',
         display: 'standalone',
-        start_url: '/admin',
+        orientation: 'portrait-primary',
+        start_url: '/',
         icons: [
           {
             src: 'pwa-192x192.png',
             sizes: '192x192',
-            type: 'image/png'
-          },
-          {
-            src: 'pwa-512x512.png',
-            sizes: '512x512',
-            type: 'image/png'
+            type: 'image/png',
+            purpose: 'any maskable'
           },
           {
             src: 'pwa-512x512.png',
