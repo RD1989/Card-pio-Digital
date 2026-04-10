@@ -61,18 +61,39 @@ export default function BioLinks() {
       .order('sort_order', { ascending: true });
     setLinks(linksData || []);
 
-    // Fetch Profile for Preview
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('restaurant_name, logo_url, primary_color, slug, bio_link_text')
-      .eq('user_id', userId)
-      .single();
-    if (profile) {
-      setRestaurantName(profile.restaurant_name);
-      setLogoUrl(profile.logo_url || '');
-      setPrimaryColor(profile.primary_color || '#f59e0b');
-      setSlug(profile.slug);
-      setBioLinkText(profile.bio_link_text || 'FAZER PEDIDO NO CARDÁPIO');
+    try {
+      // Fetch Profile for Preview - Tenta buscar com a nova coluna
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('restaurant_name, logo_url, primary_color, slug, bio_link_text')
+        .eq('user_id', userId)
+        .single();
+
+      if (error) {
+        // Se der erro (provavelmente coluna faltando), tenta buscar sem a nova coluna
+        console.warn('Erro ao buscar perfil com bio_link_text, tentando fallback...', error);
+        const { data: fallbackProfile } = await supabase
+          .from('profiles')
+          .select('restaurant_name, logo_url, primary_color, slug')
+          .eq('user_id', userId)
+          .single();
+        
+        if (fallbackProfile) {
+          setRestaurantName(fallbackProfile.restaurant_name);
+          setLogoUrl(fallbackProfile.logo_url || '');
+          setPrimaryColor(fallbackProfile.primary_color || '#f59e0b');
+          setSlug(fallbackProfile.slug);
+          setBioLinkText('FAZER PEDIDO NO CARDÁPIO');
+        }
+      } else if (profile) {
+        setRestaurantName(profile.restaurant_name);
+        setLogoUrl(profile.logo_url || '');
+        setPrimaryColor(profile.primary_color || '#f59e0b');
+        setSlug(profile.slug);
+        setBioLinkText(profile.bio_link_text || 'FAZER PEDIDO NO CARDÁPIO');
+      }
+    } catch (err) {
+      console.error('Erro crítico ao carregar dados da Bio:', err);
     }
     
     setLoading(false);

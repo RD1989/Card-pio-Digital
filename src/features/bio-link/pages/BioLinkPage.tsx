@@ -57,11 +57,15 @@ export default function BioLinkPage() {
       if (!slug) return;
 
       // Fetch Profile
-      const { data: profileData } = await supabase
+      const { data: profileData, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('slug', slug)
         .single();
+
+      if (error) {
+        console.error('Erro ao buscar perfil:', error);
+      }
 
       if (profileData) {
         setProfile(profileData as any);
