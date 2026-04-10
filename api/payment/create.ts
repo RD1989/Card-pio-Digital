@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import { getEfiInstance } from '../_lib/efi';
 import { supabaseAdmin, getGlobalSetting } from '../_lib/supabase';
 
@@ -66,8 +67,8 @@ export default async function handler(req: any, res: any) {
       ]
     };
 
-    // Gera TxId aleatório de 35 chars
-    const txid = require('crypto').randomBytes(16).toString('hex') + 'abc'; 
+    // Gera TxId aleatório de 35 chars usando crypto ESM
+    const txid = crypto.randomBytes(16).toString('hex') + 'abc'; 
 
     const response = await efiApi.put(`/v2/cob/${txid}`, cobPayload);
     const chargeData = response.data;
