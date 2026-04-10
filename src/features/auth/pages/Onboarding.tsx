@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Phone, Palette, Store, ArrowRight, Loader2, CheckCircle2 } from 'lucide-react';
+import { Phone, Palette, Store, ArrowRight, Loader2, CheckCircle2, Plus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { toast } from 'sonner';

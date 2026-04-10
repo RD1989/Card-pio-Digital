@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, Reorder } from 'framer-motion';
-import { Link as LinkIcon, Plus, Trash2, GripVertical, Check, X, Loader2, ExternalLink, Eye, Smartphone, Copy } from 'lucide-react';
+import { Link as LinkIcon, Plus, Trash2, GripVertical, Check, X, Loader2, ExternalLink, Eye, Smartphone, Copy, Store } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useImpersonateStore } from '@/shared/stores/global/useImpersonateStore';
@@ -145,6 +145,14 @@ export default function BioLinks() {
     const { error } = await (supabase as any).from('bio_links').update({ is_active: !active }).eq('id', id);
     if (!error) {
       setLinks(links.map(l => l.id === id ? { ...l, is_active: !active } : l));
+    }
+  };
+
+  const handleReorder = async (newOrder: BioLink[]) => {
+    setLinks(newOrder);
+    // Simple update - in production use a single RPC or debounced updates
+    for (let i = 0; i < newOrder.length; i++) {
+        await (supabase as any).from('bio_links').update({ sort_order: i }).eq('id', newOrder[i].id);
     }
   };
 
