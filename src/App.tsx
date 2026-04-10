@@ -77,8 +77,6 @@ const queryClient = new QueryClient({
   },
 });
 
-import { PwaProvider } from "@/shared/contexts/PwaContext";
-
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider>

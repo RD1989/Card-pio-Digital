@@ -173,16 +173,18 @@ export default function SuperAdminSettings() {
   return (
     <div className="space-y-6 max-w-3xl">
       <div>
-        <h1 className="text-xl sm:text-2xl font-bold">Configurações Globais</h1>
+        <h1 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
+          Configurações Globais <span className="text-[10px] bg-primary/20 text-primary px-2 py-0.5 rounded-full font-black tracking-widest uppercase">v2.2 - Gateway Efí</span>
+        </h1>
         <p className="text-muted-foreground text-xs sm:text-sm mt-1">APIs, tema e pagamentos (Pix Próprio e Gateway Efí)</p>
       </div>
 
       <Tabs defaultValue="apis">
-        <TabsList className="grid grid-cols-2 md:grid-cols-4 w-full h-auto p-1 gap-1 bg-muted/50 rounded-xl">
-          <TabsTrigger value="apis" className="py-2.5 font-bold tracking-tight uppercase text-[10px] sm:text-xs">IA (OpenRouter)</TabsTrigger>
-          <TabsTrigger value="ownpix" className="py-2.5 font-bold tracking-tight uppercase text-[10px] sm:text-xs text-orange-500">Pix Grátis</TabsTrigger>
-          <TabsTrigger value="efi" className="py-2.5 font-bold tracking-tight uppercase text-[10px] sm:text-xs text-emerald-500">Gateway (Efí)</TabsTrigger>
-          <TabsTrigger value="theme" className="py-2.5 font-bold tracking-tight uppercase text-[10px] sm:text-xs">Visual</TabsTrigger>
+        <TabsList className="grid grid-cols-2 md:grid-cols-4 w-full h-auto p-1 gap-1.5 bg-muted/50 rounded-2xl border border-border/50">
+          <TabsTrigger value="apis" className="py-3 font-black tracking-tight uppercase text-[9px] sm:text-[10px] rounded-xl transition-all data-[state=active]:bg-background data-[state=active]:shadow-sm">IA (OpenRouter)</TabsTrigger>
+          <TabsTrigger value="ownpix" className="py-3 font-black tracking-tight uppercase text-[9px] sm:text-[10px] rounded-xl transition-all data-[state=active]:bg-background data-[state=active]:shadow-sm text-orange-500">Pix Grátis</TabsTrigger>
+          <TabsTrigger value="efi" className="py-3 font-black tracking-tight uppercase text-[9px] sm:text-[10px] rounded-xl transition-all data-[state=active]:bg-background data-[state=active]:shadow-sm text-emerald-500">Gateway (Efí)</TabsTrigger>
+          <TabsTrigger value="theme" className="py-3 font-black tracking-tight uppercase text-[9px] sm:text-[10px] rounded-xl transition-all data-[state=active]:bg-background data-[state=active]:shadow-sm text-primary">Visual</TabsTrigger>
         </TabsList>
 
         <TabsContent value="apis" className="space-y-4 mt-4">
